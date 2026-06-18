@@ -1,0 +1,8 @@
+{
+  "name": "neurawork-cc-harness",
+  "description": "NeuraWork Claude Code harness: repo-local, self-maintaining project knowledge. Bundles two independently installable skills — knowledge-compiler (distils session logs into a per-repo knowledge base) and claudemd-lerner (keeps the CLAUDE.md hierarchy + docs/ current). Knowledge and docs always live inside the repo, never in .claude/. Recon + brownfield seed on install so existing repos can be upgraded.",
+  "author": {
+    "name": "Felix Doobe",
+    "email": "felix.doobe@neurawork.ai"
+  }
+}

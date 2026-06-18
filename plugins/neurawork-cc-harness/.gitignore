@@ -1,0 +1,8 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local per-repo plugin config (written by recon on install)
+.claude/*.local.md
