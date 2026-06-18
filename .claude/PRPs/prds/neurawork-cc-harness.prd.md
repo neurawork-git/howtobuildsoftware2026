@@ -145,7 +145,7 @@ Shortest path to value (per skill):
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
 | 1 | Plugin scaffold & shared infra | `neurawork-cc-harness` plugin skeleton (plugin.json, dirs), shared session-capture + hook patterns, namespacing, in-repo write-guard | complete | - | - | [scaffold plan](../plans/completed/neurawork-cc-harness-scaffold.plan.md) |
-| 2 | knowledge-compiler skill | Clean reimpl of compile/flush/query/lint + install command + recon + seed + triggers | pending | with 3 | 1 | - |
+| 2 | knowledge-compiler skill | Clean reimpl of compile/flush/query/lint + install command + recon + seed + triggers | in-progress | with 3 | 1 | [kc plan](../plans/neurawork-cc-harness-knowledge-compiler.plan.md) |
 | 3 | claudemd-lerner skill | Session→CLAUDE.md hierarchy + docs maintenance (no wiki) + install command + recon + seed + triggers | pending | with 2 | 1 | - |
 | 4 | Exemplary docs & self-host | Apply both skills to THIS repo as the worked example; write install/upgrade guide; choose license | pending | - | 2, 3 | - |
 | 5 | TechStack Validator (Session 2) | Checks plans/code vs. chosen stack allowlist | pending | with 6 | 4 | - |
