@@ -1,0 +1,9 @@
+{
+  "lerner_dir": "claudemd-lerner",
+  "model": "",
+  "update_age_hours": 6,
+  "claudemd_depth": 1,
+  "docs_dir": "docs",
+  "language": "en",
+  "excluded_dirs": ["node_modules", ".venv", "dist", "build", ".git"]
+}
