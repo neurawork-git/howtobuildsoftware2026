@@ -1,0 +1,27 @@
+You are seeding the documentation for THIS repository on first install. Build (or
+UPDATE) the project's CLAUDE.md hierarchy and docs/ tree from what the repository
+already documents about itself.
+
+Follow the schema in AGENTS.md exactly (where things go, update/seed rules).
+
+Steps:
+1. Read the repository's README, EVERY existing CLAUDE.md (root and any subdir),
+   the docs/ directory, and the top-level source map provided below. Open the
+   files that look foundational. Ignore everything under the excluded directories.
+2. Produce or UPDATE the root CLAUDE.md so it states: the project's purpose; the
+   exact build / test / lint / run commands; the high-level architecture (major
+   components with paths); repo-wide conventions; and key decisions with rationale.
+3. Up to the configured CLAUDE.md depth, create/update an area <subdir>/CLAUDE.md
+   for any subtree with distinct conventions or build/test quirks. Do NOT create
+   area files below the configured depth.
+4. Create or refresh docs/<topic>.md entries for longer-form material that would
+   bloat CLAUDE.md (guides, design docs, runbooks).
+
+Hard constraints:
+- Write ONLY CLAUDE.md files and files under the configured docs directory. Do not
+  touch anything else, and NEVER write under .claude/.
+- If a root CLAUDE.md already exists, UPDATE it surgically — preserve hand-written
+  content; do not overwrite or discard it.
+- Use ONLY facts grounded in the files you read. Do not invent details. If
+  something is unknown, leave it out rather than guessing.
+- Write all prose in the configured language.

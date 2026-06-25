@@ -1,0 +1,13 @@
+[project]
+name = "neurawork-claudemd-lerner"
+version = "0.1.0"
+description = "Per-repo learner that keeps the CLAUDE.md hierarchy + docs/ current from Claude Code sessions (neurawork-cc-harness)."
+requires-python = ">=3.12"
+dependencies = [
+    "claude-agent-sdk>=0.2.96",
+    "python-dotenv>=1.0.0",
+    "tzdata>=2024.1",
+]
+
+[tool.ruff]
+line-length = 100
