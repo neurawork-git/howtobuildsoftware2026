@@ -1,0 +1,15 @@
+# knowledge-compiler runtime (knowledge/ is tracked; these are local)
+daily/
+reports/
+knowledge/log.md
+scripts/state.json
+scripts/last-compile.json
+scripts/last-flush.json
+scripts/kc-compile.lock
+scripts/*.log
+scripts/session-flush-*.md
+scripts/flush-context-*.md
+__pycache__/
+*.pyc
+.venv/
+uv.lock

@@ -1,0 +1,20 @@
+{
+  "name": "neurawork-harness",
+  "owner": {
+    "name": "NeuraWork",
+    "email": "felix.doobe@neurawork.ai"
+  },
+  "description": "Repo-local, self-maintaining CLAUDE.md + knowledge harness for Claude Code.",
+  "plugins": [
+    {
+      "name": "neurawork-cc-harness",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/neurawork-git/howtobuildsoftware2026.git",
+        "path": "plugins/neurawork-cc-harness"
+      },
+      "description": "Two independently installable skills: knowledge-compiler (per-repo knowledge base) + claudemd-lerner (keeps CLAUDE.md hierarchy + docs/ current). Interactive recon + brownfield seed on install.",
+      "license": "MIT"
+    }
+  ]
+}

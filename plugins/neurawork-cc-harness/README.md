@@ -14,11 +14,18 @@ level-depth, docs layout, excluded dirs), and **seed** an existing repo on first
 install. Knowledge and docs are always written **inside the repo** — never under
 `.claude/`.
 
+**Install & upgrade guide:** [`../../docs/INSTALL.md`](../../docs/INSTALL.md).
+For how this differs from the `coding-suite` skills of the same name, see
+[`../../docs/WHEN-TO-USE.md`](../../docs/WHEN-TO-USE.md).
+
 ## Status
 
-Phase 1 (this commit): plugin scaffold + shared Python infrastructure
-(`engines/_shared/`). No end-user skill behavior yet — skills land in Phases 2
-and 3. See `.claude/PRPs/prds/neurawork-cc-harness.prd.md` in the host repo.
+- Phase 1 — plugin scaffold + shared Python infrastructure (`engines/_shared/`). ✅
+- Phase 2 — `knowledge-compiler` skill. ✅
+- Phase 3 — `claudemd-lerner` skill. In progress.
+- Phase 4 — exemplary docs, license, marketplace + self-host. In progress.
+
+See `.claude/PRPs/prds/neurawork-cc-harness.prd.md` in the host repo.
 
 ## Skill names & collision note
 

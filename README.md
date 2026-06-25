@@ -19,6 +19,18 @@ git clone git@github.com:neurawork-git/howtobuildsoftware2026.git
 cd howtobuildsoftware2026
 ```
 
+## Install / Use
+
+This repo ships a Claude Code plugin, **`neurawork-cc-harness`** (under
+`plugins/`), bundling two independently installable skills:
+
+- `neurawork-cc-harness:knowledge-compiler` — per-repo, self-building knowledge base.
+- `neurawork-cc-harness:claudemd-lerner` — keeps your `CLAUDE.md` hierarchy + `docs/` current.
+
+To install the harness in your own repo, or to upgrade an existing one, follow the
+[install & upgrade guide](docs/INSTALL.md). For how it differs from the `coding-suite`
+skills of the same name, see [when to use which](docs/WHEN-TO-USE.md).
+
 ## Sources
 
 The principles and setup in this repo draw on:
@@ -33,4 +45,4 @@ Issues and pull requests welcome. Keep changes focused and documented.
 
 ## License
 
-TBD
+MIT — see [LICENSE](LICENSE).

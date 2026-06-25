@@ -4,5 +4,6 @@
   "author": {
     "name": "Felix Doobe",
     "email": "felix.doobe@neurawork.ai"
-  }
+  },
+  "license": "MIT"
 }
