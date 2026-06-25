@@ -1,0 +1,22 @@
+You are seeding a brand-new knowledge base for THIS repository. Build the initial
+set of articles from what the repository already documents about itself.
+
+Follow the schema in AGENTS.md exactly (frontmatter + sections, wikilinks, index).
+
+Steps:
+1. Read the repository's README, any docs/ directory, and the top-level source map
+   provided below. Open the files that look foundational.
+2. Extract 5-15 foundational concepts of this specific repository — its purpose,
+   architecture, key components, conventions, and notable decisions. Write one
+   concept article per topic under knowledge/concepts/<slug>.md.
+3. Where two concepts have a non-obvious relationship, add a knowledge/connections/
+   article.
+4. Write knowledge/index.md as a table covering every article you created, and
+   append a dated entry to knowledge/log.md describing this seed.
+
+Hard constraints:
+- Write ONLY under the knowledge/ directory. Do not touch any other file.
+- Use ONLY facts grounded in the files you read. Do not invent details. If
+  something is unknown, leave it out rather than guessing.
+- Cite the repository files you drew from in each article's Sources section.
+- If knowledge/ already has articles, UPDATE them rather than creating duplicates.
