@@ -8,6 +8,11 @@
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/session-start.py",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/claudemd-lerner\" python hooks/cl-session-start.py",
+            "timeout": 15
           }
         ]
       }
@@ -20,6 +25,11 @@
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/pre-compact.py",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/claudemd-lerner\" python hooks/cl-pre-compact.py",
+            "timeout": 10
           }
         ]
       }
@@ -31,6 +41,11 @@
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/session-end.py",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/claudemd-lerner\" python hooks/cl-session-end.py",
             "timeout": 10
           }
         ]

@@ -1,0 +1,14 @@
+# claudemd-lerner runtime (CLAUDE.md + docs/ live at the repo root and are tracked;
+# everything below is local machinery)
+daily/
+scripts/state.json
+scripts/last-update.json
+scripts/last-flush.json
+scripts/cl-update.lock
+scripts/*.log
+scripts/session-flush-*.md
+scripts/flush-context-*.md
+__pycache__/
+*.pyc
+.venv/
+uv.lock
