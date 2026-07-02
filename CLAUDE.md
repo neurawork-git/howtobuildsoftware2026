@@ -6,13 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository documents how to build software in 2026 and ships the tooling
 that does it: **`neurawork-cc-harness`**, a Claude Code plugin (under `plugins/`)
-that keeps a repo's project knowledge fresh. The plugin bundles two independently
+that keeps a repo's project knowledge fresh. The plugin bundles three independently
 installable skills — `knowledge-compiler` (distils session logs into a per-repo
-knowledge base) and `claudemd-lerner` (keeps the `CLAUDE.md` hierarchy + `docs/`
-current). Both write **inside the target repo, never under `.claude/`**.
+knowledge base), `claudemd-lerner` (keeps the `CLAUDE.md` hierarchy + `docs/`
+current), and `compliance-compiler` (parallel agents distil GDPR/SOC2/ISO27001 into
+a tracked constraint catalog, and a `PostToolUse` hook validates PRP plans against
+it). All write **inside the target repo, never under `.claude/`**.
 
-This repo **self-hosts** both skills: `knowledge-base/` and `claudemd-lerner/`
-are live installs of the harness into this repo itself.
+This repo **self-hosts** all three skills: `knowledge-base/`, `claudemd-lerner/`,
+and `compliance-base/` are live installs of the harness into this repo itself.
 
 ## Build / test / lint / run commands
 
@@ -28,6 +30,7 @@ discovery per test directory. From `plugins/neurawork-cc-harness/engines/`:
 python3 -m unittest discover -s _shared/tests
 python3 -m unittest discover -s knowledge-compiler/tests
 python3 -m unittest discover -s claudemd-lerner/tests
+python3 -m unittest discover -s compliance-compiler/tests
 ```
 
 The tests use a real git temp repo and subprocess; they make no network/LLM calls.
@@ -43,22 +46,27 @@ uvx ruff check
 **Run the self-hosted harness in this repo:**
 
 ```bash
-uv run --directory knowledge-base python scripts/compile.py   # distil daily/ → knowledge/
-uv run --directory claudemd-lerner python scripts/update.py   # apply daily/ → CLAUDE.md + docs/
+uv run --directory knowledge-base python scripts/compile.py     # distil daily/ → knowledge/
+uv run --directory claudemd-lerner python scripts/update.py     # apply daily/ → CLAUDE.md + docs/
+uv run --directory compliance-base python scripts/extract.py    # ~30 agents → catalog/*.json
+uv run --directory compliance-base python scripts/validate.py <plan>  # check a PRP plan
 ```
 
-Both also run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
+The first two run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
 hooks in `.claude/settings.json` (a 6-hour `SessionStart` gate triggers compile/update).
-Slash commands: `/neurawork-cc-harness:kc-compile` and `/neurawork-cc-harness:cl-update`.
+`compliance-compiler` adds a `SessionStart` bootstrap (builds the catalog if missing)
+and a `PostToolUse` hook that validates each PRP plan write. Slash commands:
+`/neurawork-cc-harness:kc-compile`, `/neurawork-cc-harness:cl-update`,
+`/neurawork-cc-harness:co-extract`, and `/neurawork-cc-harness:co-validate`.
 
 ## High-level architecture
 
 - **`plugins/neurawork-cc-harness/`** — the distributed plugin source (see
   `plugins/CLAUDE.md`). Contains the plugin manifest (`.claude-plugin/plugin.json`),
-  the two install skills (`skills/*/SKILL.md`), slash commands (`commands/`), and
+  the install skills (`skills/*/SKILL.md`), slash commands (`commands/`), and
   the Python install engines (`engines/`). Each engine has `install.py`, `recon.py`,
   a `payload/` (the code copied into a target repo), and `tests/`. `engines/_shared/`
-  holds stdlib-only helpers reused by both engines.
+  holds stdlib-only helpers reused by all engines.
 - **`.claude-plugin/marketplace.json`** — repo-root marketplace manifest
   (`neurawork-harness`) that distributes the plugin via a `git-subdir` source.
 - **`knowledge-base/`** — a live self-host install of `knowledge-compiler` (see
@@ -67,6 +75,12 @@ Slash commands: `/neurawork-cc-harness:kc-compile` and `/neurawork-cc-harness:cl
 - **`claudemd-lerner/`** — a live self-host install of `claudemd-lerner` (see
   `claudemd-lerner/CLAUDE.md`). Holds only machinery; its outputs are the repo-root
   `CLAUDE.md` hierarchy and `docs/`.
+- **`compliance-base/`** — a live self-host install of `compliance-compiler`. Holds
+  the engine machinery plus the tracked `catalog/` (GDPR/SOC2/ISO27001 constraint
+  JSON + `index.md`); `catalog/.shards/` and `reports/` are gitignored. The engine
+  uses `co-`-prefixed hooks and the `PostToolUse` event so it coexists with the
+  other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
+  (`asyncio.gather` + a semaphore) — the harness's only parallel compile path.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
   [`docs/WHEN-TO-USE.md`](docs/WHEN-TO-USE.md),
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
