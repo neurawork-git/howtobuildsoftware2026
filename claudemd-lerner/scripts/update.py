@@ -17,8 +17,11 @@ import argparse
 import asyncio
 import json
 import os
+import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # <ldir> for _shared
 
 from config import (
     AGENTS_FILE,
