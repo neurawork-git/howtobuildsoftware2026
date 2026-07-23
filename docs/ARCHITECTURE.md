@@ -83,10 +83,11 @@ commits `<dir>/` and `.claude/settings.json`.
 Three hooks drive capture, merged into `.claude/settings.json`:
 
 - **`SessionEnd`** / **`PreCompact`** — write the session into a `daily/` log.
-- **`SessionStart`** — inject the current output (the wiki index, or the root
-  `CLAUDE.md` + `docs/` listing) as additional context, and, if the last run is
-  older than the 6-hour gate *and* there is new `daily/` content *and* no fresh
-  lock, fire a detached compile/update (skipped inside a worktree).
+- **`SessionStart`** — for `knowledge-compiler`, inject the current wiki index as
+  additional context; `claudemd-lerner` injects nothing here (its `CLAUDE.md` +
+  `docs/` are already read at session start). For both, if the last run is older than
+  the 6-hour gate *and* there is new `daily/` content *and* no fresh lock, fire a
+  detached compile/update (skipped inside a worktree).
 
 Synthesis can also be triggered manually: `/neurawork-cc-harness:kc-compile` and
 `/neurawork-cc-harness:cl-update`, or directly via

@@ -8,8 +8,9 @@ description: Install a per-repo learner that keeps the CLAUDE.md hierarchy and d
 Installs the claudemd-lerner engine into the current repo: SessionEnd/PreCompact
 hooks capture each session into `<ldir>/daily/`, and an updater applies those logs
 to the repo's **CLAUDE.md hierarchy + `docs/` tree** (editing them in place).
-SessionStart injects the current CLAUDE.md + docs/ listing. Updates run on a manual
-command or a 6-hour SessionStart gate.
+Updates run on a manual command or a 6-hour SessionStart gate. The SessionStart hook
+injects no context — CLAUDE.md and docs/ are already read at session start; it only
+fires the gated update.
 
 The lerner dir (`<ldir>/`) holds ONLY machinery (hooks/scripts/_shared/daily). The
 actual outputs — CLAUDE.md files and `docs/` — live at the **repo root**, the files
