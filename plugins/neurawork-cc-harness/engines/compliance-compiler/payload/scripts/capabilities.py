@@ -554,14 +554,18 @@ def main() -> int:
     # ── Persist per-framework catalog hashes ──
     # full rebuild (cluster succeeded), delta run (agent succeeded), and delta-unchanged
     # frameworks (id set identical — refresh the hash so the next run is a fast reuse).
+    # NEVER persist a hash for a framework that failed the coverage gate: leaving the old
+    # hash in place means a plain re-run retries it automatically instead of seeing a hash
+    # match, reusing the gapped catalog, and falsely reporting success (no --all needed).
     for fw, h in to_run:
-        if fw in clusters:
+        if fw in clusters and fw not in uncovered:
             cap_state[fw] = {"catalog_hash": h, "generated_at": now_iso()}
     for j in delta_jobs:
-        if j["fw"] in delta_succeeded:
+        if j["fw"] in delta_succeeded and j["fw"] not in uncovered:
             cap_state[j["fw"]] = {"catalog_hash": j["hash"], "generated_at": now_iso()}
     for fw, h in hash_refresh.items():
-        cap_state[fw] = {"catalog_hash": h, "generated_at": now_iso()}
+        if fw not in uncovered:  # provably gap-free, but keep the rule uniform
+            cap_state[fw] = {"catalog_hash": h, "generated_at": now_iso()}
     state["total_cost"] = state.get("total_cost", 0.0) + total_cost
     save_state(state)
 
