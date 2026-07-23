@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 from config import PLANS_SUBPATH
-from utils import load_constraints, mandatory_ids, referenced_ids
+from utils import load_constraints, mandatory_ids, referenced_ids, validation_frameworks
 
 _COMPLIANCE_SECTION_RE = re.compile(r"^##\s+Compliance", re.MULTILINE)
 
@@ -36,7 +36,7 @@ def is_plan_path(path_str: str, repo_root: Path | str) -> bool:
 
 def precheck(plan_text: str, cfg: dict, catalog_dir: Path | None = None) -> dict:
     """Deterministic structural signals for a plan against the catalog."""
-    frameworks = cfg.get("frameworks", [])
+    frameworks = validation_frameworks(cfg)
     constraints = load_constraints(frameworks, catalog_dir)
     mand = mandatory_ids(constraints)
     refs = referenced_ids(plan_text)

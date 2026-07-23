@@ -28,9 +28,8 @@ CONFIG_FILE = ROOT_DIR / "config.json"
 INDEX_FILE = CATALOG_DIR / "index.md"
 STATE_FILE = SCRIPTS_DIR / "state.json"
 
-# Trigger coordination (the SessionStart bootstrap/age gate).
+# Completion stamp written by extract.py after a run.
 LAST_EXTRACT_FILE = SCRIPTS_DIR / "last-extract.json"
-LOCK_FILE = SCRIPTS_DIR / "co-extract.lock"
 
 # PRP plan files the validator hook checks (relative to the REPO root, which is
 # ROOT_DIR.parent for a top-level catalog dir).
@@ -47,8 +46,8 @@ FRAMEWORK_TITLES = {
 DEFAULT_CFG = {
     "catalog_dir": "compliance-base",
     "model": "",
-    "extract_age_hours": 168,
     "frameworks": ["gdpr", "soc2", "iso27001"],
+    "validate_frameworks": [],  # empty → validate plans against all `frameworks`
     "max_concurrency": 12,
     "validate_mode": "warn",
 }

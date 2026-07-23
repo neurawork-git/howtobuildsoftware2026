@@ -54,8 +54,11 @@ uv run --directory compliance-base python scripts/validate.py <plan>  # check a 
 
 The first two run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
 hooks in `.claude/settings.json` (a 6-hour `SessionStart` gate triggers compile/update).
-`compliance-compiler` adds a `SessionStart` bootstrap (builds the catalog if missing)
-and a `PostToolUse` hook that validates each PRP plan write. Slash commands:
+`compliance-compiler` adds only a `PostToolUse` hook that validates each PRP plan
+write (nothing at `SessionStart` — that budget is left for the knowledge concepts);
+its catalog is built at install time and rebuilt on demand via `co-extract`. A
+`validate_frameworks` config key scopes which frameworks plans are checked against
+(default: all extracted). Slash commands:
 `/neurawork-cc-harness:kc-compile`, `/neurawork-cc-harness:cl-update`,
 `/neurawork-cc-harness:co-extract`, and `/neurawork-cc-harness:co-validate`.
 
@@ -78,8 +81,8 @@ and a `PostToolUse` hook that validates each PRP plan write. Slash commands:
 - **`compliance-base/`** — a live self-host install of `compliance-compiler`. Holds
   the engine machinery plus the tracked `catalog/` (GDPR/SOC2/ISO27001 constraint
   JSON + `index.md`); `catalog/.shards/` and `reports/` are gitignored. The engine
-  uses `co-`-prefixed hooks and the `PostToolUse` event so it coexists with the
-  other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
+  uses a `co-`-prefixed `PostToolUse` hook (no `SessionStart`) so it coexists with
+  the other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
   (`asyncio.gather` + a semaphore) — the harness's only parallel compile path.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
   [`docs/WHEN-TO-USE.md`](docs/WHEN-TO-USE.md),

@@ -1,4 +1,5 @@
-"""Pure-logic tests for shards, the extract gate, and the plan precheck. No LLM."""
+"""Pure-logic tests for shards, the validation-framework selector, and the plan
+precheck. No LLM."""
 
 from __future__ import annotations
 
@@ -35,29 +36,42 @@ class TestShards(unittest.TestCase):
         self.assertEqual(shards.build_shards({"frameworks": ["nope"]}), [])
 
 
-class TestShouldExtract(unittest.TestCase):
-    AGE = 168
-    NOW = 1_000_000.0
+class TestValidationFrameworks(unittest.TestCase):
+    def test_selector_prefers_validate_frameworks(self) -> None:
+        self.assertEqual(
+            utils.validation_frameworks(
+                {"frameworks": ["gdpr", "soc2", "iso27001"], "validate_frameworks": ["soc2"]}),
+            ["soc2"])
 
-    def test_missing_catalog_bootstraps(self) -> None:
-        self.assertTrue(utils.should_extract(self.NOW, None, self.AGE, True, False, False))
+    def test_selector_falls_back_when_unset_or_empty(self) -> None:
+        self.assertEqual(
+            utils.validation_frameworks({"frameworks": ["gdpr", "soc2"]}), ["gdpr", "soc2"])
+        self.assertEqual(
+            utils.validation_frameworks({"frameworks": ["gdpr"], "validate_frameworks": []}),
+            ["gdpr"])
 
-    def test_present_no_stamp_leaves_alone(self) -> None:
-        self.assertFalse(utils.should_extract(self.NOW, None, self.AGE, False, False, False))
+    def _catalog(self, tmp: Path) -> Path:
+        catalog = tmp / "catalog"
+        catalog.mkdir()
+        (catalog / "gdpr.json").write_text(json.dumps({
+            "framework": "gdpr",
+            "constraints": [{"id": "GDPR-ART5-01", "mandatory": True}],
+        }), encoding="utf-8")
+        (catalog / "soc2.json").write_text(json.dumps({
+            "framework": "soc2",
+            "constraints": [{"id": "SOC2-CC6-01", "mandatory": True},
+                            {"id": "SOC2-CC6-02", "mandatory": True}],
+        }), encoding="utf-8")
+        return catalog
 
-    def test_present_stale_reextracts(self) -> None:
-        old = self.NOW - 200 * 3600
-        self.assertTrue(utils.should_extract(self.NOW, old, self.AGE, False, False, False))
-
-    def test_present_fresh_blocks(self) -> None:
-        recent = self.NOW - 3600
-        self.assertFalse(utils.should_extract(self.NOW, recent, self.AGE, False, False, False))
-
-    def test_worktree_blocks(self) -> None:
-        self.assertFalse(utils.should_extract(self.NOW, None, self.AGE, True, True, False))
-
-    def test_fresh_lock_blocks(self) -> None:
-        self.assertFalse(utils.should_extract(self.NOW, None, self.AGE, True, False, True))
+    def test_precheck_honors_validate_frameworks_subset(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = self._catalog(Path(t))
+            cfg = {"frameworks": ["gdpr", "soc2"], "validate_frameworks": ["soc2"]}
+            pc = precheck.precheck("# Feature\n\nno mention", cfg, catalog)
+            # only soc2 constraints are considered — gdpr is excluded from validation
+            self.assertEqual(pc["mandatory_total"], 2)
+            self.assertEqual(pc["missing_mandatory_ids"], ["SOC2-CC6-01", "SOC2-CC6-02"])
 
 
 class TestPrecheck(unittest.TestCase):

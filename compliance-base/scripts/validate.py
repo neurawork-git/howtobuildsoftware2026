@@ -24,6 +24,7 @@ from config import (
     ROOT_DIR,
     load_cfg,
 )
+from utils import validation_frameworks
 
 from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
 
@@ -71,7 +72,7 @@ Do not flag inapplicable constraints."""
 async def validate_one(plan_text: str, report_path: Path, cfg: dict) -> float:
     from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
 
-    catalog_text = _catalog_text(cfg.get("frameworks", []))
+    catalog_text = _catalog_text(validation_frameworks(cfg))
     cost = 0.0
     async for message in query(
         prompt=_build_prompt(plan_text, catalog_text, report_path),

@@ -1,11 +1,13 @@
 """Install (or adopt) the compliance-compiler into the current repo.
 
 Copies the payload + the shared helpers into ``<repo>/<catalog_dir>/``, scaffolds
-the catalog/ and reports/ trees, writes .gitignore, and merges the SessionStart +
-PostToolUse hooks into .claude/settings.json. ADOPT mode refreshes code without
-clobbering an existing catalog.
+the catalog/ and reports/ trees, writes .gitignore, and merges the PostToolUse
+plan-validator hook into .claude/settings.json. ADOPT mode refreshes code without
+clobbering an existing catalog. The catalog is built at install time (``--extract``)
+and rebuilt on demand via ``/neurawork-cc-harness:co-extract`` — there is no
+SessionStart bootstrap.
 
-The hook filenames are ``co-``-prefixed and the PostToolUse event is untouched by
+The hook filename is ``co-``-prefixed and the PostToolUse event is untouched by
 the other harness engines, so all three coexist in one .claude/settings.json.
 
 Run:
@@ -40,7 +42,6 @@ catalog/.shards/
 reports/
 scripts/state.json
 scripts/last-extract.json
-scripts/co-extract.lock
 scripts/*.log
 __pycache__/
 *.pyc
@@ -91,7 +92,6 @@ def _scaffold(target: Path, cdir: str) -> None:
 def _hooks(cdir: str) -> list[tuple[str, str, int, str]]:
     base = f'uv run --directory "$CLAUDE_PROJECT_DIR/{cdir}" python'
     return [
-        ("SessionStart", f"{base} hooks/co-session-start.py", 15, "hooks/co-session-start.py"),
         ("PostToolUse", f"{base} hooks/co-post-tooluse.py", 15, "hooks/co-post-tooluse.py"),
     ]
 

@@ -5,8 +5,8 @@ argument-hint: "[--frameworks gdpr,soc2,iso27001] [--dry-run]"
 
 # Extract the compliance catalog
 
-Build the per-repo compliance catalog on demand (does not wait for the SessionStart
-bootstrap gate). Fans out ~30 parallel agents.
+Build (or rebuild) the per-repo compliance catalog on demand. The catalog is
+otherwise built at install time; this command refreshes it. Fans out ~30 parallel agents.
 
 1. Locate the catalog dir: the top-level directory containing `scripts/extract.py`
    and `hooks/co-post-tooluse.py` (commonly `compliance-base`). If none exists, tell
