@@ -1,7 +1,7 @@
 # Install & Upgrade Guide — neurawork-cc-harness
 
 `neurawork-cc-harness` is a Claude Code plugin that keeps a repo's project
-knowledge fresh. It bundles two **independently installable** skills:
+knowledge fresh. It bundles three **independently installable** skills:
 
 - **`neurawork-cc-harness:knowledge-compiler`** — captures Claude Code sessions
   into `<dir>/daily/` logs and compiles them into a per-repo knowledge base
@@ -9,11 +9,13 @@ knowledge fresh. It bundles two **independently installable** skills:
   re-injected at session start.
 - **`neurawork-cc-harness:claudemd-lerner`** — learns from each session and keeps
   your **`CLAUDE.md` hierarchy + `docs/`** current. No knowledge wiki.
-  *(Ships in Phase 3 — if the skill is not yet present in your plugin copy, only
-  `knowledge-compiler` is installable.)*
+- **`neurawork-cc-harness:compliance-compiler`** — ~30 parallel agents distil
+  GDPR/SOC2/ISO27001 into a tracked constraint **catalog** (+ derived
+  capabilities); a `PostToolUse` hook validates each PRP plan against it as it is
+  written.
 
-Both run an interactive **recon** on install, can **seed** an existing
-(brownfield) repo, and write everything **inside the repo — never under
+Each runs an interactive **recon** on install, can **seed** an existing
+(brownfield) repo, and writes everything **inside the repo — never under
 `.claude/`**.
 
 ---
@@ -89,10 +91,9 @@ Run `uv sync --directory <dir>` to resolve the engine's dependencies, then commi
 - Manual compile: `/neurawork-cc-harness:kc-compile`.
 - Query: `uv run --directory <dir> python scripts/query.py "..."`.
 
-### 3. (Phase 3) Install `claudemd-lerner`
+### 3. Install `claudemd-lerner`
 
-Once the `claudemd-lerner` skill is present in the plugin, install it the same
-way:
+Install it the same way:
 
 ```text
 /neurawork-cc-harness:claudemd-lerner
@@ -100,7 +101,31 @@ way:
 
 It uses its own install dir (default `claudemd-lerner`) and `cl-`-prefixed hooks,
 so it coexists with `knowledge-compiler` in the same repo — both hook sets land in
-`.claude/settings.json` without clobbering each other.
+`.claude/settings.json` without clobbering each other. Manual update:
+`/neurawork-cc-harness:cl-update`.
+
+### 4. Install `compliance-compiler`
+
+```text
+/neurawork-cc-harness:compliance-compiler
+```
+
+It installs into its own dir (default `compliance-base`) and wires a **single**
+`co-`-prefixed `PostToolUse` hook — no `SessionStart`/`SessionEnd` — so it coexists
+with the other two. On install it builds the constraint **catalog**
+(`catalog/{gdpr,soc2,iso27001}.json` + `index.md` + `capabilities.{json,md}`) by
+fanning out ~30 parallel SDK agents. From then on:
+
+- Every PRP plan write (`.claude/PRPs/plans/*.plan.md`) is validated automatically:
+  a fast inline structural precheck plus a detached deep LLM report under
+  `compliance-base/reports/`.
+- Rebuild the catalog on demand: `/neurawork-cc-harness:co-extract`.
+- Validate a plan manually: `/neurawork-cc-harness:co-validate <path-to-plan>`.
+
+The catalog stores only official control/article identifiers, short titles, and
+*paraphrased* requirements — never verbatim text of the copyrighted standards.
+Extraction and deep validation need an API key (see Requirements); install,
+scaffolding, and the inline precheck run without it.
 
 ---
 

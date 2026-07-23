@@ -3,6 +3,8 @@
 Two skill names overlap between this plugin and the `coding-suite` plugin:
 `knowledge-compiler` and (conceptually) the doc-maintaining learner. This page
 explains the differences so you can pick — and so the name collision never bites.
+The third harness skill, `compliance-compiler`, has **no `coding-suite`
+counterpart**, so nothing below applies to it — install it without collision concerns.
 
 ## At a glance
 

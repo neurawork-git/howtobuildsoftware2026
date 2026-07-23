@@ -8,11 +8,12 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 ## Layout
 
 - `.claude-plugin/plugin.json` — plugin manifest (`name`, description, author, MIT).
-- `skills/<skill>/SKILL.md` — the two install skills (`knowledge-compiler`,
-  `claudemd-lerner`). Each runs a three-phase flow: **Recon** (read-only) → **Ask**
-  (AskUserQuestion) → **Execute** (run `install.py`).
-- `commands/` — slash commands `kc-compile.md` and `cl-update.md` (manual compile /
-  update; bypass the SessionStart 6-hour gate).
+- `skills/<skill>/SKILL.md` — the three install skills (`knowledge-compiler`,
+  `claudemd-lerner`, `compliance-compiler`). Each runs a three-phase flow: **Recon**
+  (read-only) → **Ask** (AskUserQuestion) → **Execute** (run `install.py`).
+- `commands/` — slash commands `kc-compile.md`, `cl-update.md` (manual compile /
+  update; bypass the SessionStart 6-hour gate) and `co-extract.md`, `co-validate.md`
+  (rebuild the compliance catalog / validate a PRP plan).
 - `engines/<engine>/` — one per skill, plus shared code:
   - `install.py` — copies `payload/` + `_shared/` into the target repo, scaffolds
     data dirs, merges hooks into `.claude/settings.json`.
@@ -21,7 +22,7 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   - `payload/` — the code copied into the target repo (`hooks/`, `scripts/`,
     `pyproject.toml`, `AGENTS.md`).
   - `tests/` — install/recon + trigger tests against a real git temp repo.
-- `engines/_shared/` — stdlib-only helpers reused by both engines and refreshed on
+- `engines/_shared/` — stdlib-only helpers reused by all engines and refreshed on
   every install (single source of truth): `hookio.py` (hook stdin + recursion
   guard), `transcript.py` (JSONL → markdown turns), `gitctx.py` (worktree redirect),
   `settings.py` (idempotent hook merge), `repo_guard.py` (in-repo / not-`.claude/`),
@@ -37,7 +38,8 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   into every target. Don't fork per-engine copies.
 - **Install modes:** `install.py` detects **ADOPT** (existing install — refresh code,
   never clobber data) vs **FRESH**. Hook merges are idempotent and use distinct
-  filenames per skill (`cl-`-prefixed for the learner) so the two skills coexist.
+  filenames + events per skill (`cl-`-prefixed for the learner; `co-`-prefixed on the
+  `PostToolUse` event for compliance) so all three skills coexist in one repo.
 - **Test discovery quirk:** `engines/` is a namespace package and the engine dirs
   are hyphenated, so a single `unittest discover -s engines` under-collects (finds
   only `_shared`). Run discovery per test directory — see the root `CLAUDE.md`.

@@ -6,7 +6,9 @@
 
 This repository documents modern practices, tools, and workflows for building
 software in 2026 — from project setup and architecture through delivery and
-operations.
+operations. It also **self-hosts** the plugin it ships: `knowledge-base/`,
+`claudemd-lerner/`, and `compliance-base/` are live installs of the three skills
+into this repo itself, so the repo is its own worked example.
 
 ## Status
 
@@ -15,10 +17,16 @@ operations.
 ## Install / Use
 
 This repo ships a Claude Code plugin, **`neurawork-cc-harness`** (under
-`plugins/`), bundling two independently installable skills:
+`plugins/`), bundling three independently installable skills:
 
-- `neurawork-cc-harness:knowledge-compiler` — per-repo, self-building knowledge base.
-- `neurawork-cc-harness:claudemd-lerner` — keeps your `CLAUDE.md` hierarchy + `docs/` current.
+- `neurawork-cc-harness:knowledge-compiler` — per-repo, self-building knowledge
+  base. Captures each session into daily logs and compiles them into a queryable
+  `knowledge/` wiki (concepts + connections + index), re-injected at session start.
+- `neurawork-cc-harness:claudemd-lerner` — keeps your `CLAUDE.md` hierarchy +
+  `docs/` tree current by editing them in place from session logs (no knowledge wiki).
+- `neurawork-cc-harness:compliance-compiler` — ~30 parallel agents distil
+  GDPR/SOC2/ISO27001 into a tracked constraint catalog (+ derived capabilities);
+  a `PostToolUse` hook validates each PRP plan against it as it is written.
 
 You do **not** clone this repo to use it. Install the plugin via its marketplace
 from inside the repo you want to upgrade, in a Claude Code session:
@@ -28,15 +36,35 @@ from inside the repo you want to upgrade, in a Claude Code session:
 /plugin install neurawork-cc-harness@neurawork-harness
 ```
 
-Then install a skill into your repo by invoking it:
+Then install any skill into your repo by invoking it (each runs its own recon +
+seed and wires its own hooks — independent, install one or all three):
 
 ```text
 /neurawork-cc-harness:knowledge-compiler
+/neurawork-cc-harness:claudemd-lerner
+/neurawork-cc-harness:compliance-compiler
 ```
+
+### Slash commands
+
+Once installed, each skill exposes on-demand commands (they otherwise run on their
+own hooks — a 6-hour `SessionStart` gate for the first two, `PostToolUse` for compliance):
+
+| Command | What it does |
+|---------|--------------|
+| `/neurawork-cc-harness:kc-compile` | Compile the knowledge base now — distil daily logs into `knowledge/` articles. |
+| `/neurawork-cc-harness:cl-update` | Update `CLAUDE.md` + `docs/` now from captured session logs. |
+| `/neurawork-cc-harness:co-extract` | (Re)build the compliance catalog now (~30 parallel agents). |
+| `/neurawork-cc-harness:co-validate <plan>` | Validate a PRP plan against the catalog (deep gap report). |
+
+The `co-extract` / `co-validate` (and the compile/update) LLM paths need
+`ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`; install, scaffolding, and the
+inline plan precheck run without it.
 
 For the full install/upgrade flow (requirements, recon, seeding, FQN/collision),
 see the [install & upgrade guide](docs/INSTALL.md). For how it differs from the
-`coding-suite` skills of the same name, see [when to use which](docs/WHEN-TO-USE.md).
+`coding-suite` skills of the same name, see [when to use which](docs/WHEN-TO-USE.md),
+and for how the harness is built, [the architecture guide](docs/ARCHITECTURE.md).
 
 ## Sources
 

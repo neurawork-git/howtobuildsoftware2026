@@ -1,29 +1,33 @@
 # Architecture — neurawork-cc-harness
 
-How the harness is put together: the plugin source, the two engines, the shared
-infrastructure, the install flow, and how this repo self-hosts both skills. For
+How the harness is put together: the plugin source, the three engines, the shared
+infrastructure, the install flow, and how this repo self-hosts all three skills. For
 *using* it see [INSTALL.md](INSTALL.md); for choosing it over `coding-suite` see
 [WHEN-TO-USE.md](WHEN-TO-USE.md).
 
-## The two skills
+## The three skills
 
-| Skill | Captures | Produces | Constitution |
-|-------|----------|----------|--------------|
+| Skill | Captures / reads | Produces | Constitution |
+|-------|------------------|----------|--------------|
 | `knowledge-compiler` | session transcripts → `<dir>/daily/` logs | `<dir>/knowledge/` wiki (`index.md`, `concepts/`, `connections/`) | `knowledge-base/AGENTS.md` |
 | `claudemd-lerner` | session transcripts → `<dir>/daily/` logs | repo-root `CLAUDE.md` hierarchy + `docs/` (edited in place) | `claudemd-lerner/AGENTS.md` |
+| `compliance-compiler` | GDPR/SOC2/ISO27001 standards (~30 parallel agents) | `<dir>/catalog/` constraint JSON + `index.md` + `capabilities.{json,md}` | `compliance-base/AGENTS.md` |
 
-Both follow the same **LLM-as-compiler** model: sessions emit append-only `daily/`
-logs (the "source code"); an LLM (the "compiler" / "learner") reads the logs plus
-the live repo and synthesizes the executable output. The output is never organised
-by hand. The concept derives from Andrej Karpathy's LLM wiki and coleam00's
+The first two follow the same **LLM-as-compiler** model: sessions emit append-only
+`daily/` logs (the "source code"); an LLM (the "compiler" / "learner") reads the logs
+plus the live repo and synthesizes the executable output — never organised by hand.
+The concept derives from Andrej Karpathy's LLM wiki and coleam00's
 `claude-memory-compiler`; the implementation is independent NeuraWork work.
+`compliance-compiler` applies the same distil-to-tracked-artifact idea to a
+different source (the standards themselves), and adds a validation half: a
+`PostToolUse` hook checks each PRP plan against the catalog as it is written.
 
 ## Plugin source layout (`plugins/neurawork-cc-harness/`)
 
 ```
 .claude-plugin/plugin.json     plugin manifest
 skills/<skill>/SKILL.md        install skills (recon → ask → execute)
-commands/                      kc-compile.md, cl-update.md (manual triggers)
+commands/                      kc-compile.md, cl-update.md, co-extract.md, co-validate.md
 engines/
   _shared/                     stdlib-only helpers (single source of truth)
   knowledge-compiler/
@@ -31,6 +35,7 @@ engines/
     payload/                   code copied into the target repo
     tests/
   claudemd-lerner/             (same shape)
+  compliance-compiler/         (same shape; payload has extract.py + validate.py + catalog scripts)
 ```
 
 The repo-root `.claude-plugin/marketplace.json` (marketplace `neurawork-harness`)
@@ -48,7 +53,7 @@ expected and harmless.
 
 ### `_shared/` helpers
 
-Stdlib-only, reused by both engines and **refreshed on every install** so there is
+Stdlib-only, reused by all engines and **refreshed on every install** so there is
 one source of truth:
 
 | Module | Purpose |
@@ -96,16 +101,28 @@ by SHA-256 of each daily log and stamp a `last-{compile,update}.json` so the gat
 knows when they last ran. Synthesis needs `ANTHROPIC_API_KEY` /
 `CLAUDE_CODE_OAUTH_TOKEN`; capture and scaffolding do not.
 
+`compliance-compiler` runs on a different clock. Its catalog is built once at install
+(and rebuilt on demand via `/neurawork-cc-harness:co-extract` — ~30 parallel SDK
+agents behind `asyncio.gather` + a semaphore, the harness's only parallel compile
+path). At runtime it wires a **single** `co-`-prefixed **`PostToolUse`** hook (no
+`SessionStart`/`SessionEnd`) that validates each PRP plan write: a fast inline
+structural precheck plus a detached deep LLM report under `compliance-base/reports/`.
+Manual check: `/neurawork-cc-harness:co-validate <plan>`.
+
 ## Self-hosting in this repo
 
-This repo installs **both** skills into itself:
+This repo installs **all three** skills into itself:
 
 - `knowledge-base/` — `knowledge-compiler` machinery + the tracked `knowledge/` wiki.
 - `claudemd-lerner/` — `claudemd-lerner` machinery; its outputs are this repo's
   root `CLAUDE.md` hierarchy and `docs/` (including this file).
+- `compliance-base/` — `compliance-compiler` machinery + the tracked `catalog/`
+  (constraint JSON + `index.md` + `capabilities.{json,md}`); `catalog/.shards/` and
+  `reports/` are gitignored.
 
-Both hook sets live side by side in `.claude/settings.json` (the learner's are
-`cl-`-prefixed), so the two coexist without clobbering each other. The machinery in
-those two dirs is a copy of the plugin payload — fix bugs in
+All three hook sets live side by side in `.claude/settings.json` — the learner's are
+`cl-`-prefixed on the `SessionStart`/`PreCompact`/`SessionEnd` events, compliance's
+single hook is `co-`-prefixed on `PostToolUse` — so they coexist without clobbering
+each other. The machinery in those dirs is a copy of the plugin payload — fix bugs in
 `plugins/…/engines/<engine>/payload/` and re-run the installer to refresh, rather
 than hand-editing the installed copy.
