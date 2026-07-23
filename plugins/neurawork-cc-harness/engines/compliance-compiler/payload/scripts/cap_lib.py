@@ -113,6 +113,80 @@ def merge_preserving(existing: dict, fresh: dict) -> dict:
     return {**fresh, "frameworks": frameworks}
 
 
+def constraint_delta(current_ids: set[str], existing_caps: list[dict]) -> dict:
+    """Diff a framework's current constraint ids against the ids its existing
+    capabilities already cover.
+
+    ``new_ids``      — constraints present now but covered by no capability (need clustering).
+    ``orphaned_ids`` — constraints a capability still lists but the catalog dropped.
+    ``unchanged``    — True when the covered id set already equals the current id set, so
+                       the framework can be reused without any LLM call (a byte change to
+                       the constraint file that added/removed no id — e.g. edited prose).
+    """
+    covered = {cid for c in existing_caps for cid in c.get("satisfies", [])}
+    new_ids = sorted(current_ids - covered)
+    orphaned_ids = sorted(covered - current_ids)
+    return {
+        "new_ids": new_ids,
+        "orphaned_ids": orphaned_ids,
+        "unchanged": not new_ids and not orphaned_ids,
+    }
+
+
+def prune_orphaned_ids(caps: list[dict], orphaned_ids) -> list[dict]:
+    """Drop orphaned constraint ids from every capability's ``satisfies``; remove any
+    capability left covering nothing. Returns new cap dicts (inputs untouched)."""
+    drop = set(orphaned_ids)
+    out: list[dict] = []
+    for c in caps:
+        kept = [cid for cid in c.get("satisfies", []) if cid not in drop]
+        if not kept:
+            continue
+        out.append({**c, "satisfies": kept})
+    return out
+
+
+def merge_delta_capabilities(
+    existing_caps: list[dict], assignments: dict, new_caps: list[dict]
+) -> list[dict]:
+    """Fold a delta-cluster result into an existing capability list.
+
+    ``assignments`` — ``{capability_name: [new constraint ids]}`` appended to the named
+    existing capability's ``satisfies`` (exact name, else ``capability_slug`` fallback).
+    ``new_caps``    — brand-new ``{name, category, description, satisfies}`` capabilities,
+                      appended with an empty ``stack``/``stack_notes`` for the stack stage.
+
+    Inputs are never mutated. An existing capability whose ``satisfies`` set gains no id
+    is copied through unchanged (same field values), so the caller can compare against the
+    original by ``satisfies`` set to decide which capabilities need re-stacking.
+    """
+    add_by_name: dict[str, set[str]] = {}
+    slug_to_name = {capability_slug(c["name"]): c["name"] for c in existing_caps}
+    for name, ids in assignments.items():
+        resolved = name if name in slug_to_name.values() else slug_to_name.get(capability_slug(name))
+        if resolved is None:
+            continue  # a name the agent invented but did not list under new_caps — skip
+        add_by_name.setdefault(resolved, set()).update(ids)
+
+    out: list[dict] = []
+    for c in existing_caps:
+        extra = add_by_name.get(c["name"])
+        if extra:
+            out.append({**c, "satisfies": sorted(set(c.get("satisfies", [])) | extra)})
+        else:
+            out.append({**c})
+    for nc in new_caps:
+        out.append({
+            "name": nc["name"],
+            "category": nc.get("category", ""),
+            "description": nc.get("description", ""),
+            "satisfies": sorted(set(nc.get("satisfies", []))),
+            "stack": [],
+            "stack_notes": "",
+        })
+    return out
+
+
 def _component_label(comp: dict) -> str:
     """`name (license · internal-infra)` — surfaces the license and operator-side tag."""
     name = comp.get("name", "")

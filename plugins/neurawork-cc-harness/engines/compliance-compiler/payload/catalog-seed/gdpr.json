@@ -1,0 +1,1279 @@
+{
+  "framework": "gdpr",
+  "title": "GDPR / DSGVO — Regulation (EU) 2016/679",
+  "generated": "2026-07-02",
+  "count": 127,
+  "mandatory": 109,
+  "constraints": [
+    {
+      "id": "GDPR-ART10-01",
+      "framework": "gdpr",
+      "title": "Criminal-conviction data processed only under legal authority",
+      "requirement": "Processing of personal data on criminal convictions and offences may occur only under the control of official authority or when authorised by Union or Member State law providing appropriate safeguards; comprehensive registers of convictions may be kept only under official authority.",
+      "applies_when": "Processes personal data relating to criminal convictions or offences",
+      "check": "Confirm such processing is backed by official authority or a specific legal authorisation with safeguards, and no unauthorised conviction register is maintained.",
+      "source_ref": "GDPR Art. 10",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART11-01",
+      "framework": "gdpr",
+      "title": "No obligation to acquire identifying data solely for compliance",
+      "requirement": "If the purposes of processing do not or no longer require identification of the data subject, the controller is not obliged to maintain, acquire, or process additional information just to identify the subject for compliance purposes.",
+      "applies_when": "Processes data that does not require identification of data subjects",
+      "check": "Verify the system does not collect or retain extra identifying data purely to satisfy GDPR obligations when the purpose needs no identification.",
+      "source_ref": "GDPR Art. 11(1)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART11-02",
+      "framework": "gdpr",
+      "title": "Handle data-subject rights requests for non-identifying data",
+      "requirement": "When identification is not required and the controller can show it cannot identify the data subject, it must inform the subject if possible; the subject may then supply additional information to enable their access/rectification/erasure rights.",
+      "applies_when": "Processes non-identifying data and receives a data-subject rights request",
+      "check": "Confirm the process informs the requester when identification is not possible and allows them to provide extra information to exercise rights.",
+      "source_ref": "GDPR Art. 11(2)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART12-01",
+      "framework": "gdpr",
+      "title": "Concise, transparent, plain-language information",
+      "requirement": "Provide any information and communication relating to processing to data subjects in a concise, transparent, intelligible and easily accessible form, using clear and plain language, especially for information addressed to children.",
+      "applies_when": "Handles personal data (PII) of natural persons",
+      "check": "Review privacy notices and data-subject communications for readability (plain language, no dense legalese) and easy accessibility; confirm child-directed content uses age-appropriate wording.",
+      "source_ref": "GDPR Art. 12(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART12-02",
+      "framework": "gdpr",
+      "title": "Respond to rights requests within one month",
+      "requirement": "Act on a data subject's rights request without undue delay and within one month of receipt, extendable by two further months for complex or numerous requests provided the subject is informed of the extension and reasons within the first month.",
+      "applies_when": "Handles personal data (PII) and receives data-subject rights requests",
+      "check": "Verify a documented request-handling process enforces a one-month SLA with a tracked extension mechanism and notification of delays.",
+      "source_ref": "GDPR Art. 12(3)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART12-03",
+      "framework": "gdpr",
+      "title": "Facilitate exercise of rights and free provision",
+      "requirement": "Facilitate the exercise of data-subject rights and provide the information and actions free of charge; a reasonable fee or refusal is only allowed for manifestly unfounded or excessive requests, with the burden of proving this on the controller.",
+      "applies_when": "Handles personal data (PII) and offers data-subject rights",
+      "check": "Confirm rights mechanisms are accessible and free by default, and that any fee/refusal path requires a documented manifestly-unfounded/excessive justification.",
+      "source_ref": "GDPR Art. 12(2),(5)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART12-04",
+      "framework": "gdpr",
+      "title": "Inform subject if no action taken on request",
+      "requirement": "If the controller does not act on a request, inform the data subject without delay and at the latest within one month of the reasons for not acting and of their right to lodge a complaint with a supervisory authority and to seek a judicial remedy.",
+      "applies_when": "Handles personal data (PII) and may decline rights requests",
+      "check": "Verify the no-action response template states reasons and informs the subject of complaint and judicial-remedy rights within one month.",
+      "source_ref": "GDPR Art. 12(4)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART12-05",
+      "framework": "gdpr",
+      "title": "Verify identity before acting on requests",
+      "requirement": "Where there are reasonable doubts about the identity of the person making a rights request, request additional information necessary to confirm the data subject's identity before disclosing data.",
+      "applies_when": "Handles personal data (PII) and fulfils data-subject requests remotely",
+      "check": "Confirm the request workflow includes a proportionate identity-verification step gated to cases of reasonable doubt.",
+      "source_ref": "GDPR Art. 12(6)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART13-01",
+      "framework": "gdpr",
+      "title": "Notice at collection from the subject",
+      "requirement": "When personal data is collected directly from the data subject, provide at the time of collection the controller's (and any representative's) identity and contact details and, where applicable, the DPO's contact details.",
+      "applies_when": "Collects personal data (PII) directly from the data subject",
+      "check": "Confirm the collection-point privacy notice states controller identity/contacts and DPO contact where a DPO exists.",
+      "source_ref": "GDPR Art. 13(1)(a),(b)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART13-02",
+      "framework": "gdpr",
+      "title": "State purposes, legal basis, and recipients",
+      "requirement": "At direct collection, disclose the purposes and legal basis for processing, the legitimate interests pursued where that basis is used, and the recipients or categories of recipients of the personal data.",
+      "applies_when": "Collects personal data (PII) directly from the data subject",
+      "check": "Verify the notice lists each processing purpose with its legal basis (and legitimate-interest description if applicable) and identifies recipients/categories.",
+      "source_ref": "GDPR Art. 13(1)(c),(d),(e)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART13-03",
+      "framework": "gdpr",
+      "title": "Disclose transfers, retention, rights, and automated decisions",
+      "requirement": "At direct collection also inform the subject of any intended international transfers and safeguards, the retention period (or criteria), their rights (access, rectification, erasure, restriction, portability, objection, withdrawal of consent), the right to complain to a supervisory authority, whether provision is mandatory, and the existence of automated decision-making including profiling with meaningful logic.",
+      "applies_when": "Collects personal data (PII) directly from the data subject",
+      "check": "Confirm the notice covers third-country transfers/safeguards, retention criteria, the full list of applicable rights, complaint right, consequences of non-provision, and any automated decision-making logic.",
+      "source_ref": "GDPR Art. 13(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART14-01",
+      "framework": "gdpr",
+      "title": "Notice when data not obtained from the subject",
+      "requirement": "When personal data is obtained from a source other than the data subject, provide the same categories of information as for direct collection plus the categories of personal data concerned and the source from which the data originated (including whether from publicly accessible sources).",
+      "applies_when": "Obtains personal data (PII) from third parties or other sources, not directly from the subject",
+      "check": "Verify the indirect-collection notice includes data categories and the origin/source of the data alongside the standard controller, purpose, legal-basis, recipient, and rights disclosures.",
+      "source_ref": "GDPR Art. 14(1),(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART14-02",
+      "framework": "gdpr",
+      "title": "Timing of notice for indirectly obtained data",
+      "requirement": "Provide the Article 14 information within a reasonable period after obtaining the data and at the latest within one month, or at first communication with the subject if used for that, or before disclosure if data is to be disclosed to another recipient, whichever is earliest.",
+      "applies_when": "Obtains personal data (PII) indirectly from third-party sources",
+      "check": "Confirm the notice-timing process delivers information within one month or at first communication/before onward disclosure, whichever comes first.",
+      "source_ref": "GDPR Art. 14(3)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART14-03",
+      "framework": "gdpr",
+      "title": "Exemptions from indirect-collection notice",
+      "requirement": "Article 14 notice is not required where the subject already has the information, provision proves impossible or involves disproportionate effort (with appropriate safeguards and public disclosure instead), or where obtaining/disclosure is expressly laid down by law or subject to professional secrecy; reliance on any exemption must be justified.",
+      "applies_when": "Obtains personal data (PII) indirectly and seeks to rely on a notice exemption",
+      "check": "Verify any waiver of the indirect notice records which exemption applies and, for disproportionate effort, documents compensating safeguards such as making the information publicly available.",
+      "source_ref": "GDPR Art. 14(5)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART15-01",
+      "framework": "gdpr",
+      "title": "Confirm processing and grant access to data",
+      "requirement": "On request, confirm to the data subject whether their personal data is being processed and, if so, provide access to that personal data together with the required contextual information.",
+      "applies_when": "Handles personal data (PII) of identifiable natural persons",
+      "check": "Verify a subject-access-request mechanism can confirm processing and return the subject's actual personal data.",
+      "source_ref": "GDPR Art. 15(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART15-02",
+      "framework": "gdpr",
+      "title": "Supply required access-request metadata",
+      "requirement": "When granting access, also provide the purposes, categories of data, recipients (especially in third countries), envisaged retention period, the existence of rectification/erasure/restriction/objection rights, the right to complain, the source of the data where not collected from the subject, and details of any automated decision-making.",
+      "applies_when": "Handles personal data (PII) and fulfils access requests",
+      "check": "Confirm the access-response template includes purposes, data categories, recipients, retention, rights, complaint route, data source, and automated-decision logic.",
+      "source_ref": "GDPR Art. 15(1)(a)-(h),(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART15-03",
+      "framework": "gdpr",
+      "title": "Provide a copy without adversely affecting others",
+      "requirement": "Provide a free copy of the personal data undergoing processing (charging a reasonable fee only for further copies), delivering it in a commonly used electronic form for electronic requests, while ensuring the copy does not adversely affect the rights and freedoms of others.",
+      "applies_when": "Handles personal data (PII) and fulfils access requests",
+      "check": "Verify the process returns a first copy free in a commonly used electronic format and applies redaction to protect third-party rights.",
+      "source_ref": "GDPR Art. 15(3),(4)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART16-01",
+      "framework": "gdpr",
+      "title": "Right to rectification of inaccurate data",
+      "requirement": "The system must let a data subject obtain, without undue delay, correction of inaccurate personal data concerning them.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify a workflow/endpoint exists that accepts a rectification request and updates the inaccurate personal data, and confirm an SLA/target of 'without undue delay' (max one month) is defined.",
+      "source_ref": "GDPR Art. 16 (right to rectification)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART16-02",
+      "framework": "gdpr",
+      "title": "Completion of incomplete data",
+      "requirement": "The system must allow a data subject to have incomplete personal data completed, including by providing a supplementary statement.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm the rectification process supports adding/completing missing fields or attaching a supplementary statement, not just editing existing values.",
+      "source_ref": "GDPR Art. 16 (completion of incomplete data)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART17-01",
+      "framework": "gdpr",
+      "title": "Right to erasure (right to be forgotten)",
+      "requirement": "The system must erase a data subject's personal data without undue delay when an applicable ground applies (e.g., data no longer necessary, consent withdrawn, unlawful processing, or the subject objects).",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify an erasure capability exists that deletes personal data across primary stores, and that it is triggered by the qualifying Art. 17(1) grounds within the response deadline.",
+      "source_ref": "GDPR Art. 17(1) (right to erasure)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART17-02",
+      "framework": "gdpr",
+      "title": "Propagate erasure of data made public",
+      "requirement": "When personal data has been made public and erasure is required, the controller must take reasonable steps to inform other controllers processing that data of the erasure request (links, copies, replicas).",
+      "applies_when": "Makes personal data public or shares it with downstream/third-party controllers",
+      "check": "Confirm a process notifies downstream/other controllers or public-facing replicas to erase links and copies of the data.",
+      "source_ref": "GDPR Art. 17(2) (informing other controllers)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART17-03",
+      "framework": "gdpr",
+      "title": "Erasure exemptions honored",
+      "requirement": "The erasure process must correctly refuse or limit deletion where an exemption applies (e.g., freedom of expression, compliance with a legal obligation, public-interest archiving, or establishment/defense of legal claims), retaining only the data covered by the exemption.",
+      "applies_when": "Handles personal data (PII) subject to retention obligations or legal-hold exemptions",
+      "check": "Verify erasure logic checks for Art. 17(3) exemptions and documents the legal basis when a deletion request is denied or partially fulfilled.",
+      "source_ref": "GDPR Art. 17(3) (erasure exceptions)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART18-01",
+      "framework": "gdpr",
+      "title": "Right to restriction of processing",
+      "requirement": "The system must support restricting (suspending) processing of a data subject's personal data on request in the qualifying cases, keeping it stored but not otherwise processed except with consent or for legal claims.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm a mechanism flags records as restricted so they are stored but excluded from active processing except in permitted cases.",
+      "source_ref": "GDPR Art. 18(1) (restriction of processing)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART18-02",
+      "framework": "gdpr",
+      "title": "Notify before lifting a restriction",
+      "requirement": "Before a restriction on processing is lifted, the controller must inform the data subject that the restriction is being removed.",
+      "applies_when": "Supports restriction of processing on personal data",
+      "check": "Verify the workflow sends a notice to the data subject prior to un-restricting their data.",
+      "source_ref": "GDPR Art. 18(3) (inform before lifting restriction)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART19-01",
+      "framework": "gdpr",
+      "title": "Notify recipients of rectification, erasure, or restriction",
+      "requirement": "The controller must communicate any rectification, erasure, or restriction of personal data to each recipient the data was disclosed to, unless this proves impossible or involves disproportionate effort.",
+      "applies_when": "Discloses personal data to recipients or third parties",
+      "check": "Confirm a process propagates rectification/erasure/restriction events to all recipients of the data, or documents why it is impossible/disproportionate.",
+      "source_ref": "GDPR Art. 19 (notification to recipients)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART19-02",
+      "framework": "gdpr",
+      "title": "Disclose recipients on request",
+      "requirement": "The controller must inform the data subject about the recipients to whom their data was disclosed if the subject requests it.",
+      "applies_when": "Discloses personal data to recipients or third parties",
+      "check": "Verify the data subject can obtain the list of recipients their data was shared with.",
+      "source_ref": "GDPR Art. 19 (inform subject of recipients)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART20-01",
+      "framework": "gdpr",
+      "title": "Data portability in machine-readable format",
+      "requirement": "When processing is based on consent or contract and carried out by automated means, the system must provide the subject's personal data in a structured, commonly used, machine-readable format.",
+      "applies_when": "Processes personal data by automated means under consent or contract legal basis",
+      "check": "Confirm an export produces the subject-provided personal data in a structured, machine-readable format (e.g., JSON/CSV/XML).",
+      "source_ref": "GDPR Art. 20(1) (right to data portability)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART20-02",
+      "framework": "gdpr",
+      "title": "Direct transmission to another controller",
+      "requirement": "Where technically feasible, the system must be able to transmit the data subject's personal data directly to another controller at the subject's request.",
+      "applies_when": "Processes portable personal data (consent/contract basis, automated means)",
+      "check": "Verify a mechanism exists to send data directly controller-to-controller when technically feasible, or documents infeasibility.",
+      "source_ref": "GDPR Art. 20(2) (direct transmission)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART20-03",
+      "framework": "gdpr",
+      "title": "Scope portability to eligible data only",
+      "requirement": "The portability export must be limited to data the subject provided and must not adversely affect the rights and freedoms of others.",
+      "applies_when": "Processes portable personal data (consent/contract basis, automated means)",
+      "check": "Confirm the export scopes to subject-provided data under consent/contract and excludes data that would infringe third parties' rights.",
+      "source_ref": "GDPR Art. 20(1) and (4) (scope and limits of portability)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART21-01",
+      "framework": "gdpr",
+      "title": "Right to object to legitimate-interest or public-task processing",
+      "requirement": "Provide data subjects a mechanism to object at any time, on grounds relating to their particular situation, to processing based on public interest (Art 6(1)(e)) or legitimate interests (Art 6(1)(f)), including any profiling built on those grounds.",
+      "applies_when": "Processes personal data under legitimate-interests or public-task/official-authority legal basis, or performs profiling on those bases",
+      "check": "Confirm the system exposes a way for individuals to lodge an objection to such processing and that objections are recorded and routed for handling.",
+      "source_ref": "GDPR Art 21(1) (right to object)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART21-02",
+      "framework": "gdpr",
+      "title": "Cease processing on objection unless overriding grounds",
+      "requirement": "Upon a valid objection, stop the processing unless the controller can demonstrate compelling legitimate grounds that override the data subject's interests, rights and freedoms, or the processing is needed to establish, exercise or defend legal claims.",
+      "applies_when": "Receives objections to legitimate-interest or public-task processing",
+      "check": "Verify the objection workflow halts processing by default and requires a documented override-grounds or legal-claims justification to continue.",
+      "source_ref": "GDPR Art 21(1) (obligation to stop absent overriding grounds)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART21-03",
+      "framework": "gdpr",
+      "title": "Right to object to direct marketing at any time",
+      "requirement": "Allow data subjects to object at any time, without needing a reason, to processing of their personal data for direct marketing purposes, including profiling related to such marketing.",
+      "applies_when": "Processes personal data for direct marketing or marketing-related profiling",
+      "check": "Confirm an unconditional opt-out/objection channel for direct marketing is available to every recipient.",
+      "source_ref": "GDPR Art 21(2) (objection to direct marketing)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART21-04",
+      "framework": "gdpr",
+      "title": "Absolute stop of direct-marketing processing on objection",
+      "requirement": "Once a data subject objects to direct marketing, the personal data must no longer be processed for those purposes; this objection is absolute with no balancing test.",
+      "applies_when": "Receives objections to direct marketing processing",
+      "check": "Verify that a marketing objection immediately and permanently suppresses the individual from all direct-marketing processing.",
+      "source_ref": "GDPR Art 21(3) (mandatory cessation for direct marketing)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART21-05",
+      "framework": "gdpr",
+      "title": "Explicit notice of the right to object",
+      "requirement": "Bring the right to object to the data subject's attention explicitly and present it clearly and separately from any other information, at the latest at the time of the first communication with them.",
+      "applies_when": "Processes personal data under bases carrying a right to object (Art 6(1)(e)/(f) or direct marketing)",
+      "check": "Inspect first-contact notices/privacy information to confirm the objection right is stated explicitly and set apart from other content.",
+      "source_ref": "GDPR Art 21(4) (explicit, separate notice of objection right)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART21-06",
+      "framework": "gdpr",
+      "title": "Automated means to exercise objection for online services",
+      "requirement": "For information society services, enable data subjects to exercise their right to object by automated means using technical specifications (e.g., machine-readable signals), rather than only manual requests.",
+      "applies_when": "Offers an information society service (online/app service)",
+      "check": "Confirm the online service supports an automated objection mechanism or honors automated opt-out signals.",
+      "source_ref": "GDPR Art 21(5) (automated objection for information society services)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART21-07",
+      "framework": "gdpr",
+      "title": "Right to object to research or statistical processing",
+      "requirement": "Where personal data is processed for scientific or historical research or statistical purposes, allow data subjects to object on grounds relating to their particular situation, unless the processing is necessary for a task carried out in the public interest.",
+      "applies_when": "Processes personal data for scientific/historical research or statistical purposes",
+      "check": "Verify research/statistics processing offers an objection route with a documented public-interest-necessity exception check.",
+      "source_ref": "GDPR Art 21(6) (objection to research/statistics)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART22-01",
+      "framework": "gdpr",
+      "title": "Right not to be subject to solely automated significant decisions",
+      "requirement": "Do not subject data subjects to a decision based solely on automated processing, including profiling, that produces legal effects concerning them or similarly significantly affects them, except under the permitted grounds.",
+      "applies_when": "Makes decisions about individuals based solely on automated processing with legal or similarly significant effects",
+      "check": "Identify any solely-automated decisions with significant effects and confirm each is either prohibited or covered by a permitted ground.",
+      "source_ref": "GDPR Art 22(1) (right against solely automated decisions)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART22-02",
+      "framework": "gdpr",
+      "title": "Permitted grounds for automated decision-making",
+      "requirement": "Only carry out solely-automated significant decisions where they are necessary for entering into or performing a contract, authorized by EU/member-state law with suitable safeguards, or based on the data subject's explicit consent.",
+      "applies_when": "Performs solely-automated significant decision-making or profiling",
+      "check": "Verify each automated-decision use case is mapped to one of the three permitted grounds (contract necessity, legal authorization, or explicit consent).",
+      "source_ref": "GDPR Art 22(2) (exceptions permitting automated decisions)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART22-03",
+      "framework": "gdpr",
+      "title": "Safeguards for permitted automated decisions",
+      "requirement": "For automated decisions based on contract necessity or explicit consent, implement suitable measures to safeguard the data subject's rights, including at minimum the right to obtain human intervention, to express their point of view, and to contest the decision.",
+      "applies_when": "Relies on contract-necessity or explicit-consent grounds for automated decision-making",
+      "check": "Confirm the process provides human-review, a way to express a viewpoint, and a mechanism to contest automated decisions.",
+      "source_ref": "GDPR Art 22(3) (safeguards: human intervention, view, contest)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART22-04",
+      "framework": "gdpr",
+      "title": "Restriction on special-category data in automated decisions",
+      "requirement": "Do not base permitted automated decisions on special categories of personal data (Art 9(1)) unless explicit consent (Art 9(2)(a)) or substantial public interest (Art 9(2)(g)) applies and suitable measures to protect rights and legitimate interests are in place.",
+      "applies_when": "Automated decision-making uses special-category (sensitive) personal data",
+      "check": "Verify special-category data feeds an automated decision only when a valid Art 9(2)(a)/(g) condition and additional safeguards are documented.",
+      "source_ref": "GDPR Art 22(4) (special categories in automated decisions)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART23-01",
+      "framework": "gdpr",
+      "title": "Restrictions of rights only via lawful, proportionate measures",
+      "requirement": "Any restriction of data subject rights and controller obligations (Arts 12-22, 34, and corresponding Art 5 duties) must rest on an EU or member-state legislative measure that respects the essence of fundamental rights and is a necessary and proportionate measure for a listed objective (e.g., national security, crime prevention, public interest).",
+      "applies_when": "Relies on a legal restriction to limit data subject rights or transparency/objection duties",
+      "check": "Confirm any invoked restriction cites a specific legislative measure and satisfies the essence, necessity, and proportionality conditions.",
+      "source_ref": "GDPR Art 23(1) (permitted restrictions)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART23-02",
+      "framework": "gdpr",
+      "title": "Specific safeguards required in restriction measures",
+      "requirement": "A legislative restriction may only be relied upon if it contains the required specific provisions, including the purposes and categories of processing, scope of the restriction, safeguards against abuse, retention periods, and the data subjects' right to be informed of the restriction where appropriate.",
+      "applies_when": "Applies a legal restriction that limits data subject rights",
+      "check": "Verify the relied-upon restriction includes the mandated specific provisions and safeguards before applying it.",
+      "source_ref": "GDPR Art 23(2) (required content of restriction measures)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART24-01",
+      "framework": "gdpr",
+      "title": "Controller accountability and demonstrable compliance",
+      "requirement": "The controller must implement appropriate technical and organizational measures, proportionate to the risk, to ensure and be able to demonstrate that processing complies with the GDPR, reviewing and updating those measures over time.",
+      "applies_when": "Acts as a data controller processing personal data (PII)",
+      "check": "Confirm the plan documents risk-proportionate technical/organizational measures and a mechanism to evidence compliance (policies, logs, reviews) that can be shown to a regulator.",
+      "source_ref": "GDPR Art. 24(1) responsibility of the controller",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART24-02",
+      "framework": "gdpr",
+      "title": "Data protection policies where proportionate",
+      "requirement": "Where proportionate to processing activities, the controller must adopt and implement internal data protection policies as part of its compliance measures.",
+      "applies_when": "Acts as a data controller processing personal data (PII)",
+      "check": "Verify documented data protection policies exist and are referenced by the processing activities.",
+      "source_ref": "GDPR Art. 24(2) data protection policies",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART25-01",
+      "framework": "gdpr",
+      "title": "Data protection by design",
+      "requirement": "The controller must build data protection into processing by implementing measures such as pseudonymization and data minimization, both when determining the means of processing and during processing itself.",
+      "applies_when": "Designs or builds any system processing personal data (PII)",
+      "check": "Verify the design embeds minimization/pseudonymization and that privacy measures are decided at design time, not bolted on afterward.",
+      "source_ref": "GDPR Art. 25(1) data protection by design",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART25-02",
+      "framework": "gdpr",
+      "title": "Data protection by default",
+      "requirement": "By default the system must process only the personal data necessary for each specific purpose, limiting the amount collected, extent of processing, retention period, and accessibility, so data is not made accessible to an indefinite number of people without intervention.",
+      "applies_when": "Processes personal data (PII), especially with user-facing defaults or sharing features",
+      "check": "Confirm default settings minimize data collected, limit retention, and restrict access, requiring explicit action to broaden sharing.",
+      "source_ref": "GDPR Art. 25(2) data protection by default",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART26-01",
+      "framework": "gdpr",
+      "title": "Joint controller arrangement",
+      "requirement": "Where two or more controllers jointly determine the purposes and means of processing, they must set out in a transparent arrangement their respective responsibilities for GDPR compliance, particularly regarding data subject rights and information duties, and make the essence available to data subjects.",
+      "applies_when": "Jointly determines purposes and means of processing with another controller",
+      "check": "Verify a documented joint-controller arrangement allocates responsibilities (rights handling, transparency) and that its essence is disclosed to data subjects.",
+      "source_ref": "GDPR Art. 26 joint controllers",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART27-01",
+      "framework": "gdpr",
+      "title": "EU representative for non-EU controllers/processors",
+      "requirement": "A controller or processor not established in the EU but subject to the GDPR must designate in writing a representative in a Member State where affected data subjects are, unless a listed exemption (e.g., occasional, low-risk processing or a public authority) applies.",
+      "applies_when": "Controller/processor is established outside the EU but offers goods/services to or monitors EU data subjects",
+      "check": "Confirm a written EU representative designation exists, or that a documented exemption applies.",
+      "source_ref": "GDPR Art. 27 representatives of controllers/processors not established in the EU",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART28-01",
+      "framework": "gdpr",
+      "title": "Use only processors giving sufficient guarantees",
+      "requirement": "A controller may only engage processors that provide sufficient guarantees to implement appropriate technical and organizational measures meeting GDPR requirements and protecting data subject rights.",
+      "applies_when": "Engages third-party processors / sub-vendors to process personal data",
+      "check": "Verify due-diligence evidence that each processor offers adequate security and compliance guarantees before engagement.",
+      "source_ref": "GDPR Art. 28(1) processor selection",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART28-02",
+      "framework": "gdpr",
+      "title": "Written processor contract with mandatory clauses",
+      "requirement": "Processing by a processor must be governed by a binding written contract that sets out subject matter, duration, nature and purpose, data types and data subjects, and imposes the mandatory obligations (act only on documented instructions, confidentiality, security, sub-processor rules, assistance, deletion/return, and audit rights).",
+      "applies_when": "Engages a processor to process personal data on the controller's behalf",
+      "check": "Confirm a signed data processing agreement exists containing all Art. 28(3) required clauses.",
+      "source_ref": "GDPR Art. 28(3) processor contract contents",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART28-03",
+      "framework": "gdpr",
+      "title": "Sub-processor authorization and flow-down",
+      "requirement": "A processor must not engage a sub-processor without the controller's prior specific or general written authorization, and must impose the same data protection obligations on any sub-processor by contract, remaining fully liable for its performance.",
+      "applies_when": "A processor intends to use sub-processors (fourth parties)",
+      "check": "Verify controller authorization is obtained and sub-processor contracts flow down equivalent obligations, with the processor retaining liability.",
+      "source_ref": "GDPR Art. 28(2),(4) sub-processors",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART29-01",
+      "framework": "gdpr",
+      "title": "Processing only on controller instructions",
+      "requirement": "The processor and anyone acting under the controller's or processor's authority must not process personal data except on instructions from the controller, unless required to do so by law.",
+      "applies_when": "Personnel or processors act under the authority of a controller or processor",
+      "check": "Confirm access controls and contractual terms restrict staff/processors to processing only per documented controller instructions.",
+      "source_ref": "GDPR Art. 29 processing under authority",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART30-01",
+      "framework": "gdpr",
+      "title": "Controller records of processing activities",
+      "requirement": "Each controller (and its representative) must maintain a written, including electronic, record of processing activities under its responsibility, including purposes, categories of data subjects and data, recipients, transfers, retention periods, and a description of security measures.",
+      "applies_when": "Acts as a controller processing personal data (with limited small-organization exemptions)",
+      "check": "Verify a maintained record of processing activities exists with all Art. 30(1) fields and is available to the supervisory authority.",
+      "source_ref": "GDPR Art. 30(1) records of processing (controller)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART30-02",
+      "framework": "gdpr",
+      "title": "Processor records of processing activities",
+      "requirement": "Each processor (and its representative) must maintain a record of all categories of processing carried out on behalf of controllers, including controller identities, categories of processing, transfers, and a description of security measures.",
+      "applies_when": "Acts as a processor processing personal data on behalf of controllers",
+      "check": "Verify the processor keeps an Art. 30(2) record listing controllers, processing categories, transfers, and security measures.",
+      "source_ref": "GDPR Art. 30(2) records of processing (processor)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART31-01",
+      "framework": "gdpr",
+      "title": "Cooperation with the supervisory authority",
+      "requirement": "The controller and processor, and their representatives, must cooperate with the supervisory authority on request in the performance of its tasks.",
+      "applies_when": "Acts as a controller or processor of personal data",
+      "check": "Confirm the plan designates a contact and process for responding to and cooperating with supervisory authority requests.",
+      "source_ref": "GDPR Art. 31 cooperation with the supervisory authority",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART32-01",
+      "framework": "gdpr",
+      "title": "Risk-appropriate security of processing",
+      "requirement": "Implement technical and organizational measures that ensure a level of security appropriate to the risk, weighing the state of the art, implementation cost, and the nature, scope, context and purposes of processing against the likelihood and severity of risks to individuals.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm a documented risk assessment maps identified processing risks to specific security controls, and that the control selection references cost/state-of-the-art tradeoffs.",
+      "source_ref": "GDPR Art. 32(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART32-02",
+      "framework": "gdpr",
+      "title": "Encryption and pseudonymization of personal data",
+      "requirement": "Where appropriate to the risk, apply pseudonymization and encryption to personal data to reduce exposure.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify personal data is encrypted at rest and in transit and/or pseudonymized where the risk assessment calls for it, with key management documented.",
+      "source_ref": "GDPR Art. 32(1)(a)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART32-03",
+      "framework": "gdpr",
+      "title": "Confidentiality, integrity, availability and resilience",
+      "requirement": "Ensure the ongoing confidentiality, integrity, availability and resilience of processing systems and services handling personal data.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm controls exist for access confidentiality, data integrity, uptime/availability, and system resilience (e.g. redundancy, monitoring) covering the personal-data systems.",
+      "source_ref": "GDPR Art. 32(1)(b)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART32-04",
+      "framework": "gdpr",
+      "title": "Restore availability after an incident",
+      "requirement": "Maintain the ability to restore availability of and access to personal data in a timely manner after a physical or technical incident.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify tested backup and disaster-recovery procedures exist for personal-data stores with defined recovery objectives.",
+      "source_ref": "GDPR Art. 32(1)(c)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART32-05",
+      "framework": "gdpr",
+      "title": "Regular testing of security measures",
+      "requirement": "Establish a process to regularly test, assess and evaluate the effectiveness of the security measures protecting personal data.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm a recurring schedule of security testing (e.g. pen tests, vulnerability scans, control reviews) with documented remediation of findings.",
+      "source_ref": "GDPR Art. 32(1)(d)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART32-06",
+      "framework": "gdpr",
+      "title": "Personnel process only on instruction",
+      "requirement": "Ensure that anyone acting under the controller's or processor's authority who has access to personal data processes it only on documented instructions, unless legally required otherwise.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify staff and contractors are bound by confidentiality and instruction-limited access terms, and that access is role-scoped.",
+      "source_ref": "GDPR Art. 32(4)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART33-01",
+      "framework": "gdpr",
+      "title": "Notify supervisory authority within 72 hours",
+      "requirement": "On becoming aware of a personal data breach, the controller must notify the competent supervisory authority without undue delay and where feasible within 72 hours, unless the breach is unlikely to risk individuals' rights and freedoms.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm the incident-response plan defines breach detection, a risk triage step, and a 72-hour notification path to the supervisory authority.",
+      "source_ref": "GDPR Art. 33(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART33-02",
+      "framework": "gdpr",
+      "title": "Explain delay beyond 72 hours",
+      "requirement": "If notification to the authority occurs later than 72 hours, accompany it with the reasons for the delay.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify the breach procedure requires recording and submitting a justification whenever the 72-hour window is exceeded.",
+      "source_ref": "GDPR Art. 33(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART33-03",
+      "framework": "gdpr",
+      "title": "Processor notifies controller without undue delay",
+      "requirement": "A processor that becomes aware of a personal data breach must notify the controller without undue delay.",
+      "applies_when": "Acts as a processor handling personal data on behalf of a controller",
+      "check": "Confirm processor contracts and runbooks require immediate breach notification to the controller with a defined channel and timeframe.",
+      "source_ref": "GDPR Art. 33(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART33-04",
+      "framework": "gdpr",
+      "title": "Minimum content of authority notification",
+      "requirement": "The notification to the authority must at least describe the nature of the breach and categories/approximate numbers of data subjects and records, the DPO or contact point, the likely consequences, and the measures taken or proposed to address it.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify the breach notification template captures nature, affected categories and counts, contact point, likely consequences, and mitigation measures.",
+      "source_ref": "GDPR Art. 33(3)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART33-05",
+      "framework": "gdpr",
+      "title": "Maintain internal breach register",
+      "requirement": "Document all personal data breaches, including the facts, effects, and remedial action taken, so the authority can verify compliance.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm an internal breach log records every incident with facts, impact, and remediation regardless of whether it was reportable.",
+      "source_ref": "GDPR Art. 33(5)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART34-01",
+      "framework": "gdpr",
+      "title": "Notify data subjects of high-risk breaches",
+      "requirement": "When a breach is likely to result in a high risk to individuals' rights and freedoms, communicate it to the affected data subjects without undue delay.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify the breach procedure includes a high-risk assessment that triggers direct notification to affected individuals.",
+      "source_ref": "GDPR Art. 34(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART34-02",
+      "framework": "gdpr",
+      "title": "Clear-language content of subject notification",
+      "requirement": "The communication to data subjects must use plain language and include the nature of the breach, the DPO/contact point, likely consequences, and measures taken or proposed to mitigate it.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm the data-subject notice template uses plain language and covers nature, contact point, consequences, and mitigation.",
+      "source_ref": "GDPR Art. 34(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART34-03",
+      "framework": "gdpr",
+      "title": "Exemptions from notifying data subjects",
+      "requirement": "Direct notification to data subjects is not required if the data was rendered unintelligible (e.g. strong encryption), if subsequent measures eliminated the high risk, or if it would involve disproportionate effort (in which case use a public communication instead).",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify any decision not to notify individuals is documented against one of the recognized exemptions, with a public communication used where effort is disproportionate.",
+      "source_ref": "GDPR Art. 34(3)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART35-01",
+      "framework": "gdpr",
+      "title": "Carry out a DPIA for high-risk processing",
+      "requirement": "Before starting processing that is likely to result in a high risk to the rights and freedoms of individuals — especially when using new technologies — the controller must perform a data protection impact assessment of the envisaged operations, taking into account the nature, scope, context and purposes of the processing.",
+      "applies_when": "Processing is likely to result in a high risk to individuals' rights and freedoms (e.g. new technologies, large-scale or sensitive processing)",
+      "check": "Confirm a documented DPIA exists and was completed before the high-risk processing began, covering the specific operations, technologies and purposes involved.",
+      "source_ref": "GDPR Art. 35(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART35-02",
+      "framework": "gdpr",
+      "title": "DPIA mandatory for the enumerated high-risk categories",
+      "requirement": "A DPIA is specifically required when the processing involves systematic and extensive automated evaluation/profiling that produces legal or similarly significant effects, large-scale processing of special-category or criminal-offence data, or systematic large-scale monitoring of a publicly accessible area.",
+      "applies_when": "Processing involves large-scale profiling with significant effects, large-scale special-category/criminal data, or systematic large-scale monitoring of public areas",
+      "check": "Determine whether the processing falls into any of the three listed trigger categories and verify a DPIA was conducted for it.",
+      "source_ref": "GDPR Art. 35(3)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART35-03",
+      "framework": "gdpr",
+      "title": "Consult the DPO when performing a DPIA",
+      "requirement": "When carrying out a DPIA, the controller must seek the advice of the data protection officer, where one has been designated.",
+      "applies_when": "A DPIA is being performed and a DPO has been designated",
+      "check": "Verify that the DPO's advice was sought and documented as part of the DPIA process.",
+      "source_ref": "GDPR Art. 35(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART35-04",
+      "framework": "gdpr",
+      "title": "Include the minimum required content in the DPIA",
+      "requirement": "The DPIA must contain at least a systematic description of the processing operations and purposes, an assessment of their necessity and proportionality, an assessment of the risks to individuals' rights and freedoms, and the safeguards and measures envisaged to address those risks and demonstrate compliance.",
+      "applies_when": "A DPIA is required for the processing",
+      "check": "Inspect the DPIA to confirm it documents the processing description/purposes, necessity and proportionality analysis, risk assessment, and mitigating safeguards.",
+      "source_ref": "GDPR Art. 35(7)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART35-05",
+      "framework": "gdpr",
+      "title": "Seek data subjects' views where appropriate",
+      "requirement": "Where appropriate, the controller should seek the views of data subjects or their representatives on the intended processing, without prejudice to the protection of commercial or public interests or the security of the operations.",
+      "applies_when": "A DPIA is required and seeking data subjects' views is appropriate to the processing",
+      "check": "Check whether the DPIA records that data subjects' views were sought, or a documented justification for why it was not appropriate.",
+      "source_ref": "GDPR Art. 35(9)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART35-06",
+      "framework": "gdpr",
+      "title": "Review the DPIA when risk changes",
+      "requirement": "The controller must review the assessment where necessary, at least when there is a change in the risk represented by the processing operations, to ensure the DPIA remains accurate.",
+      "applies_when": "A DPIA has been performed and the processing or its risk profile may change over time",
+      "check": "Confirm a review process exists and that the DPIA is re-evaluated when the nature, scope, context or risk of the processing changes.",
+      "source_ref": "GDPR Art. 35(11)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART36-01",
+      "framework": "gdpr",
+      "title": "Consult the supervisory authority for unmitigated high risk",
+      "requirement": "Where a DPIA indicates that the processing would result in a high risk in the absence of measures taken by the controller to mitigate it, the controller must consult the supervisory authority before carrying out the processing.",
+      "applies_when": "A DPIA shows residual high risk that the controller's mitigation measures do not adequately reduce",
+      "check": "Verify that prior consultation with the supervisory authority took place before processing began whenever the DPIA showed unmitigated high residual risk.",
+      "source_ref": "GDPR Art. 36(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART36-02",
+      "framework": "gdpr",
+      "title": "Provide required information during prior consultation",
+      "requirement": "When consulting the supervisory authority, the controller must supply the required information, including respective responsibilities, the purposes and means of processing, the safeguards to protect individuals, the DPO's contact details, the DPIA, and any other requested information.",
+      "applies_when": "Prior consultation with the supervisory authority is being conducted",
+      "check": "Confirm the consultation submission included the responsibilities, purposes/means, safeguards, DPO contact details and the DPIA document.",
+      "source_ref": "GDPR Art. 36(3)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART37-01",
+      "framework": "gdpr",
+      "title": "Designate a Data Protection Officer when required",
+      "requirement": "The controller and processor must designate a data protection officer whenever processing is carried out by a public authority, whenever core activities require regular and systematic large-scale monitoring of individuals, or whenever core activities involve large-scale processing of special-category or criminal-offence data.",
+      "applies_when": "Organisation is a public authority, or its core activities involve large-scale systematic monitoring or large-scale special-category/criminal data processing",
+      "check": "Assess whether any of the three designation triggers apply and, if so, verify a DPO has been formally designated.",
+      "source_ref": "GDPR Art. 37(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART37-02",
+      "framework": "gdpr",
+      "title": "Designate the DPO on the basis of professional qualities and expertise",
+      "requirement": "The DPO must be designated on the basis of professional qualities, in particular expert knowledge of data protection law and practices and the ability to fulfil the tasks of the role.",
+      "applies_when": "A DPO is being designated",
+      "check": "Verify the appointed DPO's professional qualifications and demonstrable expertise in data protection law and practice.",
+      "source_ref": "GDPR Art. 37(5)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART37-03",
+      "framework": "gdpr",
+      "title": "Publish and communicate the DPO's contact details",
+      "requirement": "The controller or processor must publish the contact details of the data protection officer and communicate them to the relevant supervisory authority.",
+      "applies_when": "A DPO has been designated",
+      "check": "Confirm the DPO's contact details are published (e.g. in the privacy notice) and have been communicated to the supervisory authority.",
+      "source_ref": "GDPR Art. 37(7)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART38-01",
+      "framework": "gdpr",
+      "title": "Involve the DPO and provide resources and independence",
+      "requirement": "The organisation must involve the DPO properly and in a timely manner in all data protection matters, provide the resources and access to data/operations needed to perform the tasks and maintain expertise, and ensure the DPO does not receive instructions on how to carry out those tasks.",
+      "applies_when": "A DPO has been designated",
+      "check": "Verify the DPO is engaged early in relevant projects, is given adequate resources and access, and operates without instructions or interference on task execution.",
+      "source_ref": "GDPR Art. 38(1)-(3)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART38-02",
+      "framework": "gdpr",
+      "title": "Protect the DPO from dismissal and conflicts of interest",
+      "requirement": "The DPO must not be dismissed or penalised for performing their tasks, must report to the highest management level, and any other duties they hold must not create a conflict of interest.",
+      "applies_when": "A DPO has been designated",
+      "check": "Confirm the DPO reports to top management, has protection against dismissal/penalty for their role, and that any additional duties are free of conflicts of interest.",
+      "source_ref": "GDPR Art. 38(3)-(6)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART39-01",
+      "framework": "gdpr",
+      "title": "Assign the DPO its statutory tasks",
+      "requirement": "The DPO must at minimum inform and advise the organisation and its staff of their obligations, monitor compliance with the GDPR and internal data protection policies (including awareness-raising and staff training), advise on and monitor DPIAs, cooperate with the supervisory authority, and act as the contact point for the authority.",
+      "applies_when": "A DPO has been designated",
+      "check": "Verify the DPO's mandate/role description covers advising, monitoring compliance and training, DPIA advice, and acting as the supervisory-authority contact point.",
+      "source_ref": "GDPR Art. 39(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART39-02",
+      "framework": "gdpr",
+      "title": "DPO to apply a risk-based approach to its tasks",
+      "requirement": "In performing its tasks the DPO must have due regard to the risk associated with processing operations, taking account of the nature, scope, context and purposes of the processing.",
+      "applies_when": "A DPO has been designated and is performing its monitoring/advisory tasks",
+      "check": "Confirm the DPO prioritises its activities according to the risk level of the organisation's processing operations.",
+      "source_ref": "GDPR Art. 39(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART44-01",
+      "framework": "gdpr",
+      "title": "General principle for cross-border transfers",
+      "requirement": "Any transfer of personal data to a third country or international organisation, including onward transfers, is permitted only if the conditions of Chapter V (Art. 44-49) are met, so that the level of protection guaranteed by the GDPR is not undermined.",
+      "applies_when": "Transfers personal data (PII) to recipients, processors, or systems located outside the EEA, or exposes such data to onward transfer.",
+      "check": "Confirm the plan identifies every destination outside the EEA and maps each to a valid Chapter V basis (adequacy, safeguard, or derogation) before data leaves; verify onward transfers carry the same protection.",
+      "source_ref": "GDPR Art. 44 (general principle for transfers)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART45-01",
+      "framework": "gdpr",
+      "title": "Transfers based on an adequacy decision",
+      "requirement": "A transfer may proceed without additional authorisation only where the Commission has issued a valid adequacy decision covering the destination country, territory, sector, or international organisation.",
+      "applies_when": "Transfers personal data to a third country claimed to provide an adequate level of protection.",
+      "check": "Verify the destination is covered by a current Commission adequacy decision and that the transfer stays within the decision's scope; check no supplementary safeguard is required.",
+      "source_ref": "GDPR Art. 45 (transfers on the basis of an adequacy decision)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART45-02",
+      "framework": "gdpr",
+      "title": "Monitor validity of adequacy decisions",
+      "requirement": "Reliance on an adequacy decision must account for the Commission's power to amend, suspend, or repeal it; transfers cannot continue on an adequacy basis once the decision no longer applies.",
+      "applies_when": "Relies on a Commission adequacy decision as the transfer basis.",
+      "check": "Confirm a process exists to track adequacy-decision changes/repeals and to fall back to another Chapter V basis or halt transfers if adequacy lapses.",
+      "source_ref": "GDPR Art. 45(3)-(5) (amendment, suspension, repeal of adequacy)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART46-01",
+      "framework": "gdpr",
+      "title": "Appropriate safeguards where no adequacy exists",
+      "requirement": "In the absence of an adequacy decision, a transfer requires appropriate safeguards (e.g. Standard Contractual Clauses, binding corporate rules, an approved code of conduct, or an approved certification) and enforceable data-subject rights plus effective legal remedies must be available.",
+      "applies_when": "Transfers personal data to a third country not covered by an adequacy decision.",
+      "check": "Verify a specific Art. 46 safeguard instrument is in place for the transfer and that data subjects retain enforceable rights and effective remedies in the destination.",
+      "source_ref": "GDPR Art. 46(1),(2) (transfers subject to appropriate safeguards)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART46-02",
+      "framework": "gdpr",
+      "title": "Standard Contractual Clauses used unmodified",
+      "requirement": "When relying on Standard Contractual Clauses adopted or approved by the Commission or a supervisory authority, the clauses must be used without modifications that undermine them, and any supplementary measures needed to ensure effective protection must be assessed and applied.",
+      "applies_when": "Uses Standard Contractual Clauses (SCCs) as the transfer safeguard.",
+      "check": "Confirm current Commission-approved SCC modules are incorporated intact, a transfer impact assessment was performed, and supplementary technical/organisational measures are documented where the destination's laws warrant them.",
+      "source_ref": "GDPR Art. 46(2)(c),(d) (standard data protection clauses)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART46-03",
+      "framework": "gdpr",
+      "title": "Ad hoc or non-standard safeguards need authorisation",
+      "requirement": "Transfer safeguards that are not pre-approved instruments — such as ad hoc contractual clauses or arrangements between public authorities — require prior authorisation from the competent supervisory authority.",
+      "applies_when": "Relies on ad hoc contractual clauses or bespoke administrative arrangements as the transfer basis.",
+      "check": "Verify documented supervisory-authority authorisation exists for any non-standard safeguard before the transfer occurs.",
+      "source_ref": "GDPR Art. 46(3) (safeguards requiring authorisation)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART47-01",
+      "framework": "gdpr",
+      "title": "Binding corporate rules for group transfers",
+      "requirement": "Intra-group transfers may rely on Binding Corporate Rules only if they are approved by the competent supervisory authority and are legally binding on and enforced by every group member, covering the required content (data categories, purposes, rights, complaint procedures, liability, and compliance mechanisms).",
+      "applies_when": "Transfers personal data within a corporate group or group of enterprises engaged in a joint economic activity across borders.",
+      "check": "Confirm the BCRs have supervisory-authority approval, apply to and are enforced by all participating entities, and contain the mandatory elements listed in Art. 47(2).",
+      "source_ref": "GDPR Art. 47 (binding corporate rules)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART48-01",
+      "framework": "gdpr",
+      "title": "Foreign court/authority orders not a lawful basis alone",
+      "requirement": "A judgment or decision of a third-country court or administrative authority requiring disclosure of personal data is only recognisable or enforceable if based on an international agreement such as a mutual legal assistance treaty, without prejudice to other Chapter V grounds.",
+      "applies_when": "May receive demands from non-EU courts or authorities to disclose personal data.",
+      "check": "Verify procedures require an international agreement (e.g. MLAT) or another Chapter V basis before honouring a foreign disclosure order, rather than complying automatically.",
+      "source_ref": "GDPR Art. 48 (transfers or disclosures not authorised by Union law)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART49-01",
+      "framework": "gdpr",
+      "title": "Derogations for specific situations",
+      "requirement": "Absent adequacy or appropriate safeguards, a transfer may rely on a specific derogation — explicit informed consent, contract necessity, important public-interest grounds, legal claims, vital interests, or a public register — and only for the specific situation covered.",
+      "applies_when": "Transfers personal data to a third country without an adequacy decision or Art. 46 safeguard, relying on a specific-situation exception.",
+      "check": "Confirm a specific Art. 49(1) derogation genuinely applies to the transfer, is documented, and is not used as a routine substitute for adequacy or safeguards.",
+      "source_ref": "GDPR Art. 49(1) (derogations for specific situations)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART49-02",
+      "framework": "gdpr",
+      "title": "Compelling-legitimate-interests derogation is last resort",
+      "requirement": "A transfer justified only by the controller's compelling legitimate interests is a strict last resort: it must be non-repetitive, concern a limited number of data subjects, be subject to suitable safeguards, and be notified to the supervisory authority with data subjects informed.",
+      "applies_when": "Intends to transfer personal data on the basis of compelling legitimate interests under Art. 49(1) second subparagraph.",
+      "check": "Verify no other transfer basis applies, that the transfer is occasional and limited, safeguards are assessed and documented, and the supervisory authority and data subjects are informed.",
+      "source_ref": "GDPR Art. 49(1) second subparagraph (compelling legitimate interests)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART49-03",
+      "framework": "gdpr",
+      "title": "Consent-based transfer requires warning of risks",
+      "requirement": "Where a transfer relies on the data subject's explicit consent, the subject must first be informed of the possible risks arising from the absence of an adequacy decision and appropriate safeguards.",
+      "applies_when": "Uses the data subject's explicit consent as the basis for a cross-border transfer.",
+      "check": "Confirm consent flows disclose the specific risks of transferring without adequacy/safeguards and record that explicit consent was freely and specifically given.",
+      "source_ref": "GDPR Art. 49(1)(a) (explicit consent to transfer)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART49-04",
+      "framework": "gdpr",
+      "title": "Document derogation-based transfers",
+      "requirement": "The assessment of the circumstances that justify a transfer made under the Art. 49 derogations must be documented in the controller's or processor's records of processing activities.",
+      "applies_when": "Relies on any Art. 49 derogation for a transfer.",
+      "check": "Verify the records of processing activities capture the derogation relied on and the justifying assessment for each such transfer.",
+      "source_ref": "GDPR Art. 49(6) (documentation of derogations)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-01",
+      "framework": "gdpr",
+      "title": "Lawful basis for processing",
+      "requirement": "Every processing operation on personal data must rest on at least one valid legal basis (e.g. consent, contract, legal obligation, vital interests, public task, or legitimate interests), identified before processing begins.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm the plan documents a specific Art. 6 legal basis for each processing activity and that no processing occurs without one being recorded.",
+      "source_ref": "GDPR Art. 5(1)(a) (lawfulness), read with Art. 6",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-02",
+      "framework": "gdpr",
+      "title": "Fair processing",
+      "requirement": "Personal data must be processed fairly, without deception, and in ways the data subject would reasonably expect given how the data was obtained.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify there are no hidden, misleading, or unexpected uses of the data beyond what subjects were told, and that any profiling or secondary use is assessed for fairness.",
+      "source_ref": "GDPR Art. 5(1)(a) (fairness)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-03",
+      "framework": "gdpr",
+      "title": "Transparency to data subjects",
+      "requirement": "Data subjects must be given clear, accessible, plain-language information about who processes their data, why, and how, at or before the point of collection.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm a privacy notice exists covering controller identity, purposes, legal basis, recipients, retention, and subject rights, delivered at collection time.",
+      "source_ref": "GDPR Art. 5(1)(a) (transparency), read with Arts. 12-14",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-04",
+      "framework": "gdpr",
+      "title": "Purpose limitation",
+      "requirement": "Personal data must be collected for specified, explicit, and legitimate purposes and not further processed in a manner incompatible with those purposes.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify each data field maps to a documented purpose and that any new use is checked for compatibility (or given a fresh legal basis) before proceeding.",
+      "source_ref": "GDPR Art. 5(1)(b)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-05",
+      "framework": "gdpr",
+      "title": "Data minimisation",
+      "requirement": "The personal data processed must be adequate, relevant, and limited to what is necessary for the stated purposes; do not collect or retain fields that are not needed.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Review the data model/schema and confirm each collected attribute is justified by a purpose, with no speculative or 'nice to have' fields.",
+      "source_ref": "GDPR Art. 5(1)(c)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-06",
+      "framework": "gdpr",
+      "title": "Accuracy of data",
+      "requirement": "Personal data must be kept accurate and, where necessary, up to date, with reasonable steps to erase or rectify inaccurate data without delay.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm mechanisms exist to correct, update, and remove inaccurate records, and that rectification requests are actioned promptly.",
+      "source_ref": "GDPR Art. 5(1)(d)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-07",
+      "framework": "gdpr",
+      "title": "Storage limitation / retention",
+      "requirement": "Personal data must not be kept in identifiable form longer than necessary for the purposes; retention periods must be defined and data deleted or anonymised when they expire.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify a documented retention schedule exists per data category and that automated or reviewed deletion/anonymisation enforces it.",
+      "source_ref": "GDPR Art. 5(1)(e)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-08",
+      "framework": "gdpr",
+      "title": "Integrity and confidentiality (security)",
+      "requirement": "Personal data must be processed with appropriate technical and organisational security ensuring protection against unauthorised or unlawful processing and against accidental loss, destruction, or damage.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm the plan applies safeguards such as encryption in transit and at rest, access controls, and backups proportionate to the data's sensitivity.",
+      "source_ref": "GDPR Art. 5(1)(f), read with Art. 32",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART5-09",
+      "framework": "gdpr",
+      "title": "Accountability / demonstrable compliance",
+      "requirement": "The controller must be able to demonstrate compliance with all the Article 5 principles through records, policies, and evidence, not merely comply in practice.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify documentation exists (records of processing, policies, DPIAs where relevant) that evidences how each principle is met and can be shown to a regulator.",
+      "source_ref": "GDPR Art. 5(2) (accountability)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART6-01",
+      "framework": "gdpr",
+      "title": "Establish a lawful basis for every processing activity",
+      "requirement": "Every processing of personal data must rest on at least one of the six lawful bases (consent, contract, legal obligation, vital interests, public task, or legitimate interests). Processing without an identified lawful basis is unlawful.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify each processing activity in the data inventory / RoPA is mapped to a documented lawful basis, and confirm no processing occurs without one.",
+      "source_ref": "GDPR Art. 6(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART6-02",
+      "framework": "gdpr",
+      "title": "Legitimate-interests basis requires a balancing assessment",
+      "requirement": "When relying on legitimate interests, the controller must document a balancing test showing the interest is not overridden by the data subject's rights and freedoms, and this basis cannot be used by public authorities acting in their tasks.",
+      "applies_when": "Relies on legitimate interests as a lawful basis for processing PII",
+      "check": "Confirm a documented legitimate-interests assessment (LIA / balancing test) exists for each such activity and that public-authority tasks do not use this basis.",
+      "source_ref": "GDPR Art. 6(1)(f)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART6-03",
+      "framework": "gdpr",
+      "title": "Compatibility assessment for secondary/further processing",
+      "requirement": "Where personal data is used for a new purpose other than the one it was collected for (and not based on consent or law), the controller must assess whether the new purpose is compatible with the original, considering linkage, context, data nature, consequences and safeguards.",
+      "applies_when": "Processes previously collected PII for a new/secondary purpose",
+      "check": "Verify a compatibility assessment is recorded before repurposing data, or that a fresh consent / legal basis is obtained.",
+      "source_ref": "GDPR Art. 6(4)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART7-01",
+      "framework": "gdpr",
+      "title": "Demonstrate that valid consent was obtained",
+      "requirement": "Where processing relies on consent, the controller must be able to demonstrate that the data subject gave consent for the specific processing.",
+      "applies_when": "Relies on consent as a lawful basis for processing PII",
+      "check": "Confirm the system records and retains proof of consent (who, when, what was consented to, the terms shown).",
+      "source_ref": "GDPR Art. 7(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART7-02",
+      "framework": "gdpr",
+      "title": "Consent request must be clearly separated and intelligible",
+      "requirement": "If consent is bundled into a broader written declaration, the consent request must be presented distinctly, in clear and plain language, and separable from other matters; non-compliant parts are not binding.",
+      "applies_when": "Collects consent within terms, contracts, or other written declarations",
+      "check": "Review consent UI/forms to confirm the consent ask is visually and textually distinct from other terms and written in plain language.",
+      "source_ref": "GDPR Art. 7(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART7-03",
+      "framework": "gdpr",
+      "title": "Consent must be as easy to withdraw as to give",
+      "requirement": "Data subjects must be able to withdraw consent at any time, withdrawal must be as easy as giving it, and they must be informed of this right before consenting; withdrawal does not affect prior lawful processing.",
+      "applies_when": "Relies on consent as a lawful basis for processing PII",
+      "check": "Verify a withdrawal mechanism exists that is no harder than the opt-in, and that users are told of the right to withdraw before consenting.",
+      "source_ref": "GDPR Art. 7(3)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART7-04",
+      "framework": "gdpr",
+      "title": "Consent must be freely given, not a condition of service",
+      "requirement": "Consent is not freely given if performance of a service is made conditional on consent to processing that is not necessary for that service. Assess whether consent was truly optional.",
+      "applies_when": "Ties access to a service or contract to consent for non-essential processing of PII",
+      "check": "Confirm service access is not gated on consent to unnecessary processing, so consent remains genuinely optional.",
+      "source_ref": "GDPR Art. 7(4)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART77-01",
+      "framework": "gdpr",
+      "title": "Facilitate right to lodge a complaint with a supervisory authority",
+      "requirement": "Data subjects must be able to lodge a complaint with a supervisory authority (in their Member State of residence, workplace, or place of the alleged infringement). The system/organisation must inform data subjects of this right and not obstruct it.",
+      "applies_when": "Handles personal data (PII) of individuals in the EU/EEA",
+      "check": "Confirm the privacy notice and data-subject-facing materials state the right to complain to a supervisory authority and identify the competent authority, and that no process blocks a data subject from doing so.",
+      "source_ref": "GDPR Art. 77 (Right to lodge a complaint with a supervisory authority)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART79-01",
+      "framework": "gdpr",
+      "title": "Preserve right to an effective judicial remedy against controller/processor",
+      "requirement": "Data subjects have the right to an effective judicial remedy against a controller or processor. The organisation must inform data subjects of this right and must not use terms or processes (e.g. mandatory waivers) that defeat access to courts.",
+      "applies_when": "Acts as a controller or processor of personal data",
+      "check": "Verify privacy notices disclose the right to a judicial remedy and that contracts/terms contain no clauses purporting to waive a data subject's right to seek a court remedy.",
+      "source_ref": "GDPR Art. 79 (Right to an effective judicial remedy against a controller or processor)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART8-01",
+      "framework": "gdpr",
+      "title": "Verify age and obtain parental consent for children's online services",
+      "requirement": "For information-society services offered directly to children, consent is valid only if the child is at least the applicable age threshold (16, or as low as 13 under national law); below that, consent must be given or authorised by the holder of parental responsibility.",
+      "applies_when": "Offers an online service (information-society service) directly to children and relies on consent",
+      "check": "Confirm the system checks the user's age and obtains/verifies parental consent for users below the applicable national age threshold.",
+      "source_ref": "GDPR Art. 8(1)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART8-02",
+      "framework": "gdpr",
+      "title": "Make reasonable efforts to verify parental authorisation",
+      "requirement": "The controller must make reasonable efforts, using available technology, to verify that consent for a child was actually given or authorised by the holder of parental responsibility.",
+      "applies_when": "Relies on parental consent for a child using an online service",
+      "check": "Verify a documented, technology-appropriate parental-consent verification process is in place.",
+      "source_ref": "GDPR Art. 8(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART80-01",
+      "framework": "gdpr",
+      "title": "Accept representation of data subjects by mandated bodies",
+      "requirement": "Data subjects may mandate a not-for-profit body or association to lodge complaints and exercise remedies on their behalf. The organisation's complaint/rights-handling process must accept requests submitted by such an authorised representative.",
+      "applies_when": "Handles personal data and operates a data-subject rights or complaint intake process",
+      "check": "Confirm the rights/complaint intake process can validate and act on requests submitted by a body mandated by the data subject, not only by the individual directly.",
+      "source_ref": "GDPR Art. 80 (Representation of data subjects)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART82-01",
+      "framework": "gdpr",
+      "title": "Controller liability for material and non-material damage",
+      "requirement": "A controller is liable to compensate any person who suffers material or non-material damage from processing that infringes the GDPR. The organisation should maintain records and safeguards enabling it to demonstrate it was not responsible for the event causing damage.",
+      "applies_when": "Acts as a controller of personal data",
+      "check": "Verify processing records, DPIAs, and security controls exist that could evidence the controller met its obligations and was not responsible for a damaging event.",
+      "source_ref": "GDPR Art. 82(1)-(2) (Right to compensation and liability — controller)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART82-02",
+      "framework": "gdpr",
+      "title": "Processor liability limited to processor-specific obligations and lawful instructions",
+      "requirement": "A processor is liable for damage only where it failed to meet obligations directed specifically at processors or acted outside/against the controller's lawful instructions. The processor must keep evidence that it acted within documented controller instructions.",
+      "applies_when": "Acts as a processor (or sub-processor) of personal data on behalf of a controller",
+      "check": "Confirm documented controller instructions exist and that processing activity logs demonstrate the processor operated within those instructions and its Art. 28/32 duties.",
+      "source_ref": "GDPR Art. 82(2)-(3) (Liability — processor)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART82-03",
+      "framework": "gdpr",
+      "title": "Joint and several liability among involved controllers/processors",
+      "requirement": "Where more than one controller or processor is involved in the same processing and responsible for the damage, each may be held liable for the entire damage to ensure full compensation, with apportionment settled between them afterwards.",
+      "applies_when": "Personal data is processed jointly with, or shared to, other controllers/processors",
+      "check": "Verify contracts and joint-controller/processor arrangements allocate responsibility and recovery mechanisms, and that the party can identify other involved parties for apportionment.",
+      "source_ref": "GDPR Art. 82(4)-(5) (Joint and several liability)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART83-01",
+      "framework": "gdpr",
+      "title": "Maintain compliance evidence relevant to fine assessment factors",
+      "requirement": "Administrative fines are set case-by-case weighing factors such as the nature/gravity/duration of the infringement, degree of responsibility, mitigating actions, cooperation with the authority, and adherence to codes/certifications. The organisation should maintain evidence of these mitigating factors.",
+      "applies_when": "Subject to GDPR as a controller or processor",
+      "check": "Confirm records exist evidencing technical/organisational measures, breach mitigation steps, cooperation history, and any approved codes of conduct or certifications that could reduce fine exposure.",
+      "source_ref": "GDPR Art. 83(1)-(2) (General conditions for imposing administrative fines)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART83-02",
+      "framework": "gdpr",
+      "title": "Awareness of lower-tier fine exposure (up to 10M EUR or 2% turnover)",
+      "requirement": "Infringements of obligations such as those on controllers/processors, certification bodies, and monitoring bodies (e.g. Art. 8, 11, 25-39, 42, 43) are subject to fines up to 10 million EUR or 2% of total worldwide annual turnover, whichever is higher.",
+      "applies_when": "Acts as a controller or processor subject to Art. 25-39 (records, security, DPO, DPIA) obligations",
+      "check": "Confirm a risk assessment documents lower-tier fine exposure and that the underlying obligations (records of processing, security, DPIA, DPO) are implemented.",
+      "source_ref": "GDPR Art. 83(4) (Lower-tier administrative fines)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART83-03",
+      "framework": "gdpr",
+      "title": "Awareness of higher-tier fine exposure (up to 20M EUR or 4% turnover)",
+      "requirement": "Infringements of core principles, lawful basis and consent, data-subject rights, and international transfer rules are subject to fines up to 20 million EUR or 4% of total worldwide annual turnover, whichever is higher.",
+      "applies_when": "Processes personal data on a legal basis / handles data-subject rights or cross-border transfers",
+      "check": "Confirm a risk assessment documents higher-tier fine exposure and that lawful basis, consent, rights fulfilment, and transfer safeguards are implemented.",
+      "source_ref": "GDPR Art. 83(5)-(6) (Higher-tier administrative fines)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART83-04",
+      "framework": "gdpr",
+      "title": "Cooperate with and comply with supervisory authority orders",
+      "requirement": "Non-compliance with a supervisory authority's order under Art. 58(2) is itself subject to the higher-tier fine. The organisation must have a process to receive, track, and comply with binding orders from the supervisory authority.",
+      "applies_when": "Subject to GDPR supervisory authority jurisdiction",
+      "check": "Verify there is a defined process and owner for receiving and executing supervisory-authority orders (e.g. processing bans, corrective measures) within required deadlines.",
+      "source_ref": "GDPR Art. 83(5)(e)-(6) (Fines for non-compliance with authority orders)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART84-01",
+      "framework": "gdpr",
+      "title": "Comply with Member State penalties for non-fine infringements",
+      "requirement": "Member States may lay down additional penalties (including criminal) for infringements not covered by Art. 83 administrative fines, applied effectively, proportionately and dissuasively. The organisation must account for applicable national penalty rules in its jurisdictions.",
+      "applies_when": "Operates in or targets a specific EU/EEA Member State jurisdiction",
+      "check": "Confirm a legal/compliance review has identified applicable national penalty provisions supplementing Art. 83 for each relevant Member State.",
+      "source_ref": "GDPR Art. 84 (Penalties)",
+      "mandatory": false
+    },
+    {
+      "id": "GDPR-ART9-01",
+      "framework": "gdpr",
+      "title": "Special-category data is prohibited unless an exception applies",
+      "requirement": "Processing of special categories of personal data (racial/ethnic origin, political opinions, religious/philosophical beliefs, trade-union membership, genetic, biometric-for-ID, health, sex life or sexual orientation) is prohibited unless one of the specific Article 9(2) exceptions (e.g. explicit consent, employment/social-security law, vital interests, public health) applies.",
+      "applies_when": "Processes special-category personal data",
+      "check": "Confirm each special-category processing activity is mapped to a valid Art. 9(2) exception in addition to an Art. 6 basis.",
+      "source_ref": "GDPR Art. 9(1)-(2)",
+      "mandatory": true
+    },
+    {
+      "id": "GDPR-ART9-02",
+      "framework": "gdpr",
+      "title": "Explicit consent required when consent is the special-category basis",
+      "requirement": "Where the Art. 9(2) exception relied upon is consent, that consent must be explicit for the specified purpose(s), a stronger standard than ordinary consent.",
+      "applies_when": "Relies on consent to process special-category personal data",
+      "check": "Verify the consent mechanism captures explicit, purpose-specific affirmation (e.g. an unambiguous opt-in statement) for special-category data.",
+      "source_ref": "GDPR Art. 9(2)(a)",
+      "mandatory": true
+    }
+  ]
+}

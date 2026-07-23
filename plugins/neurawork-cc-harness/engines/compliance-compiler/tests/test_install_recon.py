@@ -66,6 +66,16 @@ class TestInstall(unittest.TestCase):
             self.assertTrue((cb / "config.json").exists())
             self.assertTrue((cb / "AGENTS.md").exists())
 
+            # Prebuilt catalog seeded so a fresh install works with no LLM run.
+            for name in ("gdpr.json", "soc2.json", "iso27001.json", "capabilities.json"):
+                seeded = cb / "catalog" / name
+                self.assertTrue(seeded.exists(), f"{name} not seeded")
+                json.loads(seeded.read_text(encoding="utf-8"))  # valid JSON
+            self.assertTrue((cb / "catalog" / "capabilities.md").exists())
+            self.assertTrue((cb / "catalog" / "index.md").exists())
+            # seeded catalog outputs must be tracked, not gitignored
+            self.assertNotIn("capabilities.md", (cb / ".gitignore").read_text(encoding="utf-8"))
+
             settings = json.loads((repo / ".claude" / "settings.json").read_text())
             self.assertIn("PostToolUse", settings["hooks"])
             # compliance-compiler no longer registers a SessionStart hook
@@ -76,16 +86,36 @@ class TestInstall(unittest.TestCase):
             repo = Path(tmp)
             _init_repo(repo)
             self.assertEqual(self._install(repo).returncode, 0)
-            # Drop a catalog file; ADOPT must not clobber it.
+            # Overwrite a seeded catalog file with a sentinel; ADOPT + seed-only-if-absent
+            # must not clobber it back to the shipped catalog.
             catalog = repo / CDIR / "catalog" / "gdpr.json"
-            catalog.write_text('{"framework": "gdpr", "constraints": []}', encoding="utf-8")
+            catalog.write_text('{"framework": "gdpr", "constraints": [], "_sentinel": true}',
+                               encoding="utf-8")
             self.assertEqual(self._install(repo).returncode, 0)
 
             self.assertTrue(catalog.exists())
-            self.assertIn("gdpr", catalog.read_text(encoding="utf-8"))
+            self.assertEqual(json.loads(catalog.read_text(encoding="utf-8")).get("_sentinel"), True)
             settings = json.loads((repo / ".claude" / "settings.json").read_text())
             entries = [h for g in settings["hooks"]["PostToolUse"] for h in g["hooks"]]
             self.assertEqual(len(entries), 1)  # no duplicate after second install
+
+    def test_seeding_is_atomic(self) -> None:
+        # A repo with its own constraint catalog but a missing capabilities.json (extract
+        # ran, the capabilities stage crashed) must NOT get the shipped capabilities.json
+        # spliced in — that would send the next capabilities.py run down a bogus delta path.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+            catalog = repo / CDIR / "catalog"
+            # keep the repo's own gdpr.json, drop the derived capabilities files
+            (catalog / "capabilities.json").unlink()
+            (catalog / "capabilities.md").unlink()
+            self.assertTrue((catalog / "gdpr.json").exists())
+            self.assertEqual(self._install(repo).returncode, 0)
+            # a present constraint json ⇒ seed skipped entirely, capabilities.json stays gone
+            self.assertFalse((catalog / "capabilities.json").exists())
+            self.assertFalse((catalog / "capabilities.md").exists())
 
     def test_adopt_prunes_stale_sessionstart(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

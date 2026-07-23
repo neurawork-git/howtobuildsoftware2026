@@ -41,7 +41,7 @@ from config import (
     now_iso,
     today_iso,
 )
-from utils import catalog_file, file_hash, load_state, save_state
+from utils import catalog_file, file_hash, load_constraints, load_state, save_state
 
 from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
 
@@ -55,6 +55,10 @@ def _cluster_shard_path(fw: str) -> Path:
 
 def _stack_shard_path(slug: str) -> Path:
     return SHARDS_DIR / f"stack-{slug}.json"
+
+
+def _delta_shard_path(fw: str) -> Path:
+    return SHARDS_DIR / f"delta-{fw}.json"
 
 
 def _constitution() -> str:
@@ -176,6 +180,99 @@ async def cluster_one(fw: str, cfg: dict) -> dict:
     return {"fw": fw, "capabilities": parsed, "cost": cost}
 
 
+def _build_delta_cluster_prompt(
+    fw: str, existing_caps: list[dict], new_constraints: list[dict], shard_path: Path
+) -> str:
+    existing_summary = "\n".join(
+        f"- {c['name']} [{c.get('category', '')}]: {c.get('description', '')[:160]}"
+        for c in existing_caps
+    )
+    new_block = "\n".join(
+        f"- {c['id']}: {c.get('title', '')} — {c.get('requirement', '')[:240]}"
+        for c in new_constraints
+    )
+    return f"""You are a compliance capability agent. New constraints were added to ONE
+framework. Fit ONLY these new constraints into the framework's EXISTING capabilities,
+following the constitution exactly. Do NOT re-derive or rename the existing capabilities.
+
+## Constitution (AGENTS.md)
+
+{_constitution()}
+
+## Framework: {fw} ({FRAMEWORK_TITLES.get(fw, fw)})
+
+## Existing capabilities (reuse these — assign by EXACT name)
+
+{existing_summary}
+
+## New constraints to place
+
+{new_block}
+
+Rules:
+- Every new constraint id above MUST be placed exactly once: either assigned to an
+  existing capability (by its EXACT name from the list) or covered by a NEW capability.
+- Prefer assigning to an existing capability; only create a new capability when none fits.
+- Each new capability's "category" must be one of: {", ".join(cap_lib.CATEGORIES)}.
+- Do NOT touch, rename, or re-describe existing capabilities; do NOT re-list old ids.
+
+Write a single JSON object to exactly this file, using the Write tool, and write
+nothing else:
+
+    {shard_path}
+
+Object: {{"assignments": {{"<existing capability name>": ["<new id>", ...]}},
+"new_capabilities": [{{"name": str, "category": str, "description": str,
+"satisfies": [str]}}]}}.
+Output only the JSON object as the file's content — no prose, no other files. Ensure
+valid JSON (double quotes, no trailing commas)."""
+
+
+async def delta_cluster_one(
+    fw: str, existing_caps: list[dict], new_constraints: list[dict], cfg: dict
+) -> dict:
+    """Place only the NEW constraints into a framework's existing capabilities.
+
+    Returns ``{fw, assignments, new_capabilities, cost}``; raises on failure."""
+    from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
+
+    shard_path = _delta_shard_path(fw)
+    if shard_path.exists():
+        shard_path.unlink()
+
+    cost = 0.0
+    async for message in query(
+        prompt=_build_delta_cluster_prompt(fw, existing_caps, new_constraints, shard_path),
+        options=ClaudeAgentOptions(
+            cwd=str(ROOT_DIR),
+            system_prompt={"type": "preset", "preset": "claude_code"},
+            allowed_tools=["Read", "Write"],
+            permission_mode="acceptEdits",
+            max_turns=30,
+            setting_sources=[],
+            strict_mcp_config=True,
+            model=(cfg.get("model") or None),
+        ),
+    ):
+        if isinstance(message, ResultMessage):
+            cost = message.total_cost_usd or 0.0
+
+    if not shard_path.exists():
+        raise RuntimeError(f"delta {fw}: agent wrote no shard file")
+    try:
+        parsed = json.loads(shard_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"delta {fw}: invalid JSON — {e}") from e
+    if not isinstance(parsed, dict):
+        raise RuntimeError(f"delta {fw}: shard is not a JSON object")
+    return {
+        "fw": fw,
+        "assignments": parsed.get("assignments", {}) or {},
+        "new_capabilities": parsed.get("new_capabilities", []) or [],
+        "cost": cost,
+    }
+
+
 async def stack_one(cap: dict, cfg: dict) -> dict:
     """Run one capability's stack agent. Returns the component-rec dict; raises on failure."""
     from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
@@ -233,6 +330,11 @@ def _cluster_all(frameworks: list[str], cfg: dict) -> list:
 
 def _stack_all(caps: list[dict], cfg: dict) -> list:
     thunks = [(lambda c=c: stack_one(c, cfg)) for c in caps]
+    return asyncio.run(_fan_out(thunks, cfg))
+
+
+def _delta_all(jobs: list[tuple[str, list[dict], list[dict]]], cfg: dict) -> list:
+    thunks = [(lambda j=j: delta_cluster_one(j[0], j[1], j[2], cfg)) for j in jobs]
     return asyncio.run(_fan_out(thunks, cfg))
 
 
@@ -298,8 +400,10 @@ def main() -> int:
     state = load_state()
     cap_state = state.setdefault("capabilities", {})
 
-    to_run: list[tuple[str, str]] = []   # (framework, catalog_hash)
-    reuse: dict[str, list[dict]] = {}     # framework -> existing capabilities
+    to_run: list[tuple[str, str]] = []       # full rebuild: (framework, catalog_hash)
+    reuse: dict[str, list[dict]] = {}          # framework -> existing capabilities (carry all)
+    delta_jobs: list[dict] = []                # incremental frameworks (new/removed constraints)
+    hash_refresh: dict[str, str] = {}          # framework -> hash to persist without any agent
     for fw in frameworks:
         cf = catalog_file(fw)
         if not cf.exists():
@@ -307,27 +411,44 @@ def main() -> int:
             continue
         h = file_hash(cf)
         prev = cap_state.get(fw, {})
-        if (not args.all
-                and prev.get("catalog_hash") == h
-                and fw in existing.get("frameworks", {})):
-            reuse[fw] = existing["frameworks"][fw]["capabilities"]
+        existing_caps = existing.get("frameworks", {}).get(fw, {}).get("capabilities")
+        if (not args.all and prev.get("catalog_hash") == h and existing_caps is not None):
+            reuse[fw] = existing_caps
             print(f"  = {fw}: catalog unchanged — reusing existing capabilities")
+        elif not args.all and existing_caps is not None:
+            constraints = load_constraints([fw])
+            current_ids = {c["id"] for c in constraints if c.get("id")}
+            d = cap_lib.constraint_delta(current_ids, existing_caps)
+            if d["unchanged"]:
+                reuse[fw] = existing_caps
+                hash_refresh[fw] = h
+                print(f"  ~ {fw}: constraint id set unchanged — reusing, refreshing hash")
+            else:
+                new_ids = set(d["new_ids"])
+                delta_jobs.append({
+                    "fw": fw, "hash": h, "existing_caps": existing_caps,
+                    "orphaned_ids": d["orphaned_ids"],
+                    "new_constraints": [c for c in constraints if c.get("id") in new_ids],
+                })
+                print(f"  Δ {fw}: +{len(d['new_ids'])} new / -{len(d['orphaned_ids'])} "
+                      f"orphaned constraint(s) — incremental")
         else:
             to_run.append((fw, h))
 
-    if not to_run and not reuse:
+    if not to_run and not reuse and not delta_jobs:
         print("No catalog to derive from — run extract.py first.")
         return 1
 
     print(f"{'[DRY RUN] ' if args.dry_run else ''}Frameworks: {', '.join(frameworks)}")
     print(f"  cluster: {', '.join(fw for fw, _ in to_run) or '(none)'}")
+    print(f"  delta:   {', '.join(j['fw'] for j in delta_jobs) or '(none)'}")
     print(f"  reuse:   {', '.join(reuse) or '(none)'}")
     if args.dry_run:
         return 0
 
     SHARDS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # ── Cluster (parallel, one agent per framework) ──
+    # ── Cluster (parallel, one agent per full-rebuild framework) ──
     cluster_failures: list = []
     clusters: dict[str, list[dict]] = {}
     cluster_cost = 0.0
@@ -341,33 +462,76 @@ def main() -> int:
     for fw, caps in reuse.items():
         clusters[fw] = caps
 
-    # ── Stack (parallel, one agent per unique fresh capability) ──
+    # ── Delta cluster (parallel, one agent per incremental framework) ──
+    delta_failures: list = []
+    delta_cost = 0.0
+    delta_succeeded: set[str] = set()
+    delta_changed_names: dict[str, set[str]] = {}
+    if delta_jobs:
+        results = _delta_all(
+            [(j["fw"], j["existing_caps"], j["new_constraints"]) for j in delta_jobs], cfg
+        )
+        delta_failures = [r for r in results if isinstance(r, Exception)]
+        by_fw = {r["fw"]: r for r in results if isinstance(r, dict)}
+        for j in delta_jobs:
+            fw = j["fw"]
+            delta_changed_names[fw] = set()  # empty ⇒ all caps carried (also the fail path)
+            r = by_fw.get(fw)
+            if r is None:
+                clusters[fw] = j["existing_caps"]  # agent failed — carry data, don't refresh hash
+                continue
+            delta_cost += r.get("cost", 0.0)
+            delta_succeeded.add(fw)
+            pruned = cap_lib.prune_orphaned_ids(j["existing_caps"], j["orphaned_ids"])
+            merged = cap_lib.merge_delta_capabilities(
+                pruned, r["assignments"], r["new_capabilities"]
+            )
+            clusters[fw] = merged
+            orig = {c["name"]: set(c.get("satisfies", [])) for c in j["existing_caps"]}
+            for c in merged:
+                sat = set(c.get("satisfies", []))
+                if c["name"] not in orig or (sat - orig[c["name"]]):
+                    delta_changed_names[fw].add(c["name"])  # new cap or gained an id ⇒ re-stack
+
+    # ── Stack (parallel, one agent per unique capability that needs (re)stacking) ──
     seen: set[str] = set()
-    fresh_unique: list[dict] = []
+    restack: list[dict] = []
+
+    def _queue_restack(c: dict) -> None:
+        slug = cap_lib.capability_slug(c["name"])
+        if slug not in seen:
+            seen.add(slug)
+            restack.append(c)
+
     for fw, _ in to_run:
         for c in clusters.get(fw, []):
-            slug = cap_lib.capability_slug(c["name"])
-            if slug not in seen:
-                seen.add(slug)
-                fresh_unique.append(c)
+            _queue_restack(c)
+    for fw, changed in delta_changed_names.items():
+        for c in clusters.get(fw, []):
+            if c["name"] in changed:
+                _queue_restack(c)
 
-    stack_failures: list = []
+    # carried stacks (no agent) — reused frameworks + delta capabilities that did not change;
+    # listed first so any freshly-stacked capability wins on a slug clash
     stacks: list[dict] = []
-    # reused stacks first so a fresh recommendation wins on any slug clash
     for fw, caps in reuse.items():
         for c in caps:
-            stacks.append({
-                "capability": c["name"],
-                "components": c.get("stack", []),
-                "notes": c.get("stack_notes", ""),
-            })
-    if fresh_unique:
-        results = _stack_all(fresh_unique, cfg)
+            stacks.append({"capability": c["name"], "components": c.get("stack", []),
+                           "notes": c.get("stack_notes", "")})
+    for fw, changed in delta_changed_names.items():
+        for c in clusters.get(fw, []):
+            if c["name"] not in changed:
+                stacks.append({"capability": c["name"], "components": c.get("stack", []),
+                               "notes": c.get("stack_notes", "")})
+
+    stack_failures: list = []
+    if restack:
+        results = _stack_all(restack, cfg)
         stack_failures = [r for r in results if isinstance(r, Exception)]
         stacks.extend(r for r in results if isinstance(r, dict))
 
     stack_cost = sum(s["cost"] for s in stacks if isinstance(s, dict) and "cost" in s)
-    total_cost = cluster_cost + stack_cost
+    total_cost = cluster_cost + delta_cost + stack_cost
 
     # ── Assemble + deterministic verify (only the frameworks derived this run) ──
     fresh = cap_lib.assemble_catalog(clusters, stacks, generated=today_iso())
@@ -387,10 +551,17 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    # ── Persist per-framework catalog hashes for successfully clustered frameworks ──
+    # ── Persist per-framework catalog hashes ──
+    # full rebuild (cluster succeeded), delta run (agent succeeded), and delta-unchanged
+    # frameworks (id set identical — refresh the hash so the next run is a fast reuse).
     for fw, h in to_run:
         if fw in clusters:
             cap_state[fw] = {"catalog_hash": h, "generated_at": now_iso()}
+    for j in delta_jobs:
+        if j["fw"] in delta_succeeded:
+            cap_state[j["fw"]] = {"catalog_hash": j["hash"], "generated_at": now_iso()}
+    for fw, h in hash_refresh.items():
+        cap_state[fw] = {"catalog_hash": h, "generated_at": now_iso()}
     state["total_cost"] = state.get("total_cost", 0.0) + total_cost
     save_state(state)
 
@@ -401,7 +572,7 @@ def main() -> int:
         print(f"  {fw}: {f['capability_count']} caps, "
               f"mandatory {f['mandatory_covered']}/{f['mandatory_total']} covered")
 
-    failures = cluster_failures + stack_failures
+    failures = cluster_failures + delta_failures + stack_failures
     if failures:
         print(f"\n{len(failures)} agent(s) FAILED:")
         for e in failures:

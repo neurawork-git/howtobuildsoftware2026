@@ -26,6 +26,7 @@ from pathlib import Path
 
 ENGINE_DIR = Path(__file__).resolve().parent
 PAYLOAD = ENGINE_DIR / "payload"
+SEED_DIR = PAYLOAD / "catalog-seed"
 SHARED_SRC = ENGINE_DIR.parent / "_shared"
 DEFAULTS_FILE = ENGINE_DIR / "config.default.json"
 VERSION_FILE = ENGINE_DIR / "VERSION"
@@ -88,6 +89,30 @@ def _scaffold(target: Path, cdir: str) -> None:
         gitignore.write_text(GITIGNORE, encoding="utf-8")
 
     shutil.copy2(VERSION_FILE, target / "VERSION")
+
+
+def _seed_catalog(target: Path) -> None:
+    """Copy the shipped prebuilt catalog into a target that has none of its own, so a
+    fresh install has a working catalog with no LLM run.
+
+    Atomic: if the target already holds any constraint catalog (a ``<framework>.json``,
+    e.g. from a prior ``extract.py``) the whole seed is skipped — the shipped
+    capabilities.json is never mixed into a repo's own extraction (which would send the
+    next ``capabilities.py`` run down a bogus constraint-delta path). ADOPT over an
+    already-built catalog is therefore left untouched."""
+    if not SEED_DIR.is_dir():
+        return
+    seed_files = [f for f in SEED_DIR.iterdir() if f.suffix in (".json", ".md")]
+    constraint_jsons = [f.name for f in seed_files
+                        if f.suffix == ".json" and f.name != "capabilities.json"]
+    catalog = target / "catalog"
+    if any((catalog / name).exists() for name in constraint_jsons):
+        return  # repo has its own constraint catalog — never partial-seed over it
+    catalog.mkdir(parents=True, exist_ok=True)
+    for src in seed_files:
+        dst = catalog / src.name
+        if not dst.exists():
+            shutil.copy2(src, dst)
 
 
 def _hooks(cdir: str) -> list[tuple[str, str, int, str]]:
@@ -181,6 +206,7 @@ def main() -> int:
 
     _copy_code(target)
     _scaffold(target, cdir)
+    _seed_catalog(target)
 
     try:
         changed = merge_hooks(root, _hooks(cdir))
