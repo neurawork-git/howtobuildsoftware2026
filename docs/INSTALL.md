@@ -173,3 +173,13 @@ pulls the latest plugin code. To refresh an already-installed skill's engine in 
 repo, re-invoke the install skill — recon detects the existing dir as an **ADOPT**
 and refreshes the code/hooks **without clobbering** your `daily/` logs or
 `knowledge/`.
+
+**Staleness nudge.** `/plugin marketplace update` refreshes the *plugin* but not the
+engine copy already installed in your repo (that copy is tracked in-repo, not in the
+plugin cache). So after an update you must still re-run the installer to propagate an
+engine change. A plugin-level `SessionStart` hook makes this visible: at session start
+it compares each installed engine's stamped `VERSION` against the plugin's shipped
+`VERSION` and, when an install is behind, prints a short note naming the stale install
+and the exact re-run command (e.g. `re-run /neurawork-cc-harness:knowledge-compiler`).
+It is informational only — it never modifies your repo — and stays silent when every
+install is current or the repo has no harness install.
