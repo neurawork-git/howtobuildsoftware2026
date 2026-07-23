@@ -1,4 +1,4 @@
-"""Stdlib tests for gitctx worktree detection. Mirrors coding-suite's
+"""Stdlib tests for gitctx worktree detection. Mirrors a prior continuous-learner's
 test_git_context.py: builds a throwaway repo + linked worktree with real git.
 """
 

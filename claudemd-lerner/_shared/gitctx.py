@@ -11,7 +11,7 @@ same `.git`. Both values may be RELATIVE to cwd, so always resolve() before
 comparing. Every function degrades to the safe non-worktree answer on any error
 — a hook must NEVER crash the session.
 
-Ported clean (own implementation, same contract) from coding-suite's
+Ported clean (own implementation, same contract) from a prior continuous-learner's
 engines/continuous-learner/git_context.py.
 """
 

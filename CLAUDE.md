@@ -85,7 +85,6 @@ its catalog is built at install time and rebuilt on demand via `co-extract`. A
   the other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
   (`asyncio.gather` + a semaphore) — the harness's only parallel compile path.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
-  [`docs/WHEN-TO-USE.md`](docs/WHEN-TO-USE.md),
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Each skill's behaviour is specified by an `AGENTS.md` constitution copied into the
   install dir — the LLM (compiler / learner) follows it when synthesizing outputs.
@@ -101,8 +100,8 @@ its catalog is built at install time and rebuilt on demand via `co-extract`. A
 - Dates ISO 8601 (`YYYY-MM-DD`); timestamps full ISO with offset. File names
   lowercase, hyphenated. Doc prose is factual, neutral, instructive.
 - No timezone is hardcoded — local time is read from the system.
-- Invoke skills by their **fully qualified** names (`neurawork-cc-harness:…`):
-  `knowledge-compiler` also exists in the `coding-suite` plugin.
+- Invoke skills by their **fully qualified** names (`neurawork-cc-harness:…`) so an
+  install always resolves to this plugin regardless of what else is enabled.
 
 ## Key decisions
 

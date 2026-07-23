@@ -15,8 +15,6 @@ install. Knowledge and docs are always written **inside the repo** — never und
 `.claude/`.
 
 **Install & upgrade guide:** [`../../docs/INSTALL.md`](../../docs/INSTALL.md).
-For how this differs from the `coding-suite` skills of the same name, see
-[`../../docs/WHEN-TO-USE.md`](../../docs/WHEN-TO-USE.md).
 
 ## Status
 
@@ -27,14 +25,12 @@ For how this differs from the `coding-suite` skills of the same name, see
 
 See `.claude/PRPs/prds/neurawork-cc-harness.prd.md` in the host repo.
 
-## Skill names & collision note
+## Skill names
 
 Skills resolve under the plugin namespace:
 
-- `neurawork-cc-harness:claudemd-lerner` — collision-free.
-- `neurawork-cc-harness:knowledge-compiler` — the bare name `knowledge-compiler`
-  also exists in the `coding-suite` plugin. **Always invoke via the fully
-  qualified `neurawork-cc-harness:knowledge-compiler` form** to avoid ambiguity.
+- **Always invoke via the fully-qualified `neurawork-cc-harness:<skill>` form** so an
+  install always resolves to this plugin regardless of what else is enabled.
 
 ## Shared infrastructure
 

@@ -148,17 +148,12 @@ ln -s ../plugins/neurawork-cc-harness .claude/skills/neurawork-cc-harness
 
 ---
 
-## FQN / collision
+## Fully qualified names
 
-Always invoke the skills by their **fully qualified** plugin-namespaced names:
-
-- `neurawork-cc-harness:knowledge-compiler` — the bare name `knowledge-compiler`
-  **also exists** in the `coding-suite` plugin, so the FQN avoids ambiguity.
-- `neurawork-cc-harness:claudemd-lerner` — collision-free, but use the FQN anyway
-  for consistency.
-
-See [docs/WHEN-TO-USE.md](WHEN-TO-USE.md) for choosing between this harness and the
-`coding-suite` skills.
+Always invoke the skills by their **fully qualified** plugin-namespaced names —
+`neurawork-cc-harness:knowledge-compiler`, `neurawork-cc-harness:claudemd-lerner`,
+`neurawork-cc-harness:compliance-compiler` — so an install always resolves to this
+plugin regardless of what else is enabled.
 
 ---
 

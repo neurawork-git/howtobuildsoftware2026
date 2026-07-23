@@ -5,7 +5,7 @@ hooks WITHOUT clobbering existing hooks or unrelated keys. Re-running an install
 is a no-op (idempotent). A hook is recognized as "ours" when its command string
 contains the given marker.
 
-Ported clean from coding-suite's continuous-learner install.merge_settings,
+Ported clean from a prior continuous-learner install.merge_settings,
 generalized to take a hooks list and an explicit per-hook timeout.
 """
 

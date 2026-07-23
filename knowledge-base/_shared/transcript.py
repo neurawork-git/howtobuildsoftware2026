@@ -5,7 +5,7 @@ holds a `role` ("user"/"assistant") and `content` (a string OR a list of content
 blocks). We keep only user/assistant text, the last ``max_turns`` of it,
 truncated to ``max_chars``.
 
-Ported clean from coding-suite's continuous-learner extract_conversation_context.
+Ported clean from a prior continuous-learner extract_conversation_context.
 """
 
 from __future__ import annotations

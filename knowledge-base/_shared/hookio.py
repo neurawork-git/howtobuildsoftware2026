@@ -5,7 +5,7 @@ transcript_path, cwd, reason/source, ...). These helpers parse that payload
 safely and prevent infinite recursion when a hook spawns `claude -p`, which
 would fire the same hooks again.
 
-Patterns mirrored from coding-suite's continuous-learner hooks
+Patterns mirrored from a prior continuous-learner hooks
 (recursion guard + Windows-safe stdin parse).
 """
 
