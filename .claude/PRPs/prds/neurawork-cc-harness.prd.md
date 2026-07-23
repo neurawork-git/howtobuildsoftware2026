@@ -184,6 +184,16 @@ Phases 2 and 3 can run in parallel (separate worktrees) — both depend only on 
 
 ---
 
+## Backlog
+
+- **claudemd-lerner: enforce three base docs folders + one-liner CLAUDE.md** (2026-07-23) —
+  Learner should always scaffold + maintain `docs/troubleshooting/`, `docs/patterns/`,
+  `docs/rules/` (the same categories that belong in `CLAUDE.md`). New `CLAUDE.md`
+  entries land as **one-liners only**, full text in the matching `docs/` folder,
+  linked from the one-liner — so `CLAUDE.md` stays small. Needs tuning of the
+  `claudemd-lerner` `AGENTS.md` (category → docs routing) + the seed/update engine
+  (folder scaffolding). See `.claude/BACKLOG.md`.
+
 ## Decisions Log
 
 | Decision | Choice | Alternatives | Rationale |
