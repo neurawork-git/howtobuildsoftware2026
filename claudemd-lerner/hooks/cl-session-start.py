@@ -1,11 +1,11 @@
-"""SessionStart hook — inject the current CLAUDE.md + docs/, maybe spawn an update.
+"""SessionStart hook — maybe spawn an update.
 
-Two jobs, both fast:
-  1. Print the repo-root CLAUDE.md + docs/ listing + recent daily as additionalContext.
-  2. If the last update is older than the configured age AND there is new daily
-     content AND no fresh lock, spawn update.py detached. Skipped in a worktree.
+One job: if the last update is older than the configured age AND there is new
+daily content AND no fresh lock, spawn update.py detached. Skipped in a worktree.
 
-Never blocks: the update is a fire-and-forget Popen; JSON is printed right after.
+No context injection — CLAUDE.md + docs/ are already read at session start, so
+re-injecting them here would only crowd the context (the knowledge-compiler's
+concepts inject is kept free for that). The update is a fire-and-forget Popen.
 """
 
 from __future__ import annotations
@@ -14,7 +14,6 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 KDIR = Path(__file__).resolve().parent.parent
@@ -27,49 +26,12 @@ recursion_guard()
 
 from _shared.gitctx import repo_root, in_worktree
 from config import (
-    CLAUDEMD_FILE,
     DAILY_DIR,
     LAST_UPDATE_FILE,
     LOCK_FILE,
-    REPO_ROOT,
-    docs_dir,
     load_cfg,
 )
 from utils import should_update
-
-MAX_CONTEXT_CHARS = 20_000
-MAX_LOG_LINES = 30
-
-
-def _recent_daily() -> str:
-    today = datetime.now(timezone.utc).astimezone()
-    for offset in range(2):
-        date = today - timedelta(days=offset)
-        log_path = DAILY_DIR / f"{date.strftime('%Y-%m-%d')}.md"
-        if log_path.exists():
-            lines = log_path.read_text(encoding="utf-8").splitlines()
-            return "\n".join(lines[-MAX_LOG_LINES:])
-    return "(no recent daily log)"
-
-
-def build_context() -> str:
-    today = datetime.now(timezone.utc).astimezone()
-    parts = [f"## Today\n{today.strftime('%A, %B %d, %Y')}"]
-    if CLAUDEMD_FILE.exists():
-        parts.append(f"## Project CLAUDE.md\n\n{CLAUDEMD_FILE.read_text(encoding='utf-8')}")
-    else:
-        parts.append("## Project CLAUDE.md\n\n(none yet — run seed or let the learner build it)")
-    docs = docs_dir()
-    if docs.is_dir():
-        listing = "\n".join(
-            sorted(str(p.relative_to(REPO_ROOT)) for p in docs.rglob("*.md"))[:50]
-        )
-        parts.append(f"## docs/ files\n\n{listing or '(none)'}")
-    parts.append(f"## Recent Daily Log\n\n{_recent_daily()}")
-    context = "\n\n---\n\n".join(parts)
-    if len(context) > MAX_CONTEXT_CHARS:
-        context = context[:MAX_CONTEXT_CHARS] + "\n\n...(truncated)"
-    return context
 
 
 def _last_update_ts() -> float | None:
@@ -116,14 +78,7 @@ def main() -> None:
         try:
             maybe_spawn_update(float(load_cfg().get("update_age_hours", 6)))
         except Exception:
-            pass  # injection must always proceed
-
-    print(json.dumps({
-        "hookSpecificOutput": {
-            "hookEventName": "SessionStart",
-            "additionalContext": build_context(),
-        }
-    }))
+            pass
 
 
 if __name__ == "__main__":
