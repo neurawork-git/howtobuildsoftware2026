@@ -99,6 +99,24 @@ class TestInstall(unittest.TestCase):
             entries = [h for g in settings["hooks"]["PostToolUse"] for h in g["hooks"]]
             self.assertEqual(len(entries), 1)  # no duplicate after second install
 
+    def test_seeding_is_atomic(self) -> None:
+        # A repo with its own constraint catalog but a missing capabilities.json (extract
+        # ran, the capabilities stage crashed) must NOT get the shipped capabilities.json
+        # spliced in — that would send the next capabilities.py run down a bogus delta path.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+            catalog = repo / CDIR / "catalog"
+            # keep the repo's own gdpr.json, drop the derived capabilities files
+            (catalog / "capabilities.json").unlink()
+            (catalog / "capabilities.md").unlink()
+            self.assertTrue((catalog / "gdpr.json").exists())
+            self.assertEqual(self._install(repo).returncode, 0)
+            # a present constraint json ⇒ seed skipped entirely, capabilities.json stays gone
+            self.assertFalse((catalog / "capabilities.json").exists())
+            self.assertFalse((catalog / "capabilities.md").exists())
+
     def test_adopt_prunes_stale_sessionstart(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

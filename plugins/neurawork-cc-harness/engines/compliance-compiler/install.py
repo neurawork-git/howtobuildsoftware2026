@@ -92,16 +92,24 @@ def _scaffold(target: Path, cdir: str) -> None:
 
 
 def _seed_catalog(target: Path) -> None:
-    """Copy the shipped prebuilt catalog into the target — only for files not already
-    present, so a fresh install has a working catalog with no LLM run while ADOPT never
-    clobbers a repo's own extracted catalog."""
+    """Copy the shipped prebuilt catalog into a target that has none of its own, so a
+    fresh install has a working catalog with no LLM run.
+
+    Atomic: if the target already holds any constraint catalog (a ``<framework>.json``,
+    e.g. from a prior ``extract.py``) the whole seed is skipped — the shipped
+    capabilities.json is never mixed into a repo's own extraction (which would send the
+    next ``capabilities.py`` run down a bogus constraint-delta path). ADOPT over an
+    already-built catalog is therefore left untouched."""
     if not SEED_DIR.is_dir():
         return
+    seed_files = [f for f in SEED_DIR.iterdir() if f.suffix in (".json", ".md")]
+    constraint_jsons = [f.name for f in seed_files
+                        if f.suffix == ".json" and f.name != "capabilities.json"]
     catalog = target / "catalog"
+    if any((catalog / name).exists() for name in constraint_jsons):
+        return  # repo has its own constraint catalog — never partial-seed over it
     catalog.mkdir(parents=True, exist_ok=True)
-    for src in SEED_DIR.iterdir():
-        if src.suffix not in (".json", ".md"):
-            continue
+    for src in seed_files:
         dst = catalog / src.name
         if not dst.exists():
             shutil.copy2(src, dst)
