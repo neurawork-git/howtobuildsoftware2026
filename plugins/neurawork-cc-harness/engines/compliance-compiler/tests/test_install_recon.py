@@ -87,6 +87,32 @@ class TestInstall(unittest.TestCase):
             entries = [h for g in settings["hooks"]["PostToolUse"] for h in g["hooks"]]
             self.assertEqual(len(entries), 1)  # no duplicate after second install
 
+    def test_adopt_prunes_stale_sessionstart(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            # Simulate a pre-upgrade install: a stale co-session-start.py hook file
+            # and its SessionStart entry that older installs left behind.
+            stale = repo / CDIR / "hooks" / "co-session-start.py"
+            stale.write_text("# stale", encoding="utf-8")
+            settings_path = repo / ".claude" / "settings.json"
+            settings = json.loads(settings_path.read_text())
+            settings["hooks"]["SessionStart"] = [{"matcher": "", "hooks": [
+                {"type": "command",
+                 "command": f'uv run --directory "$CLAUDE_PROJECT_DIR/{CDIR}" '
+                            "python hooks/co-session-start.py",
+                 "timeout": 15}]}]
+            settings_path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+            # Reinstall (ADOPT) must prune both.
+            self.assertEqual(self._install(repo).returncode, 0)
+            self.assertFalse(stale.exists())
+            settings = json.loads(settings_path.read_text())
+            self.assertNotIn("SessionStart", settings["hooks"])
+            self.assertIn("PostToolUse", settings["hooks"])
+
     def test_recon_emits_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

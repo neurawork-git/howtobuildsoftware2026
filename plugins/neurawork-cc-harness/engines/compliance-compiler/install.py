@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -96,6 +97,65 @@ def _hooks(cdir: str) -> list[tuple[str, str, int, str]]:
     ]
 
 
+# Files/hooks this engine USED to install but no longer ships. Pruned on every
+# install so an ADOPT upgrade cleans up after itself (merge_hooks only ever adds).
+REMOVED_TARGET_FILES = ("hooks/co-session-start.py", "scripts/co-extract.lock")
+REMOVED_HOOK_MARKERS = ("hooks/co-session-start.py",)
+
+
+def _prune_removed(target: Path, root: Path) -> None:
+    """Delete files this engine no longer ships and prune their settings.json hooks.
+
+    Makes upgrades clean: a repo installed before the SessionStart hook was dropped
+    loses the stale ``co-session-start.py`` file and its ``.claude/settings.json``
+    entry on the next (re)install. No-op on a fresh install.
+    """
+    for rel in REMOVED_TARGET_FILES:
+        p = target / rel
+        if p.exists():
+            p.unlink()
+            print(f"Removed stale {rel}")
+
+    settings_path = root / ".claude" / "settings.json"
+    if not settings_path.exists():
+        return
+    try:
+        data = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return
+    hooks_obj = data.get("hooks")
+    if not isinstance(hooks_obj, dict):
+        return
+
+    changed = False
+    for event in list(hooks_obj):
+        groups = hooks_obj.get(event)
+        if not isinstance(groups, list):
+            continue
+        for g in groups:
+            hooks = g.get("hooks")
+            if not isinstance(hooks, list):
+                continue
+            kept = [h for h in hooks
+                    if not any(m in str(h.get("command", "")) for m in REMOVED_HOOK_MARKERS)]
+            if len(kept) != len(hooks):
+                g["hooks"] = kept
+                changed = True
+        non_empty = [g for g in groups if g.get("hooks")]
+        if not non_empty:
+            del hooks_obj[event]
+            changed = True
+        elif len(non_empty) != len(groups):
+            hooks_obj[event] = non_empty
+            changed = True
+
+    if changed:
+        tmp = settings_path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        os.replace(tmp, settings_path)
+        print("Pruned stale SessionStart hook from .claude/settings.json")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install the compliance-compiler")
     parser.add_argument("--catalog-dir", default="compliance-base", help="Catalog dir name")
@@ -128,6 +188,8 @@ def main() -> int:
     except Exception as e:
         print(f"Hook merge failed: {e}")
         return 1
+
+    _prune_removed(target, root)
 
     print("\nNext steps:")
     print(f"  uv sync --directory {cdir}")
