@@ -113,6 +113,16 @@ def merge_preserving(existing: dict, fresh: dict) -> dict:
     return {**fresh, "frameworks": frameworks}
 
 
+def _component_label(comp: dict) -> str:
+    """`name (license · internal-infra)` — surfaces the license and operator-side tag."""
+    name = comp.get("name", "")
+    tag = " · internal-infra" if comp.get("role") == "internal-infra" else ""
+    inner = comp.get("license") or ("internal-infra" if tag else "")
+    if not comp.get("license"):
+        return f"{name} ({inner})" if inner else name
+    return f"{name} ({inner}{tag})"
+
+
 def render_capabilities_md(catalog: dict) -> str:
     """Render catalog/capabilities.md from the assembled capability catalog."""
     fws = catalog["frameworks"]
@@ -139,7 +149,7 @@ def render_capabilities_md(catalog: dict) -> str:
         lines.append(f"## {FRAMEWORK_TITLES.get(fw, fw)} — {f['capability_count']} capabilities")
         lines.append("")
         for c in f["capabilities"]:
-            comps = ", ".join(x.get("name", "") for x in c.get("stack", [])) or "—"
+            comps = "; ".join(_component_label(x) for x in c.get("stack", [])) or "—"
             lines.append(f"### {c['name']}")
             lines.append(f"*{c['category']}* · satisfies {len(c['satisfies'])} constraints")
             lines.append("")

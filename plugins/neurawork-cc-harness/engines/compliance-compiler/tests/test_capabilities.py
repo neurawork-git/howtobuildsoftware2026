@@ -146,7 +146,9 @@ class TestRender(unittest.TestCase):
                     "category": "Data Protection",
                     "description": "Encrypt stored data.",
                     "satisfies": ["GDPR-ART5-01", "GDPR-ART5-02"],
-                    "stack": [{"name": "AWS KMS", "kind": "managed", "why": "keys"}],
+                    "stack": [{"name": "OpenBao", "kind": "open-source",
+                               "license": "MPL-2.0", "role": "in-product",
+                               "why": "envelope keys"}],
                     "stack_notes": "",
                 }],
             }},
@@ -157,7 +159,7 @@ class TestRender(unittest.TestCase):
         self.assertIn("# Capability Catalog", md)
         self.assertIn("| Framework | Capabilities | Mandatory covered | Uncovered |", md)
         self.assertIn("### Encryption at rest", md)
-        self.assertIn("**Stack (greenfield 2026):** AWS KMS", md)
+        self.assertIn("**Stack (greenfield 2026):** OpenBao (MPL-2.0)", md)
         self.assertIn("<sub>GDPR-ART5-01, GDPR-ART5-02</sub>", md)
 
     def test_index(self) -> None:

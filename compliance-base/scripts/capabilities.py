@@ -105,10 +105,29 @@ components / tools / services that implement it in a NEW build:
 - Description: {cap.get("description", "")}
 - Category: {cap.get("category", "")}
 
+LICENSE / COST POLICY (a company shipping a COMMERCIAL software product):
+- Set "role" to "in-product" if the component is shipped IN / AS the customer-facing
+  product, or "internal-infra" if it is operator-side tooling we run to
+  build/observe/secure our OWN stack and never distribute to customers.
+- "in-product" components MUST be self-hostable open-source under a product-embeddable
+  license: MIT, Apache-2.0, BSD-2/3-Clause, ISC, MPL-2.0, PostgreSQL, Unlicense, CC0,
+  Zlib (LGPL only if dynamically linked). NEVER pick a copyleft (GPL/AGPL),
+  source-available (SSPL, BSL/BUSL, Elastic-2.0, Confluent Community, Redis RSAL,
+  "Sustainable Use"), or proprietary/managed-SaaS component for an in-product role.
+  If the obvious tool relicensed, use the OSS fork (Terraform->OpenTofu,
+  Elasticsearch->OpenSearch, Redis->Valkey, Grafana in-product->…).
+- "internal-infra" components may carry ANY license (incl. AGPL like Grafana) OR be
+  proprietary — as long as they cost NO money at the start (a free tier or free
+  self-hosting is fine: GitHub free, Terraform, AWS free-tier services). Do NOT pick a
+  paid-only proprietary SaaS; prefer a free OSS self-hostable tool. Truly inherent
+  operator dependencies (a cloud substrate/region, cloud compliance attestations, an
+  EU Art.27 representative, physical badge/camera hardware) may stay proprietary.
+- Set "kind" to "open-source" or "internal-infra" accordingly, and "license" to the
+  component's real SPDX id (or "proprietary" / "inherent" for the kept exceptions).
+
 Rules:
 - 2-4 components, widely-adopted and well-supported.
-- Mark each component "kind" as "open-source" or "managed".
-- One-line "why" per component.
+- One-line "why" per component, including the license justification.
 
 Write a single JSON object to exactly this file, using the Write tool, and write
 nothing else:
@@ -116,7 +135,7 @@ nothing else:
     {shard_path}
 
 Object: {{"capability": "{cap.get("name", "")}", "components": [{{"name": str,
-"kind": str, "why": str}}], "notes": str}}.
+"kind": str, "license": str, "role": str, "why": str}}], "notes": str}}.
 Output only the JSON object as the file's content — no prose, no other files. Ensure
 valid JSON (double quotes, no trailing commas)."""
 
