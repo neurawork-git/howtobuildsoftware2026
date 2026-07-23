@@ -36,7 +36,7 @@ Added a repeatable capability-derivation engine to `compliance-compiler`: `capab
 | 5 | Pure-logic tests | `tests/test_capabilities.py` | ✅ |
 | 6 | Assert new scripts copied on install | `tests/test_install_recon.py` | ✅ |
 | 7 | Full suite + lint + parity | — | ✅ |
-| 8 | Regenerate catalog from code (real LLM run) | — | ⏭️ deferred (needs `ANTHROPIC_API_KEY`) |
+| 8 | Regenerate catalog from code (real LLM run) | — | ⏭️ deferred (needs Anthropic login `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` — same auth as the other engines) |
 
 ---
 
@@ -96,6 +96,6 @@ Note: repo-wide `uvx ruff check` reports 65 errors, all in files this change did
 
 ## Next Steps
 
-- [ ] Task 8 — operator with `ANTHROPIC_API_KEY` runs `uv run --directory compliance-base python scripts/capabilities.py --all` to regenerate the tracked catalog from code (expect gdpr 109/109, soc2 111/111, iso 59/59; 0 uncovered), then a second run to confirm idempotent skips.
+- [ ] Task 8 — operator authenticated via Anthropic login (`CLAUDE_CODE_OAUTH_TOKEN`) or `ANTHROPIC_API_KEY` (same auth path as `extract.py`/the other engines) runs `uv run --directory compliance-base python scripts/capabilities.py --all` to regenerate the tracked catalog from code (expect gdpr 109/109, soc2 111/111, iso 59/59; 0 uncovered), then a second run to confirm idempotent skips.
 - [ ] Review + PR (`/ship-pr` flushes learning capture before worktree removal).
 - [ ] PRD Phase 2 (stack mapping) and Phase 3 (validator) unblocked — can run in parallel.
