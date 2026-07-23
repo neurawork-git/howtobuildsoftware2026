@@ -2,8 +2,7 @@
 
 How the harness is put together: the plugin source, the three engines, the shared
 infrastructure, the install flow, and how this repo self-hosts all three skills. For
-*using* it see [INSTALL.md](INSTALL.md); for choosing it over `coding-suite` see
-[WHEN-TO-USE.md](WHEN-TO-USE.md).
+*using* it see [INSTALL.md](INSTALL.md).
 
 ## The three skills
 

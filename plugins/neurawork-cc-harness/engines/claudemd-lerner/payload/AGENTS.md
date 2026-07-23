@@ -6,7 +6,7 @@ full before running an update or a seed.
 
 > Lineage: this is a repo-local learner inspired by the LLM-as-compiler idea
 > (Andrej Karpathy's LLM wiki, rebuilt openly by coleam00's claude-memory-compiler)
-> and by the doc-maintenance pattern of NeuraWork's own coding-suite learner. The
+> and by the doc-maintenance pattern of prior NeuraWork doc-maintenance tooling. The
 > design here is independent NeuraWork work; only the underlying concept is shared.
 > Unlike the knowledge-compiler, this learner builds **no** knowledge wiki — it
 > only maintains the docs the agent already reads.

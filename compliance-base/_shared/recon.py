@@ -5,7 +5,7 @@ summary, then emits a machine-parsable JSON blob delimited by ``RECON_JSON``
 markers on its own segment. The install skill greps that blob to drive its
 AskUserQuestion prompts.
 
-Pattern mirrored from coding-suite's continuous-learner recon.py
+Pattern mirrored from a prior continuous-learner recon.py
 (the ``RECON_JSON`` delimiter contract).
 """
 

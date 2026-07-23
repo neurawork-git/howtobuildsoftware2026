@@ -19,11 +19,10 @@ The compiler uses the Claude Agent SDK, which needs `ANTHROPIC_API_KEY` (or
 sanctioned for third-party plugins — public/customer installs must set an API key.
 Capture (hooks/scaffold) works without it; only compile/query/seed make API calls.
 
-## Naming / collision note
+## Naming note
 
-Invoke this as `neurawork-cc-harness:knowledge-compiler`. A separate
-`coding-suite:knowledge-compiler` skill also exists — use the fully-qualified name
-to avoid ambiguity.
+Invoke this as `neurawork-cc-harness:knowledge-compiler` (the fully-qualified name)
+so it always resolves to this plugin regardless of what else is enabled.
 
 ## Phase A — Recon (read-only)
 
