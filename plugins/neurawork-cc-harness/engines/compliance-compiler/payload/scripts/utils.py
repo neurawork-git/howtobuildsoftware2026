@@ -7,6 +7,7 @@ cheaply.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -36,6 +37,11 @@ def save_state(state: dict) -> None:
     tmp = STATE_FILE.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
     os.replace(tmp, STATE_FILE)
+
+
+def file_hash(path: Path) -> str:
+    """First 16 hex chars of a file's SHA-256."""
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()[:16]
 
 
 # ── Catalog readers ───────────────────────────────────────────────────

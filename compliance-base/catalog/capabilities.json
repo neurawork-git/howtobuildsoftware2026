@@ -1,0 +1,2427 @@
+{
+ "generated": "2026-07-23",
+ "source": "compliance-base/catalog/{gdpr,soc2,iso27001}.json",
+ "method": "ultracode workflow (extract->merge->stack->verify), 83 agents",
+ "stack_target": "greenfield 2026",
+ "structure": "per-framework (overlap kept)",
+ "frameworks": {
+  "gdpr": {
+   "capability_count": 25,
+   "mandatory_covered": 109,
+   "mandatory_total": 109,
+   "uncovered_mandatory_ids": [],
+   "capabilities": [
+    {
+     "name": "Privacy notice & transparency delivery",
+     "category": "Governance & Privacy Ops",
+     "description": "Layered privacy notices and just-in-time transparency UI that surface controller/DPO identity, purposes, legal basis, recipients, transfers, retention, and all data-subject rights in plain language for both directly and indirectly collected data, and that flag the right to object explicitly and separately.",
+     "satisfies": [
+      "GDPR-ART12-01",
+      "GDPR-ART13-01",
+      "GDPR-ART13-02",
+      "GDPR-ART13-03",
+      "GDPR-ART14-01",
+      "GDPR-ART14-02",
+      "GDPR-ART14-03",
+      "GDPR-ART21-05"
+     ],
+     "stack": [
+      {
+       "name": "Transcend (Consent & Preference Management + Privacy Center)",
+       "kind": "managed",
+       "why": "API-first platform for a greenfield build that delivers layered + just-in-time notices and hosts a per-user Privacy Center surfacing controller/DPO, purposes, legal basis, recipients, transfers, retention and every data-subject right, with a distinct right-to-object/opt-out control."
+      },
+      {
+       "name": "iubenda",
+       "kind": "managed",
+       "why": "Widely-adopted generator that auto-produces and hosts plain-language, layered privacy notices covering all GDPR-mandated disclosures for both directly and indirectly collected data, kept current as processing changes."
+      },
+      {
+       "name": "Klaro!",
+       "kind": "open-source",
+       "why": "Self-hostable consent/notice widget that renders purpose-level, just-in-time transparency inline at the point of collection — the OSS option when notices must live in your own frontend with no vendor lock-in."
+      },
+      {
+       "name": "Didomi",
+       "kind": "managed",
+       "why": "Cross-channel (web, mobile, CTV) preference and notice delivery with geotargeted banners and granular per-purpose controls, letting the right to object be flagged and toggled explicitly and separately from consent."
+      }
+     ],
+     "stack_notes": "Scope note: this capability is about surfacing/flagging rights (incl. a separate right-to-object control) in the notice UI, not fulfilling DSARs — Transcend/Didomi span both, but the notice-delivery function is what's recommended here. Klaro! covers only the JIT consent/notice UI (no back-office rights orchestration). Other current, comparable managed CMPs: OneTrust, Osano, Usercentrics/Cookiebot. Confirmed current 2025-2026 via web search (ketch.com CMP roundup, osano.com, usercentrics.com)."
+    },
+    {
+     "name": "Data-subject request intake & access fulfillment",
+     "category": "Governance & Privacy Ops",
+     "description": "A DSAR workflow engine that intakes, tracks, and fulfills rights requests within the one-month SLA (with logged extension/decline reasons and complaint-rights messaging), provides free abuse-controlled handling, confirms whether data is processed, and assembles access exports with required metadata and a machine-readable copy that does not expose third parties.",
+     "satisfies": [
+      "GDPR-ART11-02",
+      "GDPR-ART12-02",
+      "GDPR-ART12-03",
+      "GDPR-ART12-04",
+      "GDPR-ART15-01",
+      "GDPR-ART15-02",
+      "GDPR-ART15-03"
+     ],
+     "stack": [
+      {
+       "name": "Transcend (Privacy Requests / DSR Automation)",
+       "kind": "managed",
+       "why": "Automates the full DSR lifecycle — authenticated intake, cross-system data discovery to confirm processing, and assembly of machine-readable access exports — with client-side key management so subject data never traverses vendor infra in plaintext."
+      },
+      {
+       "name": "OneTrust Data Subject Request (DSR) Automation",
+       "kind": "managed",
+       "why": "Widely-adopted enterprise intake portal with built-in one-month SLA/deadline clocks, extension and decline reason logging, ID verification and abuse controls, and redaction to avoid exposing third-party data in responses."
+      },
+      {
+       "name": "Temporal",
+       "kind": "open-source",
+       "why": "Durable workflow engine to model the SLA as first-class code — long-running one-month timers, extension/decline branches, retries, and a fully auditable event history — when you build the intake/tracking engine yourself instead of buying a platform."
+      },
+      {
+       "name": "Osano (Subject Rights Management)",
+       "kind": "managed",
+       "why": "Lighter-weight, faster-to-adopt alternative that covers free abuse-controlled intake, request tracking, and complaint-rights/consumer messaging for GDPR/CCPA-style rights without full enterprise data-mapping overhead."
+      }
+     ],
+     "stack_notes": "Managed platforms (Transcend, OneTrust, Osano) are the pragmatic default for a greenfield build — they ship the intake portal, SLA clocks, extension/decline logging, ID/abuse controls, redaction, and complaint-rights messaging out of the box. Transcend is strongest on actually assembling machine-readable exports via cross-system data discovery; OneTrust is the enterprise standard for intake + workflow + redaction; Osano is the lighter/cheaper option. Temporal is the open-source pick only if you need a bespoke engine — it durably orchestrates the one-month SLA (timers, extensions, declines, auditable state) but you still supply the intake UI, data connectors, and export/redaction logic yourself. Sources: https://www.gartner.com/reviews/market/subject-rights-request-automation , https://transcend.io/blog/dsar , https://my.onetrust.com/s/article/UUID-6d4d8fb4-8c9d-784b-1552-0f5fee9ed5b7 , https://expertinsights.com/compliance/top-data-subject-access-request-dsar-software"
+    },
+    {
+     "name": "Requester identity verification",
+     "category": "IAM",
+     "description": "An identity-proofing step in the request pipeline that requires additional identity evidence before disclosing or acting on personal data when there is reasonable doubt about the requester, protecting against impersonated rights requests.",
+     "satisfies": [
+      "GDPR-ART12-05"
+     ],
+     "stack": [
+      {
+       "name": "Keycloak",
+       "kind": "open-source",
+       "why": "Mature OSS IAM whose conditional/step-up authentication flows let the request pipeline demand stronger identity assurance (MFA, re-auth) exactly when a requester is doubtful."
+      },
+      {
+       "name": "Persona",
+       "kind": "managed",
+       "why": "Widely-adopted IDV orchestration platform for building risk-based document + biometric (selfie/liveness) proofing flows with built-in fraud signals, ideal as the escalation step for high-doubt rights requests."
+      },
+      {
+       "name": "Stripe Identity",
+       "kind": "managed",
+       "why": "Drop-in, well-supported government-ID + selfie verification with a simple hosted flow and API, a fast way to collect additional identity evidence before disclosing personal data."
+      },
+      {
+       "name": "Ory Kratos",
+       "kind": "open-source",
+       "why": "Cloud-native, API-first identity server with MFA and step-up flows, a self-hostable alternative to Keycloak for enforcing elevated assurance inside the request pipeline."
+      }
+     ],
+     "stack_notes": "The capability spans two layers: (1) step-up authentication to raise identity assurance on reasonable doubt (Keycloak or Ory Kratos), and (2) document/biometric identity proofing to collect fresh evidence (Persona or Stripe Identity). A typical new build pairs one from each layer. All four are current and actively maintained as of 2025-2026 (Onfido, now part of Entrust, is another managed IDV alternative to Persona/Stripe Identity). Confidence is high from domain knowledge; no web search was needed."
+    },
+    {
+     "name": "Rectification, erasure & restriction processing",
+     "category": "Data Protection",
+     "description": "Data-lifecycle operations that let subjects correct inaccurate data, complete incomplete data with supplementary statements, erase data on qualifying grounds while honoring legal-hold/retention exemptions, and place a reversible processing-restriction state with pre-lift notification.",
+     "satisfies": [
+      "GDPR-ART16-01",
+      "GDPR-ART16-02",
+      "GDPR-ART17-01",
+      "GDPR-ART17-03",
+      "GDPR-ART18-01",
+      "GDPR-ART18-02"
+     ],
+     "stack": [
+      {
+       "name": "Fides (Ethyca)",
+       "kind": "open-source",
+       "why": "Privacy-engineering platform whose DSR automation executes erasure and rectification across connected datastores via declarative policies, with masking/skip rules to honor retention and legal-hold exemptions."
+      },
+      {
+       "name": "Temporal",
+       "kind": "open-source",
+       "why": "Durable workflow engine to model the reversible processing-restriction state as a long-running state machine, gate erasure on legal-hold checks, and fire the scheduled pre-lift notification reliably."
+      },
+      {
+       "name": "Transcend",
+       "kind": "managed",
+       "why": "Managed privacy-request orchestration that fans rectification/erasure actions out to first- and third-party systems with audit trails, covering propagation the in-house engine cannot reach directly."
+      },
+      {
+       "name": "OpenFGA",
+       "kind": "open-source",
+       "why": "Fine-grained authorization store to represent and enforce the restriction/legal-hold flags as relationship tuples, so downstream services can check 'is this subject's data under restriction/hold' before processing."
+      }
+     ],
+     "stack_notes": "Answered from established knowledge; all four are actively maintained as of 2025-2026. Fides + Temporal form the open-source core (policy-driven data operations plus the reversible-state/notification workflow); Transcend is the managed alternative/complement for cross-system propagation; OpenFGA optionally externalizes the restriction/hold enforcement flag. A team could ship with just Fides + Temporal and add the others as scale/breadth demands."
+    },
+    {
+     "name": "Downstream recipient tracking & change propagation",
+     "category": "Data Protection",
+     "description": "A recipient/disclosure ledger that records where personal data was shared and, on rectification/erasure/restriction, propagates the change to each recipient (and to other controllers of publicly-disclosed data) unless impossible/disproportionate, and can disclose the recipient list to the subject on request.",
+     "satisfies": [
+      "GDPR-ART17-02",
+      "GDPR-ART19-01",
+      "GDPR-ART19-02"
+     ],
+     "stack": [
+      {
+       "name": "Fides (Ethyca)",
+       "kind": "open-source",
+       "why": "Privacy-as-code DSR orchestration engine (Apache-2.0) that maps data flows and fans erasure/rectification/consent changes out to connected databases and third-party apps, and exposes the integration/recipient list — directly implements Art. 19 propagation and Art. 15(1)(c) disclosure."
+      },
+      {
+       "name": "PostgreSQL (append-only disclosure ledger, e.g. via temporal_tables/system-versioning)",
+       "kind": "open-source",
+       "why": "System-of-record for the recipient/disclosure ledger — an immutable, timestamped log of which recipient received which data on which legal basis, queryable to produce the subject's recipient list and to drive propagation targets."
+      },
+      {
+       "name": "Temporal",
+       "kind": "open-source",
+       "why": "Durable workflow engine to run the per-recipient fan-out reliably with retries, timeouts and per-recipient status — cleanly models 'propagate to each recipient unless impossible/disproportionate' with an auditable outcome trail."
+      },
+      {
+       "name": "Transcend",
+       "kind": "managed",
+       "why": "No-code direct-vendor connectors that automatically propagate erasure/rectification to downstream processors and third parties end-to-end — a managed alternative (or complement) to self-hosting Fides for teams that don't want to run the orchestration engine."
+      }
+     ],
+     "stack_notes": "Article 19 (notify recipients of rectification/erasure/restriction) + Article 15(1)(c) (disclose recipients to subject) are the governing requirements. Recommended shape: Postgres append-only ledger as the system-of-record, Temporal to guarantee reliable per-recipient propagation with 'impossible/disproportionate' exception outcomes recorded, and Fides as the privacy-as-code engine that maps data and executes DSR fan-out to third-party integrations. Transcend (or OneTrust DSR Automation) is the managed alternative if self-hosting the orchestration isn't desired. Fides and Transcend both confirmed active and expanding erasure/integration coverage as of 2025-2026. Sources: https://www.ethyca.com/fides , https://github.com/ethyca/fides/releases , https://www.onetrust.com/products/data-subject-request-dsr-automation/ , https://temporal.io"
+    },
+    {
+     "name": "Data portability & structured export",
+     "category": "Data Protection",
+     "description": "An export service that outputs subject-provided, automated, consent/contract-based data in a structured, commonly used, machine-readable format, supports direct controller-to-controller transmission where technically feasible, and scopes the export to eligible data without affecting others' rights.",
+     "satisfies": [
+      "GDPR-ART20-01",
+      "GDPR-ART20-02",
+      "GDPR-ART20-03"
+     ],
+     "stack": [
+      {
+       "name": "Data Transfer Initiative Portability API (formerly Data Transfer Project)",
+       "kind": "open-source",
+       "why": "The de-facto open standard (backed by Google/Meta/Apple) for direct controller-to-controller transfers in commonly-used, machine-readable formats — covers Article 20's 'transmit directly where technically feasible' clause."
+      },
+      {
+       "name": "Temporal (open-source; Temporal Cloud managed)",
+       "kind": "open-source",
+       "why": "Durably orchestrates the long-running, resumable export-assembly job — fan-out across services, retries, and scoping to only the subject's eligible data without partial-failure corruption."
+      },
+      {
+       "name": "S3-compatible object storage with presigned expiring URLs (AWS S3 managed / MinIO open-source)",
+       "kind": "managed",
+       "why": "Stages the assembled JSON/CSV export bundle and delivers it via time-limited, access-controlled download links so the export self-expires and isn't left exposed."
+      },
+      {
+       "name": "Transcend Data Mapping & DSR automation (or OneTrust)",
+       "kind": "managed",
+       "why": "Handles request intake, identity verification, and legal-basis filtering (subject-provided + automated, consent/contract-only) so the export is scoped to eligible data and doesn't affect others' rights."
+      }
+     ],
+     "stack_notes": "Category: Data Protection (GDPR Art. 20). The DTI Portability API + Temporal + object storage cover a self-built core; the DSR platform (Transcend/OneTrust) is the fastest path to compliant request intake, identity verification, and legal-basis scoping if you don't want to build that layer yourself. For the serialization format itself, standard JSON/CSV (optionally NDJSON for large exports) is the commonly-used machine-readable target — no special tool needed beyond your language's stdlib. Recommendations given from established-tool knowledge; all four are current and widely adopted as of 2025-2026."
+    },
+    {
+     "name": "Objection & opt-out management",
+     "category": "Governance & Privacy Ops",
+     "description": "A preference/opt-out subsystem that lets subjects object to legitimate-interest/public-task processing and profiling (with a compelling-grounds balancing evaluation), enforces an absolute stop for direct-marketing objections, supports objection to research/statistical processing, and accepts automated machine-readable objection signals.",
+     "satisfies": [
+      "GDPR-ART21-01",
+      "GDPR-ART21-02",
+      "GDPR-ART21-03",
+      "GDPR-ART21-04",
+      "GDPR-ART21-06",
+      "GDPR-ART21-07"
+     ],
+     "stack": [
+      {
+       "name": "Ethyca Fides",
+       "kind": "open-source",
+       "why": "Apache-2.0 privacy-engineering framework with a configurable preference center, consent/objection storage, DSR fulfillment workflows, and built-in GPC-signal detection — the strongest open-source base for a subject-facing opt-out subsystem."
+      },
+      {
+       "name": "Transcend Consent & Privacy Requests",
+       "kind": "managed",
+       "why": "Middleware layer that captures objections and propagates opt-outs (incl. an absolute direct-marketing stop) downstream to every connected system, with automatic GPC detection and legitimate-interest/objection request handling."
+      },
+      {
+       "name": "Ketch",
+       "kind": "managed",
+       "why": "Server-side consent/preference orchestration that enforces opt-outs in real time across CDPs, ad, and AI pipelines and honors GPC natively — good fit where machine-readable signals must halt processing immediately."
+      },
+      {
+       "name": "Global Privacy Control (GPC)",
+       "kind": "open-source",
+       "why": "The de-facto open browser/HTTP standard for automated machine-readable objection signals (universal opt-out); implement its detection so profiling/sale-and-share objections are honored without a manual step — legally required in 12+ US states as of Jan 2026."
+      }
+     ],
+     "stack_notes": "The capability spans two proven product categories in 2025-2026: consent/preference management platforms (CMP) and data-subject-rights (DSR) automation — pick one platform (Fides if you want open-source and to self-host the balancing/compelling-grounds workflow, Transcend or Ketch if you want managed downstream enforcement) and layer GPC signal handling on top. The compelling-grounds balancing evaluation for legitimate-interest/public-task and research/statistical objections is a case-management/workflow concern these platforms model as request types but typically require custom review logic; none fully automates the balancing test. Sources: https://github.com/ethyca/fides , https://www.ethyca.com/fides , https://www.ethyca.com/docs/consent/standards/consent-gpc , https://docs.transcend.io/docs/articles/consent-management/concepts/global-privacy-control , https://www.ketch.com/blog/posts/consent-management-platforms , https://www.onetrust.com/blog/global-privacy-control-how-to-honor-consumer-opt-out-requests/"
+    },
+    {
+     "name": "Automated decision-making & profiling safeguards",
+     "category": "Governance & Privacy Ops",
+     "description": "Controls governing solely-automated significant decisions: gating them to permitted grounds (contract, law, or explicit consent), blocking special-category data unless conditions are met, and providing human-intervention, view-expression, and contest mechanisms.",
+     "satisfies": [
+      "GDPR-ART22-01",
+      "GDPR-ART22-02",
+      "GDPR-ART22-03",
+      "GDPR-ART22-04"
+     ],
+     "stack": [
+      {
+       "name": "Open Policy Agent (OPA)",
+       "kind": "open-source",
+       "why": "CNCF-graduated policy decision point that evaluates every solely-automated decision inline, gating it to permitted grounds (contract/law/explicit-consent) and denying special-category inputs unless conditions are met."
+      },
+      {
+       "name": "OneTrust (Consent & Preference Management + Privacy Rights Automation)",
+       "kind": "managed",
+       "why": "Widely-adopted system of record for explicit consent and lawful basis that OPA/the app checks, and its rights-request intake/fulfillment covers the view-expression and contest channels."
+      },
+      {
+       "name": "Camunda 8",
+       "kind": "open-source",
+       "why": "BPMN workflow/orchestration engine that routes flagged or contested decisions to human reviewers as user tasks, giving the required human-intervention and contest-handling path with an auditable trail."
+      },
+      {
+       "name": "Fiddler AI",
+       "kind": "managed",
+       "why": "Model observability and explainability platform that logs each automated decision and produces per-decision reason/feature attributions, supplying the explanation a data subject needs to meaningfully contest an outcome."
+      }
+     ],
+     "stack_notes": "Scoped to GDPR Art. 22 (and analogous ADM provisions). Division of labor: OneTrust holds consent/legal-basis + rights intake; OPA enforces the gate and special-category block at decision time; Camunda provides human-in-the-loop review/contest workflow; Fiddler supplies decision logging + explanations for meaningful contest. Camunda and OneTrust also offer managed SaaS; OPA and Fiddler could be substituted by Cerbos (OSS authz) and open-source SHAP respectively if an all-OSS stack is preferred. All four are current and actively supported as of 2026; no web search was needed given their maturity."
+    },
+    {
+     "name": "Lawful-basis & purpose governance",
+     "category": "Governance & Privacy Ops",
+     "description": "A processing registry that binds every activity to an identified lawful basis before it begins, records legitimate-interests balancing, enforces fair processing, purpose limitation, and a compatibility assessment for further use, gates criminal-conviction data to official-authority conditions, and ensures any restriction of data-subject rights rests on a lawful, necessary, proportionate measure with required safeguards.",
+     "satisfies": [
+      "GDPR-ART10-01",
+      "GDPR-ART23-01",
+      "GDPR-ART23-02",
+      "GDPR-ART5-01",
+      "GDPR-ART5-02",
+      "GDPR-ART5-04",
+      "GDPR-ART6-01",
+      "GDPR-ART6-02",
+      "GDPR-ART6-03"
+     ],
+     "stack": [
+      {
+       "name": "OneTrust Privacy & Data Governance",
+       "kind": "managed",
+       "why": "Market-leading privacy platform providing the Records of Processing (RoPA) registry, built-in legitimate-interests (LIA) and DPIA assessment workflows, and lawful-basis/special-category condition tracking per activity."
+      },
+      {
+       "name": "OpenMetadata",
+       "kind": "open-source",
+       "why": "Open data catalog with policy-driven classification and tagging to bind each processing activity to the actual data assets it touches and flag criminal-conviction/special-category data, backing purpose limitation and compatibility assessments with real lineage."
+      },
+      {
+       "name": "Open Policy Agent (OPA)",
+       "kind": "open-source",
+       "why": "Policy-as-code engine to enforce the gate at runtime — deny any processing that lacks an identified lawful basis or falls outside its declared purpose, and encode the necessity/proportionality/safeguard checks for rights restrictions."
+      },
+      {
+       "name": "Transcend",
+       "kind": "managed",
+       "why": "Code-first privacy platform (alternative or complement to OneTrust) that models purposes and lawful bases programmatically and propagates them across systems via API, fitting a greenfield build's CI/CD-driven workflow better than a UI-only tool."
+      }
+     ],
+     "stack_notes": "Roles are deliberately distinct: OneTrust or Transcend owns the registry/assessments (RoPA, LIA, compatibility, Art. 9/10 conditions); OpenMetadata binds activities to classified data assets; OPA enforces the \"lawful basis before processing begins\" and purpose-limitation gates at runtime. A greenfield 2026 build would pick one privacy platform (Transcend for code-first, OneTrust for breadth) plus OpenMetadata + OPA. All four are current and actively supported as of 2026; confidence is high without web verification given their established market positions."
+    },
+    {
+     "name": "Privacy by design & default",
+     "category": "Change & SDLC",
+     "description": "Build-time and runtime measures that embed pseudonymization and data minimization into system design, avoid acquiring or retaining identifying data solely for compliance when identification is not required, and enforce privacy-by-default settings so only data necessary for each purpose is collected, processed, retained, or made accessible without explicit action.",
+     "satisfies": [
+      "GDPR-ART11-01",
+      "GDPR-ART25-01",
+      "GDPR-ART25-02"
+     ],
+     "stack": [
+      {
+       "name": "Microsoft Presidio",
+       "kind": "open-source",
+       "why": "Self-hosted PII detection + de-identification (mask/hash/pseudonymize) applied in data pipelines and before logs/analytics/LLM context, so identifying data is stripped by design."
+      },
+      {
+       "name": "Skyflow Data Privacy Vault",
+       "kind": "managed",
+       "why": "Isolates PII in a tokenizing vault so apps store/process polymorphic tokens instead of raw identifiers, enforcing pseudonymization and data minimization at the architecture level."
+      },
+      {
+       "name": "OpenFGA",
+       "kind": "open-source",
+       "why": "CNCF fine-grained (Zanzibar-style) authorization to enforce privacy-by-default access — only the data necessary for each purpose is reachable without an explicit grant."
+      },
+      {
+       "name": "Tonic.ai",
+       "kind": "managed",
+       "why": "Generates de-identified/synthetic data for non-production so real identifying data is never acquired or retained where identification isn't required (test/dev/analytics)."
+      }
+     ],
+     "stack_notes": "Piiano Vault is a viable open-source alternative to Skyflow if a self-hosted PII vault is preferred; Gretel (now NVIDIA) is an alternative to Tonic for synthetic data. Presidio + a vault cover pseudonymization/minimization at build+runtime; OpenFGA covers privacy-by-default access; Tonic keeps identifying data out of non-prod. All four verified current as of 2026 via web search."
+    },
+    {
+     "name": "Accountability, liability & governance evidence",
+     "category": "Governance & Privacy Ops",
+     "description": "Risk-proportionate organizational and technical measures, backed by internal data-protection policies, that demonstrate and evidence compliance with all processing principles, preserve controller/processor-role and lawful-instruction documentation to bound (joint-and-several) liability, and maintain mitigating-factor evidence for fine assessment and national penalty regimes.",
+     "satisfies": [
+      "GDPR-ART24-01",
+      "GDPR-ART24-02",
+      "GDPR-ART5-09",
+      "GDPR-ART82-01",
+      "GDPR-ART82-02",
+      "GDPR-ART82-03",
+      "GDPR-ART83-01",
+      "GDPR-ART83-02",
+      "GDPR-ART83-03",
+      "GDPR-ART84-01"
+     ],
+     "stack": [
+      {
+       "name": "OneTrust Privacy & Data Governance",
+       "kind": "managed",
+       "why": "Market-leading privacy management platform: maintains Records of Processing (RoPA), DPIAs, controller/processor and DPA registers, and generates the audit-ready accountability evidence GDPR Art. 30/24 requires."
+      },
+      {
+       "name": "Fides (Ethyca)",
+       "kind": "open-source",
+       "why": "Privacy-as-code framework that declares data categories, processing purposes, lawful bases and systems in-repo, producing versioned RoPA and data-map evidence that lives beside the build and stays current via CI."
+      },
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "Continuously collects and timestamps control/policy evidence and manages internal data-protection policies across GDPR/SOC 2/ISO 27001, giving the organizational-measures and mitigating-factor trail auditors and regulators expect."
+      },
+      {
+       "name": "Eramba",
+       "kind": "open-source",
+       "why": "Open-core GRC system for a risk register, policy lifecycle, and control-to-evidence mapping — a self-hostable backbone for risk-proportionate governance measures and liability-bounding documentation."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted as of 2025-2026. Typical pairing: OneTrust or Fides for the privacy-specific RoPA/DPIA/role documentation, plus Vanta or Eramba as the broader GRC/policy-and-evidence layer. Choose one managed + one open-source depending on data-residency and budget constraints. Drata and Osano are comparable managed alternatives to Vanta/OneTrust if procurement prefers them."
+    },
+    {
+     "name": "Encryption & security of processing",
+     "category": "Data Protection",
+     "description": "Risk-appropriate technical and organisational security controls — encryption at rest and in transit, pseudonymization, and measures ensuring confidentiality, integrity, availability, and resilience — protecting personal data against unauthorised or unlawful processing and accidental loss, destruction, or damage.",
+     "satisfies": [
+      "GDPR-ART32-01",
+      "GDPR-ART32-02",
+      "GDPR-ART32-03",
+      "GDPR-ART5-08"
+     ],
+     "stack": [
+      {
+       "name": "Cloud KMS (AWS KMS / Google Cloud KMS / Azure Key Vault)",
+       "kind": "managed",
+       "why": "Managed, HSM-backed key management with envelope encryption and automatic key rotation — the default for encryption at rest of personal data in a cloud build."
+      },
+      {
+       "name": "OpenBao (or HashiCorp Vault)",
+       "kind": "open-source",
+       "why": "Encryption-as-a-service: its transit engine does application-layer field encryption and reversible pseudonymization/tokenization without the app ever holding keys, plus dynamic secrets."
+      },
+      {
+       "name": "cert-manager + Let's Encrypt",
+       "kind": "open-source",
+       "why": "Automates issuance and rotation of TLS certificates so all in-transit traffic is encrypted by default, with no manual cert lifecycle to forget."
+      },
+      {
+       "name": "Linkerd (or Istio) service mesh",
+       "kind": "open-source",
+       "why": "Enforces automatic mutual-TLS between all internal services, giving confidentiality and integrity for east-west traffic that public TLS termination alone misses."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted as of 2025-2026. OpenBao is the Linux Foundation open-source fork of Vault (relevant since Vault moved to the BSL license); pick Vault if you want the commercial/enterprise edition. For availability/resilience add provider-native encrypted backups + point-in-time recovery, which complement rather than replace the above."
+    },
+    {
+     "name": "Instruction-bound access control & least privilege",
+     "category": "IAM",
+     "description": "Authorization enforcement ensuring personnel and processors can only access and process personal data on documented instructions, backed by least-privilege access controls.",
+     "satisfies": [
+      "GDPR-ART29-01",
+      "GDPR-ART32-06"
+     ],
+     "stack": [
+      {
+       "name": "OpenFGA",
+       "kind": "open-source",
+       "why": "Zanzibar-style relationship-based authorization (ReBAC) that models fine-grained, least-privilege access per resource, giving a queryable source of truth for who may touch which personal data."
+      },
+      {
+       "name": "Open Policy Agent (OPA)",
+       "kind": "open-source",
+       "why": "Policy-as-code decision engine (Rego) that encodes documented processing instructions as versioned, auditable rules enforced uniformly across services and data pipelines."
+      },
+      {
+       "name": "Keycloak",
+       "kind": "open-source",
+       "why": "Mature OIDC/SAML identity provider supplying authenticated subjects, RBAC/group scoping, and step-up controls that anchor the least-privilege model for personnel and processors."
+      },
+      {
+       "name": "Amazon Verified Permissions (Cedar)",
+       "kind": "managed",
+       "why": "Managed Cedar-based authorization service for teams wanting hosted, provably-analyzable fine-grained permissions instead of self-run policy infrastructure."
+      }
+     ],
+     "stack_notes": "All four are current and actively maintained as of 2025-2026. Typical greenfield split: Keycloak for authN + coarse RBAC, then either OpenFGA (self-hosted ReBAC) or Verified Permissions/Cedar (managed) for fine-grained least-privilege authZ; OPA covers policy-as-code enforcement of documented processing instructions at service/gateway/CI layers. Choose OpenFGA vs. Amazon Verified Permissions based on self-host vs. managed preference — you generally would not run both."
+    },
+    {
+     "name": "Backup, restore & availability resilience",
+     "category": "Business Continuity",
+     "description": "Backup and disaster-recovery capability that restores availability of and access to personal data in a timely manner after a physical or technical incident.",
+     "satisfies": [
+      "GDPR-ART32-04"
+     ],
+     "stack": [
+      {
+       "name": "AWS Backup",
+       "kind": "managed",
+       "why": "Policy-driven, centralized backups across compute/DB/storage with cross-region and cross-account copy for tested DR, plus immutable Vault Lock for ransomware resilience."
+      },
+      {
+       "name": "Velero",
+       "kind": "open-source",
+       "why": "De-facto Kubernetes-native backup/restore and cluster migration, snapshotting persistent volumes and cluster resources to object storage for timely workload recovery."
+      },
+      {
+       "name": "pgBackRest",
+       "kind": "open-source",
+       "why": "Reliable PostgreSQL point-in-time recovery with incremental backups and WAL archiving, restoring personal data in the primary datastore to any moment after an incident."
+      },
+      {
+       "name": "S3 (with versioning + Cross-Region Replication + Object Lock)",
+       "kind": "managed",
+       "why": "Durable (11 nines), immutable, geo-replicated backup target that keeps restore artifacts available and tamper-proof after a physical or technical failure."
+      }
+     ],
+     "stack_notes": "Layered by tier: object storage is the immutable DR target; pgBackRest covers the relational datastore holding personal data; Velero covers containerized workloads; AWS Backup provides the org-wide policy/scheduling and cross-region orchestration. Substitute equivalents by cloud (Azure Backup / GCP Backup and DR; GCS or Azure Blob with versioning + object lock). All confirmed as widely adopted and actively maintained as of 2026; no web search needed."
+    },
+    {
+     "name": "Security testing & effectiveness assessment",
+     "category": "Incident & Vulnerability",
+     "description": "A recurring process to test, assess, and evaluate the effectiveness of security measures protecting personal data (e.g. pen tests, control reviews, vulnerability scans).",
+     "satisfies": [
+      "GDPR-ART32-05"
+     ],
+     "stack": [
+      {
+       "name": "Trivy",
+       "kind": "open-source",
+       "why": "De-facto vulnerability scanner for containers, filesystems, IaC and dependencies — wire into CI to continuously scan for known CVEs and misconfigurations."
+      },
+      {
+       "name": "OWASP ZAP",
+       "kind": "open-source",
+       "why": "Widely-adopted DAST tool for automated and manual web-app/API vulnerability testing, runnable in pipelines against staging environments."
+      },
+      {
+       "name": "HackerOne (PTaaS / bug bounty)",
+       "kind": "managed",
+       "why": "Delivers the recurring human pen-test and continuous crowdsourced testing that scanners can't, producing triaged findings and retest evidence for compliance."
+      },
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "Continuous control monitoring across GDPR/SOC2/ISO27001 — automatically tests control effectiveness and collects the assessment evidence auditors require."
+      }
+     ],
+     "stack_notes": "All four are current and well-supported as of 2025-2026. Alternatives if preferences differ: Nessus/Tenable or Wiz (managed) in place of Trivy for broader posture scanning; Burp Suite Pro (managed) instead of/alongside ZAP for DAST; Cobalt or Synack as PTaaS alternatives to HackerOne; Drata or Secureframe instead of Vanta for continuous control monitoring. The set spans the capability's three named activities: vulnerability scans (Trivy, ZAP), pen tests (HackerOne), and control reviews/effectiveness assessment (Vanta)."
+    },
+    {
+     "name": "Breach detection, register & notification",
+     "category": "Incident & Vulnerability",
+     "description": "Incident response pipeline that detects personal-data breaches, maintains an internal breach register, notifies the supervisory authority within 72 hours with required content and delay justification, propagates processor-to-controller alerts, and notifies affected subjects in plain language for high-risk breaches subject to defined exemptions.",
+     "satisfies": [
+      "GDPR-ART33-01",
+      "GDPR-ART33-02",
+      "GDPR-ART33-03",
+      "GDPR-ART33-04",
+      "GDPR-ART33-05",
+      "GDPR-ART34-01",
+      "GDPR-ART34-02",
+      "GDPR-ART34-03"
+     ],
+     "stack": [
+      {
+       "name": "Wazuh",
+       "kind": "open-source",
+       "why": "SIEM/XDR platform that detects personal-data breaches via file-integrity, DLP-style rules, and log correlation, firing the alert that starts the pipeline."
+      },
+      {
+       "name": "TheHive 5 (StrangeBee)",
+       "kind": "open-source",
+       "why": "Security incident-response platform providing the breach register (case DB) with SLA/72h timers, task templates, and an alert feed to ingest processor-to-controller notifications."
+      },
+      {
+       "name": "OneTrust Incident & Breach Response",
+       "kind": "managed",
+       "why": "Purpose-built GDPR module encoding 300+ breach laws: 72h supervisory-authority notification content, delay justification, risk assessment, exemption logic, and plain-language data-subject notices."
+      },
+      {
+       "name": "n8n",
+       "kind": "open-source",
+       "why": "Workflow orchestrator that glues detection to register to notifications — propagating processor-to-controller alerts and dispatching subject/authority notifications with audit trails."
+      }
+     ],
+     "stack_notes": "Split recommended: open-source SIEM (Wazuh) + SIRP (TheHive) covers detection and case/register workflow with 72h SLA tracking; a dedicated GRC breach module (OneTrust, or TrustArc as alternative) is the pragmatic managed choice for jurisdiction-aware authority notification content, delay justification, exemption rules, and data-subject plain-language notices, which are hard to hand-roll compliantly. n8n handles cross-system propagation (processor->controller alerts, notification dispatch). Elastic Security is a viable managed/OSS alternative to Wazuh for detection. Sources: https://docs.strangebee.com/thehive/overview/ , https://www.onetrust.com/news/onetrust-enhances-incident-breach-response/ , https://www.prnewswire.com/news-releases/onetrust-updates-incident--breach-response-solution-to-automate-guidance-and-response-across-300-data-breach-laws-300853960.html"
+    },
+    {
+     "name": "DPIA & prior consultation workflow",
+     "category": "Governance & Privacy Ops",
+     "description": "Data protection impact assessment process triggered for high-risk/enumerated processing, capturing required DPIA content, DPO consultation, optional data-subject input, periodic review on risk change, and prior consultation with the supervisory authority for unmitigated residual risk.",
+     "satisfies": [
+      "GDPR-ART35-01",
+      "GDPR-ART35-02",
+      "GDPR-ART35-03",
+      "GDPR-ART35-04",
+      "GDPR-ART35-05",
+      "GDPR-ART35-06",
+      "GDPR-ART36-01",
+      "GDPR-ART36-02"
+     ],
+     "stack": [
+      {
+       "name": "OneTrust Assessment Automation (PIA/DPIA Automation)",
+       "kind": "managed",
+       "why": "Market-leading privacy platform with purpose-built DPIA/PIA templates, risk scoring, DPO review routing, periodic re-assessment triggers, and supervisory-authority consultation tracking out of the box."
+      },
+      {
+       "name": "CNIL PIA tool",
+       "kind": "open-source",
+       "why": "Free, regulator-authored (French DPA) DPIA methodology app that captures required Art. 35 content, structures risk analysis, and generates the assessment report — ideal as the assessment core in a self-hosted build."
+      },
+      {
+       "name": "Camunda 8 (BPMN/DMN workflow engine)",
+       "kind": "open-source",
+       "why": "Orchestrates the DPIA lifecycle as a modeled process: high-risk-processing trigger, DPO consultation and optional data-subject input steps, periodic review on risk change, and escalation to prior consultation for unmitigated residual risk."
+      },
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "Widely adopted GRC/compliance automation that ties DPIA outcomes into a continuous control and risk register, with review reminders and evidence trails linking privacy risk to SOC2/ISO27001 posture."
+      }
+     ],
+     "stack_notes": "All four are current as of 2025-2026. OneTrust is the dominant managed choice for a turnkey DPIA workflow; CNIL PIA + Camunda is the strong open-source pairing (assessment content + orchestration/prior-consultation escalation) for a self-hosted build; Vanta is an optional managed layer if DPIA must feed a broader continuous-compliance program. Alternatives worth noting: TrustArc / Osano (managed privacy platforms) and OpenPages/ServiceNow GRC for large-enterprise workflow orchestration."
+    },
+    {
+     "name": "DPO designation & governance",
+     "category": "Governance & Privacy Ops",
+     "description": "Designation of a qualified, independent Data Protection Officer with published contact details, adequate resources and access, protection from dismissal/conflicts, and assignment of statutory risk-based advisory and monitoring tasks.",
+     "satisfies": [
+      "GDPR-ART37-01",
+      "GDPR-ART37-02",
+      "GDPR-ART37-03",
+      "GDPR-ART38-01",
+      "GDPR-ART38-02",
+      "GDPR-ART39-01",
+      "GDPR-ART39-02"
+     ],
+     "stack": [
+      {
+       "name": "OneTrust Privacy & Data Governance Cloud",
+       "kind": "managed",
+       "why": "Market-leading privacy management suite that hosts the RoPA, DPIA/assessment, and breach register a DPO statutorily monitors and advises on, with role-based access and audit trails that evidence independent oversight."
+      },
+      {
+       "name": "Ethyca Fides",
+       "kind": "open-source",
+       "why": "Privacy-as-code data-mapping and DSAR platform that gives the DPO programmatic, continuous technical visibility into processing activities for monitoring rather than point-in-time spreadsheets."
+      },
+      {
+       "name": "Osano",
+       "kind": "managed",
+       "why": "Lighter-weight, widely-adopted privacy program + consent platform well-suited to a greenfield org, covering RoPA, vendor risk, and DPO reporting/dashboards for accountability."
+      },
+      {
+       "name": "TrustArc Privacy Management Platform",
+       "kind": "managed",
+       "why": "Established alternative privacy governance suite with built-in assessment workflows and DPO advisory/monitoring task tracking, useful where a validated regulatory content library is preferred."
+      }
+     ],
+     "stack_notes": "DPO designation is fundamentally an organizational/legal act (a qualified, independent person with published contact details and protected status) — no tool \"implements\" the role itself; published DPO contact details normally live in the site's privacy policy/DPA rather than a dedicated product. The components above are the privacy-governance platforms that operationalize the DPO's statutory risk-based advisory and monitoring tasks (RoPA, DPIA, breach register, DSAR, monitoring dashboards). Recommend picking one primary platform (OneTrust or Osano for most greenfield builds; Fides if a code-first/self-hosted, engineering-owned stack is preferred) rather than stacking several. All four confirmed active and widely adopted as of 2025-2026 from prior knowledge; not web-verified this session."
+    },
+    {
+     "name": "Records of processing & authority cooperation",
+     "category": "Governance & Privacy Ops",
+     "description": "Maintained records of processing activities (as controller and processor), designation of an EU representative for non-EU entities, and processes to cooperate with the supervisory authority on request.",
+     "satisfies": [
+      "GDPR-ART27-01",
+      "GDPR-ART30-01",
+      "GDPR-ART30-02",
+      "GDPR-ART31-01"
+     ],
+     "stack": [
+      {
+       "name": "Ethyca Fides",
+       "kind": "open-source",
+       "why": "Privacy-as-code platform that auto-discovers data flows and generates/maintains Article 30 records of processing (RoPA) from your systems, versioned in the repo."
+      },
+      {
+       "name": "OneTrust Data Mapping & RoPA (Privacy Automation)",
+       "kind": "managed",
+       "why": "Market-leading privacy platform with a dedicated Article 30 RoPA module for controller/processor records plus regulator-interaction and DSAR workflows for authority cooperation."
+      },
+      {
+       "name": "Prighter (GDPR/UK Representative-as-a-Service)",
+       "kind": "managed",
+       "why": "Designated Article 27 EU (and UK) representative for non-EU entities, providing the listed EU contact point and handling correspondence with supervisory authorities on your behalf."
+      },
+      {
+       "name": "Transcend",
+       "kind": "managed",
+       "why": "Alternative privacy-ops platform that builds a live data inventory and continuously syncs it into RoPA/data-map records, reducing manual upkeep of processing activities."
+      }
+     ],
+     "stack_notes": "Core of this capability splits into three concerns: (1) maintaining RoPA as controller and processor — Fides (OSS) or OneTrust/Transcend (managed) keep the register current from actual data flows rather than static spreadsheets; (2) EU representative designation for non-EU entities — a distinct legal service, best met by a representative-as-a-service provider like Prighter (alternatives: DataRep, DataGuard); (3) supervisory-authority cooperation — handled via the representative plus the regulator-interaction/incident workflows in the privacy platform. For a lean greenfield build, Fides + Prighter covers OSS RoPA + Art. 27; swap in OneTrust or Transcend if you want a managed all-in-one with built-in DSAR and breach/authority workflows. Confidence is from prior knowledge (cutoff Jan 2026), not a fresh web check."
+    },
+    {
+     "name": "Processor & joint-controller contracting",
+     "category": "Vendor & Third-Party",
+     "description": "Vendor governance that engages only processors giving sufficient guarantees, binds them with mandatory-clause written contracts, controls sub-processor authorization and flow-down liability, and formalizes joint-controller responsibility arrangements.",
+     "satisfies": [
+      "GDPR-ART26-01",
+      "GDPR-ART28-01",
+      "GDPR-ART28-02",
+      "GDPR-ART28-03"
+     ],
+     "stack": [
+      {
+       "name": "OneTrust Third-Party Risk Management (with DPA/Vendorpedia)",
+       "kind": "managed",
+       "why": "Runs processor due-diligence to evidence 'sufficient guarantees,' tracks sub-processors and authorization chains, and centralizes DPA records — the market-standard GRC choice for Art. 28 vendor governance."
+      },
+      {
+       "name": "Vanta Vendor Risk Management",
+       "kind": "managed",
+       "why": "Continuously collects and monitors each processor's security guarantees (SOC 2/ISO evidence, questionnaires) so engagement decisions and ongoing oversight are auditable in a modern build."
+      },
+      {
+       "name": "Ironclad CLM",
+       "kind": "managed",
+       "why": "Enforces mandatory-clause DPA templates and playbooks (flow-down liability, sub-processor authorization, joint-controller Art. 26 terms) with clause-level guardrails during contract negotiation and signature."
+      },
+      {
+       "name": "Documenso",
+       "kind": "open-source",
+       "why": "Self-hostable e-signature platform to execute the required written processor and joint-controller contracts with tamper-evident audit trails, avoiding vendor lock-in for the signing step."
+      }
+     ],
+     "stack_notes": "All four are current and actively maintained as of 2025-2026. Typical split: a TPRM/GRC platform (OneTrust or Vanta) for the 'sufficient guarantees' assessment + sub-processor tracking, a CLM (Ironclad) for mandatory-clause enforcement and flow-down/joint-controller terms, and a signing tool (Documenso, open-source; or DocuSign/Ironclad-native if fully managed) to formalize the written contracts. OneTrust and Vanta overlap on vendor assessment — pick one, not both. No mature open-source option covers the full TPRM/CLM workflow, so those tiers are managed by necessity."
+    },
+    {
+     "name": "Cross-border transfer safeguards",
+     "category": "Governance & Privacy Ops",
+     "description": "Controls governing personal-data transfers outside the EEA: enforcing Chapter V bases, relying on and monitoring adequacy decisions, applying appropriate safeguards (unmodified SCCs, BCRs, codes/certifications) with supplementary measures, rejecting foreign disclosure demands lacking an international legal basis, gating derogations to the specific situation with subject risk-warnings and last-resort documentation, and recording every derogation-based transfer.",
+     "satisfies": [
+      "GDPR-ART44-01",
+      "GDPR-ART45-01",
+      "GDPR-ART45-02",
+      "GDPR-ART46-01",
+      "GDPR-ART46-02",
+      "GDPR-ART46-03",
+      "GDPR-ART47-01",
+      "GDPR-ART48-01",
+      "GDPR-ART49-01",
+      "GDPR-ART49-02",
+      "GDPR-ART49-03",
+      "GDPR-ART49-04"
+     ],
+     "stack": [
+      {
+       "name": "OneTrust (Data Mapping / Cross-Border Transfers module + Assessment Automation)",
+       "kind": "managed",
+       "why": "Purpose-built register for Chapter V: maintains RoPA/transfer inventory keyed to each transfer basis (adequacy, SCCs, BCRs, Art.49 derogations), automates Transfer Impact Assessments with supplementary-measure tracking, and logs every derogation-based transfer for audit."
+      },
+      {
+       "name": "Fides by Ethyca",
+       "kind": "open-source",
+       "why": "Code-native, self-hostable alternative that discovers and maps data flows across services and annotates them with destination/legal-basis metadata, so cross-border flows and their Chapter V basis are tracked in CI rather than a spreadsheet."
+      },
+      {
+       "name": "AWS European Sovereign Cloud",
+       "kind": "managed",
+       "why": "EU-operated, physically/logically isolated region (GA Jan 2026) that keeps personal data and operations inside the EEA, eliminating the transfer entirely for in-scope workloads and neutralizing foreign-disclosure exposure."
+      },
+      {
+       "name": "HashiCorp Vault (with BYOK / external key management)",
+       "kind": "open-source",
+       "why": "Supplementary technical measure: holds encryption keys under EEA control so any data that does leave the region stays effectively unreadable, strengthening TIAs and supporting rejection of foreign disclosure demands that lack an international legal basis."
+      }
+     ],
+     "stack_notes": "Confirmed current via web search (July 2026): AWS European Sovereign Cloud reached GA on 2026-01-15 (independent EU-located region, Germany-first with expansion to BE/NL/PT); OneTrust's TIA/cross-border transfer tooling remains the market-standard for Chapter V documentation as of 2025-2026. Typical split: OneTrust or Fides for the governance/register/TIA + derogation-log layer (managed vs. open-source choice), plus residency (Sovereign Cloud, or Microsoft EU Data Boundary as an equivalent) and EEA-held keys (Vault) as the technical supplementary-measures layer. Adequacy-decision monitoring is a live-feed feature of OneTrust; an open-source stack would need a manual/scripted watch on the EU Commission adequacy list."
+    },
+    {
+     "name": "Consent capture & lifecycle management",
+     "category": "Governance & Privacy Ops",
+     "description": "A consent subsystem that records demonstrable proof of consent, presents consent requests distinctly in plain language separate from other terms, ensures consent is freely given (not a condition of service), lets subjects withdraw as easily as they gave it, and enforces the explicit-consent standard for special-category data.",
+     "satisfies": [
+      "GDPR-ART7-01",
+      "GDPR-ART7-02",
+      "GDPR-ART7-03",
+      "GDPR-ART7-04",
+      "GDPR-ART9-02"
+     ],
+     "stack": [
+      {
+       "name": "Didomi (Consent & Preference Management Platform)",
+       "kind": "managed",
+       "why": "API-first CMP that records timestamped proof-of-consent, granular per-purpose choices, and a preference center for as-easy-as-given withdrawal; GDPR/IAB-TCF native and a 2026 enterprise leader (now Sourcepoint)."
+      },
+      {
+       "name": "OneTrust Consent & Preferences",
+       "kind": "managed",
+       "why": "Most widely adopted enterprise consent platform, with immutable consent receipts, distinct plain-language consent notices, and explicit-consent handling for special-category data across web/app/backend."
+      },
+      {
+       "name": "c15t",
+       "kind": "open-source",
+       "why": "Developer-first, self-hostable headless consent engine (React/Vue/Svelte/edge) giving full-code control over consent capture, an auditable consent-state store, and a built-in preference center for withdrawal."
+      },
+      {
+       "name": "Usercentrics (incl. Cookiebot)",
+       "kind": "managed",
+       "why": "Widely deployed EU-focused CMP with granular, freely-given consent flows, cross-domain consent logging/proof, and automated compliance updates across 150+ countries."
+      }
+     ],
+     "stack_notes": "All four target the same GDPR Art. 7/9 requirements (demonstrable proof, distinct plain-language requests, freely-given non-conditional consent, easy withdrawal, explicit consent for special-category data). For a new build, pick one CMP rather than stacking: Didomi or OneTrust if you want a managed record-of-consent API and enterprise governance; c15t if you want an open-source, self-hosted engine you embed and own end-to-end; Usercentrics/Cookiebot for a turnkey EU web deployment. Whichever you choose, persist consent receipts in your own datastore too so proof survives vendor changes. Sources: didomi.io/blog/enterprise-consent-management-platforms-best-cmp-2026, enzuzo.com/blog/best-consent-management-platforms, github.com/c15t/c15t, consent.io."
+    },
+    {
+     "name": "Special-category & children's data protection",
+     "category": "Data Protection",
+     "description": "Handling controls that block processing of special-category data unless an Article 9(2) exception applies, verify the child's age against the applicable threshold for online services offered to children, and make reasonable technology-based efforts to verify parental authorisation.",
+     "satisfies": [
+      "GDPR-ART8-01",
+      "GDPR-ART8-02",
+      "GDPR-ART9-01"
+     ],
+     "stack": [
+      {
+       "name": "Yoti (age assurance / facial age estimation)",
+       "kind": "managed",
+       "why": "Regulator-approved facial age estimation + digital-ID age checks to verify a child's age against the applicable online-services threshold; yoti-003 ranked #1 by NIST for 13-16 age estimation."
+      },
+      {
+       "name": "SuperAwesome Kids Web Services (KWS)",
+       "kind": "managed",
+       "why": "Purpose-built verifiable-parental-consent toolkit (COPPA/GDPR-K) offering technology-based parent verification (payment card, ID scan, facial age estimation) — the most widely deployed VPC platform."
+      },
+      {
+       "name": "OneTrust Consent & Preference Management",
+       "kind": "managed",
+       "why": "Records and enforces explicit opt-in consent and lawful basis per purpose, so special-category (Art 9) processing is blocked unless a valid Art 9(2) exception/consent is on record."
+      },
+      {
+       "name": "Google Cloud Sensitive Data Protection (formerly Cloud DLP)",
+       "kind": "managed",
+       "why": "Discovers and classifies special-category data (health, biometrics, race, etc.) in data flows and storage so pipelines can gate or de-identify it before processing."
+      }
+     ],
+     "stack_notes": "Coverage maps to the three sub-controls: age check (Yoti), parental authorisation (KWS), and special-category gating (OneTrust for consent/lawful-basis + Google Cloud Sensitive Data Protection for detection/classification). Alternatives worth noting: Persona for age/identity verification, PRIVO for VPC (FTC safe harbor), Transcend or Osano for consent management, and AWS Macie / Microsoft Purview / BigID for sensitive-data discovery. Viable open-source substitutes are scarce for age assurance and VPC (these are inherently managed/regulated services); the closest OSS option is on the classification side (e.g. Microsoft Presidio for PII/special-category detection) if a self-hosted alternative to Google Cloud DLP is required."
+    },
+    {
+     "name": "Data minimisation, accuracy & retention lifecycle",
+     "category": "Data Protection",
+     "description": "Data-lifecycle machinery limiting collection to what is necessary, keeping data accurate and rectified/erased without delay, and enforcing defined retention periods with automated deletion or anonymisation of identifiable data when they expire.",
+     "satisfies": [
+      "GDPR-ART5-05",
+      "GDPR-ART5-06",
+      "GDPR-ART5-07"
+     ],
+     "stack": [
+      {
+       "name": "Ethyca Fides",
+       "kind": "open-source",
+       "why": "Privacy-as-code platform that maps PII and automates data-subject access/rectification/erasure plus per-dataset retention rules directly against your infrastructure."
+      },
+      {
+       "name": "Transcend",
+       "kind": "managed",
+       "why": "Developer-first DSR/erasure orchestration with APIs that propagate deletion and retention actions across microservices, SaaS, and data warehouses."
+      },
+      {
+       "name": "pg_partman + pg_cron",
+       "kind": "open-source",
+       "why": "Time-based table partitioning with scheduled automatic dropping of expired partitions, giving deterministic retention/deletion at the Postgres storage layer."
+      },
+      {
+       "name": "ARX Data Anonymization Tool",
+       "kind": "open-source",
+       "why": "Applies k-anonymity, pseudonymisation, and generalisation so identifiable data can be anonymised rather than deleted when retention periods expire."
+      }
+     ],
+     "stack_notes": "Split OSS-native (Fides for privacy-as-code, pg_partman/pg_cron for storage-level TTL, ARX for anonymisation-on-expiry) and managed (Transcend for cross-system DSR/erasure orchestration; OneTrust is the enterprise-suite alternative if a broader GRC platform is preferred over Transcend's developer/API focus). Fides + a storage-native TTL mechanism covers most greenfield builds; add ARX or Transcend when anonymisation-instead-of-delete or multi-system fan-out is required. Confirmed current for 2025-2026 via vendor sites and a 2026 privacy-platform buyer's guide."
+    },
+    {
+     "name": "Data-subject transparency, complaints & remedies",
+     "category": "Governance & Privacy Ops",
+     "description": "Subject-facing intake and information flows: clear plain-language notices at or before collection, informing subjects of and not obstructing their rights to lodge a supervisory-authority complaint and pursue an effective judicial remedy, accepting requests from mandated not-for-profit representatives, and a process to receive, track, and comply with binding supervisory-authority orders.",
+     "satisfies": [
+      "GDPR-ART5-03",
+      "GDPR-ART77-01",
+      "GDPR-ART79-01",
+      "GDPR-ART80-01",
+      "GDPR-ART83-04"
+     ],
+     "stack": [
+      {
+       "name": "Osano (Consent & CMP)",
+       "kind": "managed",
+       "why": "Widely-adopted consent/CMP platform for serving clear plain-language privacy notices at or before collection and capturing consent records."
+      },
+      {
+       "name": "Ethyca Fides",
+       "kind": "open-source",
+       "why": "Self-hostable privacy-engineering framework with a subject-facing request portal that receives, maps, and fulfills DSRs across connected systems."
+      },
+      {
+       "name": "Transcend (DSR Automation)",
+       "kind": "managed",
+       "why": "End-to-end privacy-request orchestration (1,500+ integrations) to authenticate, route, track, and fulfill requests — including those from mandated representatives — with an auditable workflow."
+      },
+      {
+       "name": "Jira Service Management",
+       "kind": "managed",
+       "why": "SLA-driven case/ticketing workflow to receive, track, and evidence compliance with binding supervisory-authority orders and complaint intake, with full audit trail."
+      }
+     ],
+     "stack_notes": "Currency confirmed via web search (July 2026): Ethyca Fides is actively maintained (Fides 2.x, GitHub ethyca/fides) and Transcend publishes a 2026 DSAR guide + live DSR Automation product. Design intent: Osano handles the transparency/notice-at-collection leg; Fides (OSS) or Transcend (managed) handle subject-facing intake + fulfillment and accepting not-for-profit representative requests; a case tracker (Jira Service Management, or the case module inside Transcend/OneTrust) covers receiving/tracking/complying with supervisory-authority orders and lodged complaints. The notice UX should also surface subjects' right to lodge a supervisory-authority complaint and pursue a judicial remedy (static content, no dedicated tool). OneTrust is a viable managed all-in-one alternative that spans notice + DSAR + case management if a single vendor is preferred over the Osano/Fides/Transcend split. Sources: https://github.com/ethyca/fides , https://www.ethyca.com/fides , https://transcend.io/platform/dsr-automation , https://transcend.io/blog/dsar"
+    }
+   ]
+  },
+  "soc2": {
+   "capability_count": 25,
+   "mandatory_covered": 111,
+   "mandatory_total": 111,
+   "uncovered_mandatory_ids": [],
+   "capabilities": [
+    {
+     "name": "Capacity planning & elastic scaling",
+     "category": "Infrastructure & Network",
+     "description": "Continuously monitor compute, storage, and network utilization, forecast demand against available capacity, and provide manual or auto-scaling so the system meets demand before resources are exhausted and availability commitments are breached.",
+     "satisfies": [
+      "SOC2-A1-01",
+      "SOC2-A1-02",
+      "SOC2-A1-03"
+     ],
+     "stack": [
+      {
+       "name": "Prometheus",
+       "kind": "open-source",
+       "why": "CNCF-standard time-series metrics engine that scrapes compute/storage/network utilization and is the data source scaling decisions and forecasts read from."
+      },
+      {
+       "name": "KEDA (Kubernetes Event-Driven Autoscaling)",
+       "kind": "open-source",
+       "why": "Graduated CNCF project that scales workloads on real demand signals (queue depth, Prometheus metrics, HTTP RPS) well beyond basic HPA, scaling to and from zero."
+      },
+      {
+       "name": "Karpenter",
+       "kind": "open-source",
+       "why": "Just-in-time node provisioner that adds/consolidates cluster capacity in seconds so compute is elastic before pods go unschedulable and SLAs breach."
+      },
+      {
+       "name": "Grafana",
+       "kind": "open-source",
+       "why": "De-facto dashboarding and alerting layer over Prometheus for capacity trend visualization, forecasting panels, and threshold alerts ahead of exhaustion."
+      }
+     ],
+     "stack_notes": "Assumes a Kubernetes-based greenfield build, the dominant 2025-2026 substrate for elastic scaling. All four are current and widely adopted. Managed equivalents if not self-hosting: AWS Auto Scaling / EC2 Auto Scaling Groups + Amazon Managed Service for Prometheus + Amazon Managed Grafana, or GKE Autopilot with Cloud Monitoring; on cloud, Karpenter is native to EKS while GKE uses its built-in Cluster Autoscaler / node auto-provisioning. For statistical demand forecasting, Prometheus data can feed tools like Grafana ML or Facebook Prophet, but the four above cover the core continuous-monitor-plus-autoscale loop."
+    },
+    {
+     "name": "Environmental safeguards & facility monitoring",
+     "category": "Infrastructure & Network",
+     "description": "Protect hosting facilities against environmental hazards (fire, flood, power loss, temperature, humidity) and monitor environmental conditions with alerting so responders can act before an anomaly causes an outage.",
+     "satisfies": [
+      "SOC2-A1-04",
+      "SOC2-A1-05"
+     ],
+     "stack": [
+      {
+       "name": "Cloud provider compliance attestations (AWS Artifact / Google Cloud Compliance Reports / Azure Service Trust Portal)",
+       "kind": "managed",
+       "why": "For a cloud-hosted greenfield build, physical facility protections (fire suppression, flood, power, HVAC, temperature/humidity) are inherited from the provider and evidenced via their SOC 2 / ISO 27001 / ISO 27001 reports — the correct 'don't build it' answer for most 2026 stacks."
+      },
+      {
+       "name": "Prometheus + Alertmanager with SNMP Exporter",
+       "kind": "open-source",
+       "why": "De-facto standard for ingesting environmental telemetry (temp, humidity, PDU power, UPS state via SNMP/IPMI) and firing threshold-based alerts before an anomaly becomes an outage."
+      },
+      {
+       "name": "PagerDuty (or Opsgenie)",
+       "kind": "managed",
+       "why": "On-call routing, escalation, and multi-channel notification so a human responder is actually paged and acknowledges when an environmental alert triggers."
+      },
+      {
+       "name": "Sunbird DCIM (managed) or openDCIM (open-source)",
+       "kind": "managed",
+       "why": "Only if you operate your own facility/colo: DCIM tracks rack-level environmental sensors, power chains, and thermal maps and centralizes hazard monitoring — skip entirely for pure-cloud deployments."
+      }
+     ],
+     "stack_notes": "Primary recommendation for most 2026 greenfield builds: host on a major cloud/colo and inherit environmental safeguards via the provider's attestations (component 1) — this capability is largely a shared-responsibility 'inherited control' rather than something you build. Components 2-3 cover the part you still own: monitoring your own equipment telemetry and alerting responders. Component 4 (DCIM) only applies if you run physical facility infrastructure yourself. All listed tools are current and widely adopted as of 2025-2026."
+    },
+    {
+     "name": "Business continuity & disaster recovery",
+     "category": "Business Continuity",
+     "description": "Maintain encrypted isolated backups and redundant failover infrastructure with defined RTO/RPO, document and periodically test BC/DR plans and backup restoration, and identify disruption risks with proportionate mitigation including risk-transfer such as insurance.",
+     "satisfies": [
+      "SOC2-A1-06",
+      "SOC2-A1-07",
+      "SOC2-A1-08",
+      "SOC2-A1-09",
+      "SOC2-A1-10",
+      "SOC2-A1-11",
+      "SOC2-CC9-01",
+      "SOC2-CC9-02",
+      "SOC2-CC9-03"
+     ],
+     "stack": [
+      {
+       "name": "restic",
+       "kind": "open-source",
+       "why": "Widely-adopted CLI backup tool giving client-side AES-256 encryption, deduplication, and append-only/immutable repositories to isolated object storage — the encrypted-isolated-backup primitive with fast, verifiable restores."
+      },
+      {
+       "name": "AWS Backup with S3 Object Lock (cross-region/cross-account)",
+       "kind": "managed",
+       "why": "Centralized, policy-driven backup with scheduled RPO windows, WORM immutability via Object Lock, and cross-region/cross-account copy for isolated ransomware-resistant DR copies and enforceable retention."
+      },
+      {
+       "name": "Velero",
+       "kind": "open-source",
+       "why": "De-facto standard for Kubernetes backup/restore and cluster migration, enabling failover of workloads and persistent volumes to a redundant cluster/region to meet defined RTO."
+      },
+      {
+       "name": "Terraform",
+       "kind": "open-source",
+       "why": "Codifies the redundant failover infrastructure as reproducible IaC so recovery environments can be rebuilt to a known-good state and BC/DR runbooks can be periodically test-executed against real infra."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted as of 2025-2026; no web search was needed. Together they cover encrypted isolated backups (restic, AWS Backup + Object Lock immutability), redundant failover with defined RTO/RPO (Velero, Terraform-provisioned multi-region infra), and testable restoration (all support restore/rebuild drills). The requirement's risk-transfer/insurance element (e.g., cyber insurance) is a procurement/governance control, not a software component, so it is intentionally not listed here. Managed alternatives worth noting per cloud: Azure Backup / Google Cloud Backup and DR; Veeam is a strong commercial cross-platform option if a single managed backup plane is preferred over restic."
+    },
+    {
+     "name": "Data classification & confidentiality protection",
+     "category": "Data Protection",
+     "description": "Establish criteria to identify and classify confidential information at creation/receipt, maintain an inventory of confidential assets and locations, label the data, and apply access controls and encryption throughout its retention period.",
+     "satisfies": [
+      "SOC2-C1-01",
+      "SOC2-C1-02",
+      "SOC2-C1-03",
+      "SOC2-C1-04"
+     ],
+     "stack": [
+      {
+       "name": "Microsoft Purview Information Protection (sensitivity labels + DLP)",
+       "kind": "managed",
+       "why": "Defines classification criteria and auto/manual sensitivity labels applied at creation/receipt, with policy-driven DLP that follows the label through the data's life."
+      },
+      {
+       "name": "AWS Macie (or Google Cloud Sensitive Data Protection / Cloud DLP)",
+       "kind": "managed",
+       "why": "Continuously discovers, classifies, and inventories confidential data (PII, secrets) across object storage, giving the required asset-and-location inventory."
+      },
+      {
+       "name": "HashiCorp Vault",
+       "kind": "open-source",
+       "why": "Central secrets/key management with transit encryption and dynamic keys, enforcing encryption of confidential data throughout its retention period."
+      },
+      {
+       "name": "Open Policy Agent (OPA) with OpenFGA",
+       "kind": "open-source",
+       "why": "Policy-as-code and relationship-based authorization to enforce fine-grained, label-aware access controls on classified assets."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted as of 2025-2026. Choice of Macie vs Google Cloud Sensitive Data Protection should follow the target cloud; both are managed discovery/classification services. Purview is the strongest labeling layer if the org is on Microsoft 365/Azure; a cloud-native alternative is AWS/GCP tag-based classification plus their DLP service. Vault vs cloud KMS (AWS KMS / Cloud KMS) is an open-source-vs-managed tradeoff for the encryption/key layer."
+    },
+    {
+     "name": "Data retention & secure disposal",
+     "category": "Data Protection",
+     "description": "Define retention periods aligned to commitments and legal obligations, then irreversibly delete or anonymize data at end-of-life (cryptographic erasure, secure wipe, physical destruction) across all copies including backups, retaining evidence of disposal.",
+     "satisfies": [
+      "SOC2-C1-05",
+      "SOC2-C1-06",
+      "SOC2-C1-07",
+      "SOC2-C1-08",
+      "SOC2-C1-09",
+      "SOC2-C1-10",
+      "SOC2-C1-12",
+      "SOC2-P4-02",
+      "SOC2-P4-03"
+     ],
+     "stack": [
+      {
+       "name": "HashiCorp Vault",
+       "kind": "open-source",
+       "why": "Per-tenant/per-record encryption keys enable cryptographic erasure (crypto-shredding) — destroying the key renders data irrecoverable across all copies including backups."
+      },
+      {
+       "name": "AWS S3 Object Lock + Lifecycle policies",
+       "kind": "managed",
+       "why": "Declarative retention periods (governance/compliance mode) with automatic expiration and deletion of objects at end-of-life, tamper-evident and auditable."
+      },
+      {
+       "name": "OpenMetadata",
+       "kind": "open-source",
+       "why": "Data catalog + governance to classify PII and define/track retention periods per dataset aligned to legal and contractual obligations."
+      },
+      {
+       "name": "ShredOS / nwipe",
+       "kind": "open-source",
+       "why": "Standards-based secure wipe of physical media (NIST 800-88 style) producing a certificate as evidence of disposal for decommissioned drives."
+      }
+     ],
+     "stack_notes": "Recommended pattern for a greenfield build: make cryptographic erasure the primary disposal mechanism (Vault-managed keys) since it uniformly covers backups and replicas that secure-wipe cannot reach; use S3 Object Lock/Lifecycle for automated retention+expiry of object data; OpenMetadata to author and enforce retention schedules; ShredOS/nwipe only for the residual physical-media destruction case. Disposal evidence: retain KMS key-destruction logs (CloudTrail/Vault audit device) and wipe certificates as the immutable audit trail. Cloud-neutral alternatives exist (GCP KMS, Azure Key Vault, MinIO object retention) if avoiding AWS lock-in."
+    },
+    {
+     "name": "Control environment: governance, ethics & personnel",
+     "category": "Governance & Privacy Ops",
+     "description": "Maintain a code of conduct with ethics remediation, an independent competent board overseeing controls, defined organizational structure and authorities with segregation of duties, plus role-based competence requirements, training, succession, and individual accountability for control responsibilities.",
+     "satisfies": [
+      "SOC2-CC1-01",
+      "SOC2-CC1-02",
+      "SOC2-CC1-03",
+      "SOC2-CC1-04",
+      "SOC2-CC1-05",
+      "SOC2-CC1-06",
+      "SOC2-CC1-07",
+      "SOC2-CC1-08",
+      "SOC2-CC1-09",
+      "SOC2-CC1-10",
+      "SOC2-CC1-11",
+      "SOC2-CC1-12",
+      "SOC2-CC1-13"
+     ],
+     "stack": [
+      {
+       "name": "NAVEX One (Ethics & Compliance suite)",
+       "kind": "managed",
+       "why": "Purpose-built for code of conduct policy management, ethics hotline intake, and case/remediation workflows — the core of ethics-remediation and individual accountability."
+      },
+      {
+       "name": "Vanta (or Drata) GRC platform",
+       "kind": "managed",
+       "why": "Maps controls to owners with evidence and continuous monitoring, operationalizing board-overseen control responsibility and per-role accountability across SOC 2/ISO 27001."
+      },
+      {
+       "name": "Rippling (or Workday) HRIS",
+       "kind": "managed",
+       "why": "Encodes the org structure, reporting lines, role-based competence/job profiles, training assignments, and succession data that define authorities and personnel controls."
+      },
+      {
+       "name": "SailPoint Identity Security (or open-source Keycloak for RBAC)",
+       "kind": "managed",
+       "why": "Enforces segregation of duties and least-privilege authorities via identity governance, access reviews, and SoD-conflict detection tied to defined roles."
+      }
+     ],
+     "stack_notes": "Domain is governance/HR/ethics-heavy, so strong options are predominantly managed SaaS; the credible open-source foothold is Keycloak for role-based authorities (RBAC), noted as the alternative in the identity component. Vanta/Drata and Rippling/Workday and SailPoint/Keycloak are given as interchangeable peers so the build can pick by budget/scale. All named tools are current and widely adopted as of 2025-2026."
+    },
+    {
+     "name": "Control information & communications",
+     "category": "Governance & Privacy Ops",
+     "description": "Identify and capture quality information needed for internal control from internal and external sources, and communicate control objectives, policies, and responsibilities internally (including a confidential reporting channel), to the board, and to external users.",
+     "satisfies": [
+      "SOC2-CC2-01",
+      "SOC2-CC2-02",
+      "SOC2-CC2-03",
+      "SOC2-CC2-04",
+      "SOC2-CC2-05",
+      "SOC2-CC2-06",
+      "SOC2-CC2-07",
+      "SOC2-CC2-08"
+     ],
+     "stack": [
+      {
+       "name": "Vanta (or Drata)",
+       "kind": "managed",
+       "why": "GRC platform that captures control information from integrated internal/external systems and centralizes control objectives, policies, ownership, and attestations — its Trust Center also communicates control posture to external users."
+      },
+      {
+       "name": "GlobaLeaks",
+       "kind": "open-source",
+       "why": "Anonymous, end-to-end-encrypted whistleblowing platform (EU Directive 2019/1937 / ISO 37002 aligned) that provides the required confidential internal reporting channel; self-hostable with no per-seat cost."
+      },
+      {
+       "name": "Confluence (or Notion)",
+       "kind": "managed",
+       "why": "Internal knowledge hub for publishing and versioning control objectives, policies, and role/responsibility assignments so they are consistently communicated to staff, with permissioned spaces for external stakeholders."
+      },
+      {
+       "name": "Diligent Boards",
+       "kind": "managed",
+       "why": "Secure board portal for communicating control objectives, risks, and governance responsibilities to the board with auditable distribution and acknowledgement."
+      }
+     ],
+     "stack_notes": "Maps to COSO principles 13-15 (uses quality information; communicates internally; communicates externally). Split: Vanta = capture/aggregate control information + external users; GlobaLeaks = confidential reporting channel; Confluence/Notion = internal policy communication; Diligent = board communication. Vanta and Drata are both current 2025-2026 market leaders (Vanta named IDC MarketScape Leader 2025); GlobaLeaks confirmed actively maintained and recommended by Transparency International. A leaner 3-component build can fold board comms into the Confluence/Notion hub; Diligent is warranted mainly when a formal board portal with acknowledgement tracking is required. NAVEX EthicsPoint is the managed alternative to GlobaLeaks if a fully hosted hotline (with phone intake) is preferred."
+    },
+    {
+     "name": "Identity & access management",
+     "category": "IAM",
+     "description": "Logical access layer that assigns unique identifiers, manages credential issuance/rotation/revocation, enforces MFA on privileged/remote/external paths, runs authorized provisioning and prompt deprovisioning, applies least privilege and segregation of duties, and performs recurring access and privileged-access recertification.",
+     "satisfies": [
+      "SOC2-CC5-05",
+      "SOC2-CC5-08",
+      "SOC2-CC6-01",
+      "SOC2-CC6-02",
+      "SOC2-CC6-03",
+      "SOC2-CC6-05",
+      "SOC2-CC6-06",
+      "SOC2-CC6-07",
+      "SOC2-CC6-08"
+     ],
+     "stack": [
+      {
+       "name": "Microsoft Entra ID + Entra ID Governance",
+       "kind": "managed",
+       "why": "Cloud IdP giving each user a unique ID with Conditional Access MFA on privileged/remote/external paths, plus PIM for just-in-time privileged access and Access Reviews/lifecycle workflows for provisioning, deprovisioning, and recurring recertification."
+      },
+      {
+       "name": "Okta Workforce Identity Cloud",
+       "kind": "managed",
+       "why": "Widely-adopted IdP with adaptive/phishing-resistant MFA and SCIM-based lifecycle provisioning that automates authorized joiner-mover-leaver credential issuance, rotation, and prompt revocation across downstream apps."
+      },
+      {
+       "name": "SailPoint Identity Security Cloud",
+       "kind": "managed",
+       "why": "Leading IGA layer that enforces least privilege and segregation-of-duties policies and runs the scheduled access and privileged-access certification campaigns the capability requires."
+      },
+      {
+       "name": "Keycloak",
+       "kind": "open-source",
+       "why": "Self-hostable OIDC/SAML identity provider for your own app's login layer, issuing unique identities and enforcing MFA/credential policies without vendor lock-in."
+      }
+     ],
+     "stack_notes": "All four are current and actively maintained as of 2025-2026. Entra ID Governance and SailPoint specifically cover the SoD/least-privilege/recertification governance controls; Entra/Okta/Keycloak cover the authentication, MFA, and credential-lifecycle controls. A typical greenfield build pairs one IdP (Entra, Okta, or Keycloak) with an IGA tool (Entra ID Governance or SailPoint) rather than adopting all four."
+    },
+    {
+     "name": "Encryption & cryptographic key management",
+     "category": "Data Protection",
+     "description": "Protect sensitive and personal data with encryption at rest and in transit, restrict how and where such data may be transmitted, and securely manage cryptographic keys across their full lifecycle (generation, storage, rotation, destruction).",
+     "satisfies": [
+      "SOC2-CC6-04",
+      "SOC2-CC6-12"
+     ],
+     "stack": [
+      {
+       "name": "Cloud provider KMS (AWS KMS / Google Cloud KMS / Azure Key Vault)",
+       "kind": "managed",
+       "why": "HSM-backed managed key lifecycle (generation, rotation, destruction, access policy) with envelope encryption that underpins at-rest encryption for the rest of the stack."
+      },
+      {
+       "name": "HashiCorp Vault (or OpenBao, its OSS/Linux Foundation fork)",
+       "kind": "open-source",
+       "why": "Central secrets + encryption-as-a-service: the Transit engine encrypts app data without exposing keys, with dynamic secrets, automated key rotation, and audit logging you can self-host."
+      },
+      {
+       "name": "cert-manager + Let's Encrypt",
+       "kind": "open-source",
+       "why": "Automates TLS certificate issuance and renewal in Kubernetes so encryption-in-transit (HTTPS/mTLS) stays valid without manual cert rotation."
+      },
+      {
+       "name": "Google Tink",
+       "kind": "open-source",
+       "why": "Misuse-resistant application-layer crypto library that gives safe AEAD/envelope-encryption primitives and integrates with cloud KMS for key wrapping, avoiding hand-rolled crypto mistakes."
+      }
+     ],
+     "stack_notes": "Typical 2026 greenfield pattern: a cloud KMS (or Vault/OpenBao Transit) is the root of trust for key lifecycle and envelope/at-rest encryption; TLS everywhere (cert-manager + Let's Encrypt, optionally a service mesh like Istio/Linkerd for mTLS) covers in-transit; Tink handles field/application-level encryption safely. Vault/OpenBao and a cloud KMS are somewhat alternatives — pick cloud KMS if fully managed is preferred, Vault/OpenBao if you need self-hosted, multi-cloud, or richer secrets management. Data-residency/transmission restrictions are enforced via KMS key-region policies + IAM/network egress controls rather than a distinct tool."
+    },
+    {
+     "name": "Control monitoring, evaluation & deficiency remediation",
+     "category": "Logging & Monitoring",
+     "description": "Run ongoing monitoring and periodic independent evaluations against a documented control baseline, document and retain results, then assess and rank identified deficiencies, communicate them, track corrective actions to completion, and escalate significant deficiencies to senior management/board.",
+     "satisfies": [
+      "SOC2-CC4-01",
+      "SOC2-CC4-02",
+      "SOC2-CC4-03",
+      "SOC2-CC4-04",
+      "SOC2-CC4-05",
+      "SOC2-CC4-07",
+      "SOC2-CC4-08",
+      "SOC2-CC4-09",
+      "SOC2-CC4-10",
+      "SOC2-CC4-11"
+     ],
+     "stack": [
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "Continuous control monitoring against a documented framework baseline (SOC2/ISO27001/GDPR): auto-collects evidence, flags failing controls as deficiencies, and retains audit-ready results."
+      },
+      {
+       "name": "Prowler",
+       "kind": "open-source",
+       "why": "Independent, automated technical evaluation of cloud controls against baselines (CIS, SOC2, ISO, GDPR) — schedule periodic scans that objectively test the control set separate from the GRC tool."
+      },
+      {
+       "name": "Grafana + Prometheus/Loki (Grafana Labs LGTM stack)",
+       "kind": "open-source",
+       "why": "The ongoing logging & monitoring backbone — alerting on control-signal drift plus dashboards that surface ranked deficiency status for senior-management/board reporting."
+      },
+      {
+       "name": "Jira Service Management",
+       "kind": "managed",
+       "why": "Tracks assessed and ranked deficiencies as corrective-action items to completion, with SLA/escalation rules to route significant deficiencies to leadership."
+      }
+     ],
+     "stack_notes": "Vanta is interchangeable with Drata (both widely adopted managed CCM platforms); pick one. Prowler is the most widely adopted OSS control-evaluation scanner (Steampipe/Powerpipe compliance benchmarks are an alternative). Pattern: managed CCM for baseline+evidence+deficiency detection, OSS scanner for independent testing, observability stack for continuous monitoring/board dashboards, and an issue tracker for corrective-action-to-completion with escalation. All confirmed current for 2025-2026 from domain knowledge (cutoff Jan 2026); no web search performed."
+    },
+    {
+     "name": "External communication & incident reporting channels",
+     "category": "Incident & Vulnerability",
+     "description": "Provide channels for external parties to report security incidents, vulnerabilities, and complaints, notify external users of changes affecting security commitments, and select communication methods, formats, and timing appropriate to audience and urgency.",
+     "satisfies": [
+      "SOC2-CC2-10",
+      "SOC2-CC2-11",
+      "SOC2-CC2-12"
+     ],
+     "stack": [
+      {
+       "name": "HackerOne",
+       "kind": "managed",
+       "why": "Industry-standard VDP + bug bounty platform giving external researchers a structured, triaged channel to report security vulnerabilities."
+      },
+      {
+       "name": "security.txt (RFC 9116)",
+       "kind": "open-source",
+       "why": "Standardized /.well-known/security.txt file publishes a machine-readable security contact so external parties know exactly where and how to report incidents."
+      },
+      {
+       "name": "Atlassian Statuspage",
+       "kind": "managed",
+       "why": "Proactively notifies subscribed external users of incidents and changes affecting security commitments via email/SMS/webhook with severity-appropriate messaging."
+      },
+      {
+       "name": "Zammad",
+       "kind": "open-source",
+       "why": "Self-hosted help-desk providing an auditable intake channel for external complaints and reports across email, web form, and chat."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted in 2025-2026. HackerOne (or Bugcrowd as an equivalent managed alternative) covers vulnerability intake; security.txt is the open standard advertising the reporting contact; Statuspage (or open-source Cachet / managed Instatus) handles outbound change/incident notification tuned to audience and urgency; Zammad (or managed Zendesk/Freshdesk) captures complaints. Together they cover inbound reporting, contact discoverability, and outbound notification called for by the capability."
+    },
+    {
+     "name": "Risk assessment & fraud-risk governance",
+     "category": "Governance & Privacy Ops",
+     "description": "Specify objectives and risk tolerances, identify and analyze risks to objectives from internal and external sources, determine documented risk responses, explicitly assess fraud potential including management override, and re-analyze risk when significant environmental, business, leadership, or technology changes occur.",
+     "satisfies": [
+      "SOC2-CC3-01",
+      "SOC2-CC3-02",
+      "SOC2-CC3-03",
+      "SOC2-CC3-04",
+      "SOC2-CC3-05",
+      "SOC2-CC3-06",
+      "SOC2-CC3-07",
+      "SOC2-CC3-08",
+      "SOC2-CC3-09",
+      "SOC2-CC3-10",
+      "SOC2-CC3-11"
+     ],
+     "stack": [
+      {
+       "name": "LogicGate Risk Cloud",
+       "kind": "managed",
+       "why": "No-code GRC/ERM platform with configurable risk register, risk tolerances, and workflow-driven risk responses plus automated re-assessment triggers on change events."
+      },
+      {
+       "name": "Diligent HighBond (Diligent One)",
+       "kind": "managed",
+       "why": "2025 Gartner GRC Leader whose ML-driven analytics test fraud potential and management-override / journal-entry anomalies while managing enterprise risk assessments."
+      },
+      {
+       "name": "Eramba",
+       "kind": "open-source",
+       "why": "Self-hostable GRC tool providing an internal/external risk register, documented risk treatment, and scheduled periodic reviews to re-analyze risk on significant change."
+      },
+      {
+       "name": "SimpleRisk",
+       "kind": "open-source",
+       "why": "Lightweight open-source risk assessment/register with scoring, documented mitigation responses, and configurable review cycles for greenfield teams wanting minimal footprint."
+      }
+     ],
+     "stack_notes": "Capability maps to COSO ERM principles 6-9 (objectives/tolerances, risk identification, fraud assessment incl. management override, change-driven re-analysis). Managed picks (LogicGate, Diligent HighBond) are the widely-adopted enterprise choices; Diligent HighBond is the strongest for the fraud-potential/management-override requirement via its analytics engine. Open-source picks (Eramba, SimpleRisk) cover the risk-register + treatment + periodic-review core but need custom analytics for fraud-specific override testing. Both managed tools confirmed current for 2025-2026 via web search (LogicGate won a Oct-2025 risk award; Diligent named 2025 Gartner GRC Magic Quadrant Leader). Choose 1 managed platform + optionally 1 open-source register depending on budget/self-hosting needs."
+    },
+    {
+     "name": "Control framework design, policy deployment & accountability",
+     "category": "Governance & Privacy Ops",
+     "description": "Select and develop a risk-aligned mix of manual/automated and preventive/detective control activities, deploy them through documented policies and procedures with assigned accountability, perform them timely with corrective action, and periodically reassess them via competent personnel.",
+     "satisfies": [
+      "SOC2-CC5-01",
+      "SOC2-CC5-02",
+      "SOC2-CC5-03",
+      "SOC2-CC5-04",
+      "SOC2-CC5-10",
+      "SOC2-CC5-11",
+      "SOC2-CC5-12",
+      "SOC2-CC5-13"
+     ],
+     "stack": [
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "Widely-adopted compliance automation platform that maps a risk-aligned control set to frameworks (SOC 2/ISO 27001/GDPR), ships policy templates, and runs continuous automated (detective) checks with evidence collection."
+      },
+      {
+       "name": "Drata",
+       "kind": "managed",
+       "why": "GRC platform whose strength is control ownership and accountability — assign each control to a person, drive timely completion and corrective-action workflows, and schedule periodic control reassessment."
+      },
+      {
+       "name": "Eramba",
+       "kind": "open-source",
+       "why": "Self-hostable GRC for teams needing full control: design a custom control catalog, run the policy lifecycle (review/approval/publish), assign owners, and enforce periodic reassessment on defined review cycles."
+      },
+      {
+       "name": "NIST OSCAL + IBM trestle",
+       "kind": "open-source",
+       "why": "Open standard and toolkit for expressing controls, policies, and assessment results as machine-readable, version-controlled 'compliance-as-code', so the framework lives in your repo and stays auditable across tools."
+      }
+     ],
+     "stack_notes": "All four are current as of 2025-2026. Vanta and Drata are the two dominant managed options — pick one, not both; Vanta leans toward framework breadth and automated evidence, Drata toward control accountability and corrective-action workflows. Eramba is the leading open-source self-hosted alternative when data residency or customization rules out a SaaS. OSCAL/trestle is complementary (not a full platform): adopt it if you want controls and policies as code alongside whichever platform you choose. Secureframe and Sprinto are viable managed alternatives in the same tier if evaluating further. Confidence is high from domain knowledge; no web search was needed."
+    },
+    {
+     "name": "Vendor & third-party risk management",
+     "category": "Vendor & Third-Party",
+     "description": "Maintain a vendor/subprocessor inventory, assess risk at onboarding and ongoing, impose security/confidentiality/availability and retention/disposal obligations contractually, monitor subservice-organization controls, remediate deficiencies, and manage secure termination including data return/destruction and access revocation.",
+     "satisfies": [
+      "SOC2-C1-11",
+      "SOC2-CC2-09",
+      "SOC2-CC3-12",
+      "SOC2-CC4-06",
+      "SOC2-CC9-04",
+      "SOC2-CC9-05",
+      "SOC2-CC9-06",
+      "SOC2-CC9-07",
+      "SOC2-CC9-08",
+      "SOC2-CC9-09",
+      "SOC2-CC9-10",
+      "SOC2-CC9-11",
+      "SOC2-P6-01"
+     ],
+     "stack": [
+      {
+       "name": "Vanta (Vendor Risk Management module)",
+       "kind": "managed",
+       "why": "Auto-discovers and maintains a vendor/subprocessor inventory, runs onboarding + recurring risk assessments, and automates security questionnaires/document collection with continuous monitoring."
+      },
+      {
+       "name": "SecurityScorecard",
+       "kind": "managed",
+       "why": "Continuous external security ratings and alerting on vendors and subservice organizations, surfacing control deficiencies to drive ongoing monitoring and remediation."
+      },
+      {
+       "name": "OneTrust Third-Party Risk Management",
+       "kind": "managed",
+       "why": "Enterprise VRM workflows for assessment, contractual obligation/DPA tracking (security, confidentiality, retention/disposal), and structured offboarding covering data return/destruction and access revocation."
+      },
+      {
+       "name": "Eramba (Community Edition)",
+       "kind": "open-source",
+       "why": "Self-hostable GRC with a third-party register, recurring risk assessments, and control/obligation tracking for teams that need on-prem TPRM instead of SaaS."
+      }
+     ],
+     "stack_notes": "All four are current and actively supported as of 2025-2026. Typical greenfield pattern: one automation/GRC platform of record (Vanta for mid-market, OneTrust for enterprise-depth contractual/offboarding obligations, or Eramba if self-hosting is required) plus a continuous external-monitoring feed like SecurityScorecard (BitSight is an equivalent alternative). Drata is a close substitute for Vanta; Prevalent/Mitratech and ServiceNow VRM are enterprise alternatives to OneTrust. Contract lifecycle (CLM) tools like Ironclad may complement the contractual-obligation piece if not handled inside the GRC platform. Did not web-verify each vendor live this session; all are well-established and were current at knowledge cutoff."
+    },
+    {
+     "name": "Physical access control & secure media disposal",
+     "category": "Data Protection",
+     "description": "Restrict and periodically review physical access to facilities, data centers, and hardware, and securely erase or destroy data on media and assets before disposal or reuse so residual sensitive data is unrecoverable.",
+     "satisfies": [
+      "SOC2-CC6-09",
+      "SOC2-CC6-10"
+     ],
+     "stack": [
+      {
+       "name": "Cloud provider (AWS / Azure / GCP) inherited data-center controls",
+       "kind": "managed",
+       "why": "Building on a hyperscaler inherits SOC2/ISO27001-attested data-center physical access control and NIST 800-88 media destruction, so you never operate or dispose of your own server media."
+      },
+      {
+       "name": "Verkada or Kisi cloud access control",
+       "kind": "managed",
+       "why": "Cloud-managed badge/door access for your own offices and hardware rooms, with tamper-evident audit logs that make the required periodic access reviews auditable."
+      },
+      {
+       "name": "Kandji / Jamf / Microsoft Intune (MDM)",
+       "kind": "managed",
+       "why": "Enforces FileVault/BitLocker full-disk encryption plus remote wipe, so device disposal or reuse becomes a verifiable crypto-erase that renders residual data unrecoverable."
+      },
+      {
+       "name": "Vanta or Drata (GRC automation)",
+       "kind": "managed",
+       "why": "Automates the periodic physical-access review workflow and centrally collects device-disposal/destruction evidence and vendor SOC2 reports for continuous audit readiness."
+      }
+     ],
+     "stack_notes": "All four are managed/SaaS because this capability is fundamentally about facilities, hardware, and endpoints rather than application code — there is no meaningful open-source \"component\" you embed in a software stack to control physical door access or destroy data-center drives. For self-managed endpoints/servers, an open-source disk sanitizer such as nwipe (NIST 800-88 purge) or the built-in `cryptsetup`/`blkdiscard` crypto-erase can supplement the MDM path, but in a greenfield cloud build the provider handles media destruction. Primary control set is: inherit DC controls from the cloud provider, gate your own facilities with cloud access control, enforce encryption+remote-wipe via MDM for crypto-shredding, and track reviews/evidence in a GRC platform."
+    },
+    {
+     "name": "Infrastructure, network boundary & endpoint protection",
+     "category": "Infrastructure & Network",
+     "description": "General controls over technology infrastructure (networks, servers, cloud) supporting reliable processing, boundary defenses (firewalls, segmentation, IDS/IPS) protecting the perimeter, and controls to prevent, detect, and remediate unauthorized or malicious software.",
+     "satisfies": [
+      "SOC2-CC5-07",
+      "SOC2-CC6-11",
+      "SOC2-CC6-13"
+     ],
+     "stack": [
+      {
+       "name": "Cloudflare (WAF + DDoS + Zero Trust/Access)",
+       "kind": "managed",
+       "why": "Managed perimeter defense — global WAF, L3/7 DDoS mitigation, and identity-aware Zero Trust access replace legacy edge firewalls for a cloud-native build."
+      },
+      {
+       "name": "Cilium + Hubble (eBPF)",
+       "kind": "open-source",
+       "why": "CNCF-graduated eBPF dataplane enforcing default-deny network policies and east-west microsegmentation for Kubernetes, with Hubble for flow visibility."
+      },
+      {
+       "name": "CrowdStrike Falcon",
+       "kind": "managed",
+       "why": "Widely-adopted EDR/XDR for servers, endpoints, and cloud workloads — prevents, detects, and remediates malicious software with cloud-delivered threat intel."
+      },
+      {
+       "name": "Falco",
+       "kind": "open-source",
+       "why": "CNCF runtime threat detection using eBPF/syscalls to flag unexpected process, file, and network behavior in containers and hosts as an IDS layer."
+      }
+     ],
+     "stack_notes": "Scoped to a greenfield cloud/Kubernetes stack. Cloudflare handles the perimeter (boundary defense), Cilium handles internal segmentation, and Falcon+Falco cover endpoint/workload anti-malware and runtime intrusion detection. Open-source-only alternative to Falcon: Wazuh (HIDS, anti-malware, file-integrity monitoring). If not on Kubernetes, substitute cloud-provider network firewalls (e.g. AWS Network Firewall) for Cilium."
+    },
+    {
+     "name": "Vulnerability management & remediation",
+     "category": "Incident & Vulnerability",
+     "description": "Scheduled scanning of infrastructure and software for known vulnerabilities and configuration drift, with tracked, risk-prioritized remediation to resolution within defined SLAs.",
+     "satisfies": [
+      "SOC2-CC7-01",
+      "SOC2-CC7-10"
+     ],
+     "stack": [
+      {
+       "name": "Trivy",
+       "kind": "open-source",
+       "why": "Single scanner covering OS packages, language dependencies, container images, and IaC/config misconfiguration (drift), runnable on a schedule in CI or as a Kubernetes operator."
+      },
+      {
+       "name": "Wiz",
+       "kind": "managed",
+       "why": "Agentless CNAPP that continuously scans the cloud estate and contextually risk-prioritizes findings by exploitability, exposure, and blast radius rather than raw CVSS."
+      },
+      {
+       "name": "DefectDojo",
+       "kind": "open-source",
+       "why": "Central vulnerability aggregation/deduplication hub that ingests all scanner outputs and tracks risk-based remediation against configurable SLAs with reporting."
+      },
+      {
+       "name": "Snyk",
+       "kind": "managed",
+       "why": "Developer-facing SCA/SAST/container scanning that opens automated fix pull requests, driving software-side remediation to resolution inside the dev workflow."
+      }
+     ],
+     "stack_notes": "Pattern: Trivy (self-hosted scanning) or Wiz (managed cloud scanning + prioritization) feed findings into DefectDojo, which enforces SLA tracking and remediation workflow; Snyk covers the software/dependency side with auto-fix PRs. Managed alternatives to Wiz in this space include Tenable, Qualys VMDR, and Orca Security. A lighter open-source software-side alternative to Snyk is OSV-Scanner plus Dependabot/Renovate. All four listed tools are current and widely adopted as of 2026; no web search was needed given their established market position."
+    },
+    {
+     "name": "System monitoring, alerting & audit log retention",
+     "category": "Logging & Monitoring",
+     "description": "Continuously monitor system components for anomalies with detection tooling and defined alerting thresholds that generate timely actionable alerts, and retain integrity-protected security logs supporting detection and post-hoc investigation.",
+     "satisfies": [
+      "SOC2-CC7-02",
+      "SOC2-CC7-03",
+      "SOC2-CC7-11"
+     ],
+     "stack": [
+      {
+       "name": "Prometheus + Alertmanager",
+       "kind": "open-source",
+       "why": "De-facto metrics monitoring stack: scrapes system/app metrics, encodes anomaly-detection rules with defined thresholds, and Alertmanager routes deduplicated, actionable alerts to PagerDuty/Slack/email."
+      },
+      {
+       "name": "Grafana Loki + Grafana",
+       "kind": "open-source",
+       "why": "Horizontally-scalable log aggregation with unified dashboards and log-based alerting, giving one pane of glass over metrics and security logs for detection and post-hoc investigation."
+      },
+      {
+       "name": "Wazuh",
+       "kind": "open-source",
+       "why": "Widely-used open SIEM/XDR that does continuous anomaly and intrusion detection, file-integrity monitoring, and correlation of security events for both real-time alerting and forensic audit review."
+      },
+      {
+       "name": "AWS S3 with Object Lock (WORM)",
+       "kind": "managed",
+       "why": "Immutable, integrity-protected long-term retention of security/audit logs via write-once-read-many Object Lock and configurable retention periods, satisfying tamper-evident audit-trail requirements."
+      }
+     ],
+     "stack_notes": "Pattern: Prometheus/Alertmanager for metric-threshold alerting, Loki/Grafana for log analytics and dashboards, Wazuh for security detection and file-integrity monitoring, and S3 Object Lock as the immutable retention tier. Fully-managed alternative if avoiding self-hosting: Datadog (Infrastructure Monitoring + Cloud SIEM + Log Management with retention/archival to immutable storage) or Grafana Cloud, either of which collapses components 1-3 into one SaaS. On GCP/Azure the immutable-retention equivalent is GCS Bucket Lock or Azure Blob immutable storage. All listed tools are actively maintained and current as of 2025-2026."
+    },
+    {
+     "name": "Incident response & recovery",
+     "category": "Incident & Vulnerability",
+     "description": "End-to-end incident lifecycle covering triage and severity evaluation, a documented and periodically tested IR plan, containment/eradication/mitigation, breach and stakeholder communication, recovery of affected systems, and post-incident root-cause review with corrective actions.",
+     "satisfies": [
+      "SOC2-CC7-04",
+      "SOC2-CC7-05",
+      "SOC2-CC7-06",
+      "SOC2-CC7-07",
+      "SOC2-CC7-08",
+      "SOC2-CC7-09",
+      "SOC2-CC7-12"
+     ],
+     "stack": [
+      {
+       "name": "PagerDuty",
+       "kind": "managed",
+       "why": "Industry-standard on-call scheduling, alert routing, and severity-based escalation — the triage/detection entry point that pages the right responders and starts the incident clock."
+      },
+      {
+       "name": "incident.io",
+       "kind": "managed",
+       "why": "Slack/Teams-native end-to-end incident lifecycle: declare, assign roles, track severity/timeline, drive stakeholder comms, and run structured post-incident (RCA) reviews with tracked follow-up actions."
+      },
+      {
+       "name": "Cachet",
+       "kind": "open-source",
+       "why": "Self-hosted public/stakeholder status page for breach and outage communication, giving a supported OSS alternative to Atlassian Statuspage for external incident updates."
+      }
+     ],
+     "stack_notes": "Distinct-layer split rather than overlapping platforms: PagerDuty = detection/triage/on-call, incident.io = lifecycle orchestration + comms + post-incident RCA (covers the \"documented, periodically tested IR plan\" via runbooks and post-mortem workflows), Cachet = external stakeholder communication. Deliberately avoided two now-declining tools: Atlassian Opsgenie (end-of-sale June 2025, full EOL April 2027) and Grafana OnCall OSS (maintenance mode, archived 2026-03-24). Managed alternatives to incident.io in the same tier: Rootly and FireHydrant, both widely adopted in 2025-2026. If a managed status page is acceptable, Atlassian Statuspage is the market default in place of Cachet. Recovery of affected systems (DR/restore) is typically handled by the underlying infra/backup stack rather than these IR tools."
+    },
+    {
+     "name": "Change management & secure SDLC",
+     "category": "Change & SDLC",
+     "description": "Formal change process governing authorization, design/impact assessment, testing, independent approval, and implementation, with segregation of duties, version control, separated dev/test/prod environments, baseline configuration and security review, emergency-change and rollback paths, plus general controls over software acquisition, development, and maintenance and their technology dependencies.",
+     "satisfies": [
+      "SOC2-CC5-06",
+      "SOC2-CC5-09",
+      "SOC2-CC8-01",
+      "SOC2-CC8-02",
+      "SOC2-CC8-03",
+      "SOC2-CC8-04",
+      "SOC2-CC8-05",
+      "SOC2-CC8-06",
+      "SOC2-CC8-07",
+      "SOC2-CC8-08",
+      "SOC2-CC8-09",
+      "SOC2-CC8-10",
+      "SOC2-CC8-11",
+      "SOC2-CC8-12",
+      "SOC2-CC8-13"
+     ],
+     "stack": [
+      {
+       "name": "GitHub (branch protection + CODEOWNERS + required reviews)",
+       "kind": "managed",
+       "why": "PR-based change flow enforces authorization, independent approval, and segregation of duties on top of git version control."
+      },
+      {
+       "name": "GitHub Actions with Environments + required reviewers",
+       "kind": "managed",
+       "why": "Gated CI/CD pipeline runs tests and enforces manual approval before promoting through separated dev/test/prod environments."
+      },
+      {
+       "name": "OpenTofu (Terraform-compatible IaC)",
+       "kind": "open-source",
+       "why": "Versioned, reviewable baseline configuration for infrastructure with plan/apply gates and drift detection."
+      },
+      {
+       "name": "Argo CD (GitOps)",
+       "kind": "open-source",
+       "why": "Declarative Git-driven deploys to prod with one-click/auto rollback to any prior known-good revision, supporting emergency-change paths."
+      }
+     ],
+     "stack_notes": "Set chosen for a greenfield 2026 build; all are widely adopted and current as of 2025-2026. GitHub + Actions cover the formal change process (authorization, independent approval, SoD via CODEOWNERS, testing gates, environment separation). OpenTofu covers baseline configuration-as-code; add a pipeline security scanner such as Trivy or Snyk for the security-review step if a 5th slot is available. Argo CD provides the implementation + rollback path. GitLab (managed or self-hosted) is a viable single-vendor alternative covering the first three roles."
+    },
+    {
+     "name": "Privacy notice, consent & lawful collection",
+     "category": "Governance & Privacy Ops",
+     "description": "Publish a privacy notice describing collection, use, retention, disclosure, and disposal of personal information at or before collection, and operate a consent ledger and collection controls that capture affirmative/explicit consent, verify source authority, and keep collection and use within notified purposes.",
+     "satisfies": [
+      "SOC2-P1-01",
+      "SOC2-P1-02",
+      "SOC2-P2-01",
+      "SOC2-P2-02",
+      "SOC2-P3-01",
+      "SOC2-P3-02",
+      "SOC2-P4-01"
+     ],
+     "stack": [
+      {
+       "name": "Ethyca Fides",
+       "kind": "open-source",
+       "why": "Privacy-as-code platform that serves privacy notices, records consent against a shared data-use/purpose ontology, and enforces purpose limitation in the runtime — a self-hostable spine for the whole capability."
+      },
+      {
+       "name": "OneTrust Consent & Preference Management",
+       "kind": "managed",
+       "why": "Widely-adopted enterprise CMP for publishing/versioning privacy notices and capturing granular affirmative consent with a full audit trail at or before collection."
+      },
+      {
+       "name": "Ketch (Progressive Consent / Data Permissioning)",
+       "kind": "managed",
+       "why": "Server-side consent ledger that propagates purpose-based permissions across CDPs, ad, and AI pipelines in real time, keeping downstream use inside the notified purposes."
+      },
+      {
+       "name": "Klaro!",
+       "kind": "open-source",
+       "why": "Lightweight, self-hosted web consent manager for explicit opt-in capture at the point of collection when you only need first-party notice + affirmative consent on the client."
+      }
+     ],
+     "stack_notes": "Fides is the recommended open-source foundation (notice + consent ledger + purpose enforcement, GDPR/CCPA/LGPD built in). OneTrust or Ketch are the mature managed alternatives — Ketch is notable for a server-side ledger that enforces purpose limitation across the data ecosystem. Klaro covers only the front-end capture slice and pairs with a backend ledger. Source authority verification (proving a valid collection source/legal basis) is typically handled by the ledger's consent-record metadata plus your own IAM/identity layer; no single tool fully covers it. Confirmed current 2025-2026: ethyca/fides (github.com/ethyca/fides), ketch.com (Progressive Consent launched 2025)."
+    },
+    {
+     "name": "Data-subject rights & complaint handling",
+     "category": "Governance & Privacy Ops",
+     "description": "Authenticated self-service and back-office workflows that let data subjects access, correct, amend, or delete their personal information and propagate changes to third parties, plus an intake-and-resolution process for privacy inquiries, complaints, and disputes with corrective-action tracking.",
+     "satisfies": [
+      "SOC2-P5-01",
+      "SOC2-P5-02",
+      "SOC2-P8-01"
+     ],
+     "stack": [
+      {
+       "name": "Ethyca Fides (with Lethe DSR engine)",
+       "kind": "open-source",
+       "why": "Open-source privacy-engineering platform that data-maps personal data across systems and executes access/rectify/erase DSR fulfillment as code, including downstream/third-party propagation."
+      },
+      {
+       "name": "Transcend",
+       "kind": "managed",
+       "why": "Managed data-subject-request automation that discovers and actions a requestor's data across all connected systems and third parties, with a hosted self-service intake portal."
+      },
+      {
+       "name": "OneTrust Privacy & Data Governance (DSR Automation + Privacy Incident/Complaint Management)",
+       "kind": "managed",
+       "why": "Widely-adopted suite pairing DSAR automation with privacy inquiry/complaint intake, dispute triage, and corrective-action tracking in one back-office workflow."
+      },
+      {
+       "name": "OpenGDPR / self-hosted case management (e.g. Zammad or Camunda) fronting the DSR engine",
+       "kind": "open-source",
+       "why": "Open-source ticketing/BPMN workflow to run authenticated intake, resolution SLAs, and corrective-action tracking for complaints when a managed privacy suite is not desired."
+      }
+     ],
+     "stack_notes": "Verified current for 2025-2026 via web search. Typical build: Fides or Transcend for the automated DSR access/correct/delete + third-party propagation layer, plus OneTrust (managed) or an open-source case/BPMN tool (Zammad/Camunda) for complaint intake, disputes, and corrective-action tracking. OneTrust and Transcend are the most widely-adopted managed options; Ethyca Fides is the leading open-source DSR-automation engine. Sources: https://www.ethyca.com/guides/dsar-personal-data-tracking-infrastructure , https://www.onetrust.com/products/data-subject-request-dsr-automation/ , https://www.g2.com/compare/onetrust-privacy-automation-vs-transcend"
+    },
+    {
+     "name": "Privacy breach detection & notification",
+     "category": "Incident & Vulnerability",
+     "description": "Process and tooling to identify, track, and report unauthorized use or disclosure of personal information, notifying affected data subjects and regulators within required timeframes.",
+     "satisfies": [
+      "SOC2-P6-02"
+     ],
+     "stack": [
+      {
+       "name": "Wazuh",
+       "kind": "open-source",
+       "why": "SIEM/XDR that detects unauthorized access and exfiltration of personal data via log analysis, file-integrity monitoring, and threat-detection rules — the breach-detection trigger."
+      },
+      {
+       "name": "TheHive (StrangeBee)",
+       "kind": "open-source",
+       "why": "Incident-response case management to track each suspected breach, coordinate investigation, and keep a defensible audit timeline of who did what when."
+      },
+      {
+       "name": "OneTrust Incident & Breach Response",
+       "kind": "managed",
+       "why": "Assesses each incident against GDPR/CCPA/state-law obligations and drives data-subject and regulator notifications within statutory deadlines (e.g. GDPR 72h)."
+      },
+      {
+       "name": "Microsoft Purview (DSPM / data classification)",
+       "kind": "managed",
+       "why": "Discovers and classifies where personal data lives and flags anomalous access, so a breach's scope — which subjects and record types are affected — is known quickly."
+      }
+     ],
+     "stack_notes": "Split by function: Wazuh = detection signal, TheHive = investigation/tracking, OneTrust = the statutory notification workflow (the part most specific to this capability), Purview/DSPM = knowing what personal data was exposed to scope notifications. All four are current and widely adopted as of 2025-2026. Alternatives worth noting: Cyera or BigID in place of Purview for DSPM; Vanta/Drata incident modules as a lighter managed alternative to OneTrust for smaller builds; TheHive can be swapped for a general SOAR if one is already in the stack. A minimal 2-tool build could be Wazuh + OneTrust."
+    },
+    {
+     "name": "Personal data quality management",
+     "category": "Data Protection",
+     "description": "Mechanisms that keep stored personal information accurate, complete, and relevant to the purposes for which it is used.",
+     "satisfies": [
+      "SOC2-P7-01"
+     ],
+     "stack": [
+      {
+       "name": "Great Expectations",
+       "kind": "open-source",
+       "why": "Declarative expectation suites validate personal records for accuracy, completeness, and format at pipeline boundaries, with data docs for auditable proof."
+      },
+      {
+       "name": "Soda Core (SodaCL)",
+       "kind": "open-source",
+       "why": "SQL-based data quality checks (missing/duplicate/stale rows, freshness, distribution) run in CI and on schedule to keep stored personal data correct and current."
+      },
+      {
+       "name": "dbt (tests + snapshots)",
+       "kind": "open-source",
+       "why": "Built-in and generic tests enforce not-null/unique/accepted-values on PII columns while snapshots track change history so data stays relevant to its purpose."
+      },
+      {
+       "name": "Monte Carlo",
+       "kind": "managed",
+       "why": "End-to-end data observability with automated anomaly/freshness/volume monitoring and lineage, catching personal-data quality drift across warehouses at scale."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted as of 2025-2026. Open-source options (Great Expectations, Soda Core, dbt) cover in-pipeline validation and are typically layered together; Monte Carlo (or alternatives like Ataccama ONE / Collibra DQ for MDM-heavy needs) adds managed observability. A pragmatic new build usually pairs dbt tests + Soda/Great Expectations for enforcement, adding a managed observability layer only when data estate grows."
+    },
+    {
+     "name": "Processing integrity: validation, pipeline & output verification",
+     "category": "Change & SDLC",
+     "description": "Documented processing specifications with intake controls validating inputs and authorizing sources, exactly-once complete/accurate/timely pipeline execution with dead-letter and reconciliation, and pre-release output verification, authorized delivery, and durable protected storage of inputs and outputs.",
+     "satisfies": [
+      "SOC2-PI1-01",
+      "SOC2-PI1-02",
+      "SOC2-PI1-03",
+      "SOC2-PI1-04",
+      "SOC2-PI1-05",
+      "SOC2-PI1-06",
+      "SOC2-PI1-07",
+      "SOC2-PI1-08",
+      "SOC2-PI1-09",
+      "SOC2-PI1-10",
+      "SOC2-PI1-11",
+      "SOC2-PI1-12"
+     ],
+     "stack": [
+      {
+       "name": "Temporal",
+       "kind": "open-source (also managed via Temporal Cloud)",
+       "why": "Durable execution engine gives exactly-once, idempotent pipeline steps with automatic retries, timeouts, and built-in dead-letter/compensation — the backbone for complete/accurate/timely processing."
+      },
+      {
+       "name": "Great Expectations (or Soda Core)",
+       "kind": "open-source (managed via GX Cloud / Soda Cloud)",
+       "why": "Declarative data-contract validations run as intake controls on inputs and as pre-release output verification, producing durable pass/fail evidence per run."
+      },
+      {
+       "name": "Apache Kafka (with Schema Registry + DLQ)",
+       "kind": "open-source (managed via Confluent Cloud / MSK)",
+       "why": "Authorizes sources via ACLs/mTLS, enforces schemas at ingest, and provides native dead-letter topics plus offsets for reconciliation of exactly-once delivery."
+      },
+      {
+       "name": "Amazon S3 with Object Lock (WORM)",
+       "kind": "managed",
+       "why": "Immutable, versioned, encrypted storage of inputs and outputs gives tamper-evident, durably protected retention that supports later reconciliation and audit."
+      }
+     ],
+     "stack_notes": "Pattern: Kafka+Schema Registry for authorized/validated intake and dead-letter, Temporal for exactly-once durable pipeline execution with retries/compensation, Great Expectations (or Soda) for intake and pre-release output verification, S3 Object Lock for WORM storage of inputs/outputs. dbt tests are a strong alternative to GX for batch/warehouse pipelines. GCP/Azure equivalents for WORM: GCS Bucket Lock, Azure Blob immutable storage. All confirmed current and widely adopted as of 2025-2026."
+    }
+   ]
+  },
+  "iso27001": {
+   "capability_count": 18,
+   "mandatory_covered": 59,
+   "mandatory_total": 59,
+   "uncovered_mandatory_ids": [],
+   "capabilities": [
+    {
+     "name": "RBAC, Least Privilege & Identity Lifecycle",
+     "category": "IAM",
+     "description": "Central identity provider with unique per-principal identities, a documented access-control policy, role-based least-privilege authorization, secure credential/secret handling, a joiner-mover-leaver provisioning flow with periodic recertification, elevated controls for privileged/break-glass accounts, and automatic access revocation on role change or termination.",
+     "satisfies": [
+      "ISO-A5-07",
+      "ISO-A5-08",
+      "ISO-A5-09",
+      "ISO-A5-10",
+      "ISO-A5-11",
+      "ISO-A5-12",
+      "ISO-A6-10"
+     ],
+     "stack": [
+      {
+       "name": "Microsoft Entra ID + Entra ID Governance (or Okta + Okta Identity Governance)",
+       "kind": "managed",
+       "why": "Central cloud IdP giving each principal one identity with SSO/MFA and Conditional Access, plus built-in RBAC, joiner-mover-leaver lifecycle workflows and periodic access reviews/recertification."
+      },
+      {
+       "name": "Keycloak",
+       "kind": "open-source",
+       "why": "Self-hosted OIDC/SAML identity provider alternative when you need to own the IdP: per-principal identities, realm/role-based authorization and fine-grained least-privilege policies."
+      },
+      {
+       "name": "HashiCorp Vault (self-hosted or HCP Vault managed)",
+       "kind": "open-source",
+       "why": "Secure credential/secret handling with short-lived dynamic secrets, automatic rotation and tight lease-based least-privilege access to database and cloud credentials."
+      },
+      {
+       "name": "Teleport",
+       "kind": "open-source",
+       "why": "Identity-aware access proxy for privileged/break-glass accounts: just-in-time elevation with approval, session recording, and automatic access revocation tied to IdP role changes or termination."
+      }
+     ],
+     "stack_notes": "All four are widely adopted and current as of 2025-2026. Pick one primary IdP (managed Entra ID/Okta for fastest governance/recertification, or Keycloak if self-hosting is required) rather than both. Entra ID Governance / Okta Identity Governance cover the access-control policy, JML provisioning, recertification and automatic deprovisioning on termination; Vault covers secret handling; Teleport covers privileged/break-glass elevation and session audit. SCIM provisioning from the IdP to downstream apps ties revocation-on-role-change together end to end."
+    },
+    {
+     "name": "Data Classification, Asset Inventory & Secure Data Lifecycle",
+     "category": "Data Protection",
+     "description": "An owned asset/information inventory with a sensitivity classification and labelling scheme, acceptable-use and handling rules, encrypted and controlled transfer channels, asset return on offboarding, and verified data sanitization or secure destruction before equipment reuse, disposal, or off-site maintenance.",
+     "satisfies": [
+      "ISO-A5-01",
+      "ISO-A5-02",
+      "ISO-A5-03",
+      "ISO-A5-04",
+      "ISO-A5-05",
+      "ISO-A5-06",
+      "ISO-A7-07",
+      "ISO-A7-08"
+     ],
+     "stack": [
+      {
+       "name": "Snipe-IT",
+       "kind": "open-source",
+       "why": "Widely-used IT asset/hardware inventory with per-asset ownership, custom sensitivity fields, and check-in/check-out that enforces asset return on offboarding."
+      },
+      {
+       "name": "Microsoft Purview Information Protection",
+       "kind": "managed",
+       "why": "De-facto sensitivity-labelling and classification scheme with attached encryption, acceptable-use/handling policy and DLP-enforced controlled transfer across data and endpoints."
+      },
+      {
+       "name": "OpenMetadata",
+       "kind": "open-source",
+       "why": "Data-asset catalog that auto-classifies and tags datasets (PII/sensitivity), giving the inventory + labelling layer for structured data through its lifecycle."
+      },
+      {
+       "name": "Blancco Drive Eraser",
+       "kind": "managed",
+       "why": "Certified, verifiable data sanitization/destruction producing tamper-proof erasure certificates before equipment reuse, disposal, or off-site maintenance (NIST 800-88 / IEEE 2883)."
+      }
+     ],
+     "stack_notes": "Open-source alternative for verified sanitization: nwipe/ShredOS (drive wiping) though it lacks Blancco's audit-grade certificates. Encrypted/controlled transfer channels are largely covered by the Purview DLP layer plus standard TLS/managed file-transfer; a dedicated MFT (e.g. GoAnywhere) can be added if regulated bulk transfers are in scope. All four confirmed current and actively maintained as of 2025-2026."
+    },
+    {
+     "name": "Cryptography: Encryption in Transit, At Rest & Key Management",
+     "category": "Data Protection",
+     "description": "A documented cryptography policy enforcing strong current algorithms and adequate key lengths, TLS protection for all sensitive/personal data in transit (including service-to-service), encryption at rest for disks, databases and backups, and full-lifecycle management of keys, certificates and secrets (generation, storage, rotation, revocation, destruction) with tightly restricted access.",
+     "satisfies": [
+      "ISO-A8-06",
+      "ISO-A8-07",
+      "ISO-A8-08",
+      "ISO-A8-09",
+      "ISO-A8-10"
+     ],
+     "stack": [
+      {
+       "name": "HashiCorp Vault (or OpenBao)",
+       "kind": "open-source",
+       "why": "Central engine for the full key/secret lifecycle — generation, storage, automatic rotation, revocation and destruction — plus a built-in PKI CA, dynamic DB credentials, and tightly-scoped access policies enforcing the crypto standard."
+      },
+      {
+       "name": "Cloud KMS / HSM (AWS KMS, GCP Cloud KMS, or Azure Key Vault Managed HSM)",
+       "kind": "managed",
+       "why": "FIPS 140-2/3 hardware-backed root of trust for envelope encryption of disks, databases and backups, with auto-rotation and audited, IAM-restricted key access — the at-rest anchor Vault and services wrap their data keys against."
+      },
+      {
+       "name": "cert-manager + Let's Encrypt/ACME",
+       "kind": "open-source",
+       "why": "Automates TLS certificate issuance, renewal and revocation across the platform so all sensitive/personal data in transit is protected without manual cert handling or expiry outages."
+      },
+      {
+       "name": "Linkerd (or Istio) service mesh",
+       "kind": "open-source",
+       "why": "Transparently enforces mutual-TLS (modern ciphers, short-lived rotating certs) on every service-to-service call, closing the internal-traffic gap that edge TLS alone leaves open."
+      }
+     ],
+     "stack_notes": "Division of labor: Cloud KMS/HSM = hardware root of trust for at-rest envelope encryption; Vault/OpenBao = application-layer secrets, key lifecycle and internal PKI; cert-manager = edge/ingress TLS cert automation; service mesh = automatic service-to-service mTLS. Together they satisfy policy-enforced strong algorithms, transit protection (external + internal), at-rest for disks/DBs/backups, and full key/cert/secret lifecycle with restricted access. Infisical (available in this environment) is a lighter open-source/managed alternative to Vault if a Kubernetes-native, developer-friendly secrets store is preferred over Vault's broader PKI/dynamic-secrets feature set. All four are current and widely adopted as of 2026; OpenBao is the actively-maintained MPL fork of Vault worth choosing if BSL licensing is a concern."
+    },
+    {
+     "name": "Network Segmentation & Multi-Tenant Isolation",
+     "category": "Infrastructure & Network",
+     "description": "Secured and managed networks and devices, agreed security levels for in-house or outsourced network services, and traffic segregated into zones with logical per-tenant isolation in shared environments to limit lateral movement and contain compromise.",
+     "satisfies": [
+      "ISO-A8-01",
+      "ISO-A8-02",
+      "ISO-A8-03",
+      "ISO-A8-04"
+     ],
+     "stack": [
+      {
+       "name": "Cilium (with Hubble)",
+       "kind": "open-source",
+       "why": "eBPF CNI that enforces identity-aware L3-L7 network policies and per-namespace/per-tenant isolation in Kubernetes, the de-facto standard for cloud-native segmentation with built-in flow observability."
+      },
+      {
+       "name": "Istio Ambient Mesh",
+       "kind": "open-source",
+       "why": "Sidecar-less service mesh giving automatic mTLS and L7 authorization between workloads, creating zero-trust zones that contain lateral movement in shared multi-tenant clusters."
+      },
+      {
+       "name": "Cloud VPC segmentation (AWS VPC / GCP VPC with subnets, security groups, and Network Firewall)",
+       "kind": "managed",
+       "why": "Infrastructure-layer zoning — private subnets, security groups, and managed firewalls partition traffic into trust zones and set agreed security levels for in-house and outsourced services."
+      },
+      {
+       "name": "Tailscale",
+       "kind": "managed",
+       "why": "WireGuard-based zero-trust overlay with ACL-driven access for securely connecting managed devices and outsourced/third-party network services without exposing broad network reach."
+      }
+     ],
+     "stack_notes": "Assumes a Kubernetes-centric cloud-native greenfield build (the dominant 2026 pattern). Cilium + a mesh cover in-cluster per-tenant isolation and lateral-movement containment; VPC constructs handle infra-zone segregation; Tailscale covers secured device/service access. If not on Kubernetes, substitute Calico Enterprise or cloud-native microsegmentation (e.g., AWS security groups + PrivateLink) accordingly. All four confirmed current and widely adopted as of 2025-2026; no web search performed since these are well-established, actively maintained projects."
+    },
+    {
+     "name": "Secure Remote Access & Egress Filtering",
+     "category": "Infrastructure & Network",
+     "description": "Remote and administrative access occurs only over authenticated, encrypted channels (VPN or equivalent) rather than exposed plaintext services, and outbound web access from managed systems is filtered to reduce exposure to malicious or unauthorized sites.",
+     "satisfies": [
+      "ISO-A8-05",
+      "ISO-A8-11"
+     ],
+     "stack": [
+      {
+       "name": "Tailscale",
+       "kind": "managed",
+       "why": "WireGuard-based mesh VPN with identity-based ACLs and MFA, giving all remote access authenticated, encrypted, zero-plaintext-exposure connectivity without opening inbound ports."
+      },
+      {
+       "name": "Teleport",
+       "kind": "open-source",
+       "why": "Identity-aware access proxy for SSH/Kubernetes/databases so administrative access runs over short-lived-cert, encrypted, fully audited channels instead of exposed services."
+      },
+      {
+       "name": "Cloudflare Zero Trust (Gateway / Secure Web Gateway)",
+       "kind": "managed",
+       "why": "DNS- and HTTP-layer egress filtering with category/threat blocklists for managed systems, plus ZTNA app access, reducing outbound exposure to malicious or unauthorized sites."
+      },
+      {
+       "name": "Pomerium",
+       "kind": "open-source",
+       "why": "Self-hostable identity-aware reverse proxy for context-aware access to internal admin apps over TLS, a fully open alternative when a managed ZTNA is not desired."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted as of 2025-2026. Tailscale + Cloudflare Zero Trust together cleanly cover both halves (encrypted remote access + egress web filtering); Teleport adds privileged-admin access with audit; Pomerium is an optional fully open-source ZTNA alternative. WireGuard is the open-source protocol baseline underneath Tailscale if a self-managed VPN is preferred. Recommend 3 as the core set (Tailscale, Teleport, Cloudflare Zero Trust) with Pomerium as the open-source substitute."
+    },
+    {
+     "name": "Network Activity Monitoring & Anomaly Detection",
+     "category": "Logging & Monitoring",
+     "description": "Network activity is continuously monitored and logged so anomalous or unauthorized traffic and security events can be detected, alerted on, and investigated.",
+     "satisfies": [
+      "ISO-A8-12"
+     ],
+     "stack": [
+      {
+       "name": "Suricata",
+       "kind": "open-source",
+       "why": "High-throughput IDS/IPS network sensor doing deep packet inspection and signature/rule-based alerting on suspicious or unauthorized traffic."
+      },
+      {
+       "name": "Zeek",
+       "kind": "open-source",
+       "why": "Network security monitor that emits rich per-connection/protocol logs, the raw telemetry needed to detect anomalies and drive investigations."
+      },
+      {
+       "name": "AWS GuardDuty",
+       "kind": "managed",
+       "why": "Cloud-native ML threat detection over VPC Flow Logs, DNS, and CloudTrail — continuous anomaly/threat alerting with zero sensor operation."
+      },
+      {
+       "name": "Elastic Security (SIEM)",
+       "kind": "open-source",
+       "why": "Ingests network + host logs, runs detection rules and ML anomaly jobs, and provides the alerting and investigation workflow on top of Suricata/Zeek output."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted in 2025-2026. Typical greenfield pattern: Suricata + Zeek as the on-network sensors feeding Elastic Security as the SIEM/detection-and-response layer; GuardDuty covers the cloud/VPC control-plane side natively for AWS-based builds (swap for Azure Sentinel / Google SCC on other clouds). Wazuh is a viable open-source SIEM alternative to Elastic Security if a lighter, agent-centric stack is preferred."
+    },
+    {
+     "name": "Physical & Environmental Facility Security",
+     "category": "Infrastructure & Network",
+     "description": "Physical safeguards for equipment and workspaces: clear-desk/clear-screen enforcement, secure equipment siting and screen-privacy positioning, protection against environmental threats, resilient supporting utilities, secured and segregated power/data cabling, and controlled authorized equipment maintenance.",
+     "satisfies": [
+      "ISO-A7-01",
+      "ISO-A7-02",
+      "ISO-A7-03",
+      "ISO-A7-04",
+      "ISO-A7-05",
+      "ISO-A7-06"
+     ],
+     "stack": [
+      {
+       "name": "AWS Artifact / Google Cloud Compliance Reports / Azure Service Trust Portal (cloud provider physical-security inheritance)",
+       "kind": "managed",
+       "why": "A greenfield build hosted in a hyperscaler inherits secure equipment siting, environmental threat protection, resilient utilities (redundant power/HVAC/fire), and controlled maintenance from the provider's SOC2/ISO27001-audited data centers — these portals give you the attestations to cite the inherited controls."
+      },
+      {
+       "name": "Microsoft Intune (or Kandji / Jamf) MDM",
+       "kind": "managed",
+       "why": "Enforces clear-screen technically via mandatory screen-lock/auto-timeout, encryption, and privacy policies pushed to every endpoint — the one part of this control that is directly software-enforceable rather than facility-based."
+      },
+      {
+       "name": "NetBox",
+       "kind": "open-source",
+       "why": "The de-facto DCIM/IPAM system of record for documenting rack elevation, equipment siting, power feeds, and physical cabling with power/data segregation — the auditable source for cabling-security and secure-siting evidence in any owned or colo facility."
+      },
+      {
+       "name": "Verkada (or Envoy for visitor management + Kisi for access control)",
+       "kind": "managed",
+       "why": "Cloud-managed badge access control, environmental sensors (temp/humidity/leak/smoke), and visitor sign-in that governs authorized-only equipment maintenance and monitors environmental threats — needed only if you operate your own office/facility rather than pure cloud."
+      }
+     ],
+     "stack_notes": "This capability is overwhelmingly facility/hardware-based; for a pure-cloud greenfield build most of it (siting, environmental protection, utilities, cabling, maintenance) is inherited from the hosting provider and evidenced via their compliance portals rather than implemented in your own software. The only directly software-enforceable slice is clear-screen (MDM). NetBox and a physical-access/environmental-monitoring platform (Verkada/Envoy/Kisi) apply only if the org runs its own offices or colo space. All named tools are current and widely adopted as of 2025-2026; no web search was needed to confirm."
+    },
+    {
+     "name": "Endpoint & Off-Premises Asset Protection",
+     "category": "Infrastructure & Network",
+     "description": "Devices and assets used, transported, or stored off-premises are protected against the higher risks of operating outside controlled facilities; off-site removal of equipment, information, or software requires prior authorization and tracking; and users safeguard unattended equipment via session termination, screen locks, and log-off.",
+     "satisfies": [
+      "ISO-A7-09",
+      "ISO-A7-10",
+      "ISO-A7-11"
+     ],
+     "stack": [
+      {
+       "name": "Microsoft Intune",
+       "kind": "managed",
+       "why": "Cross-platform UEM/MDM that enforces full-disk encryption (BitLocker/FileVault), idle screen-lock and auto-logoff policies, and remote lock/wipe for lost or off-premises devices."
+      },
+      {
+       "name": "Jamf Pro",
+       "kind": "managed",
+       "why": "Apple-fleet MDM that mandates FileVault, password-protected screen-saver locks, and remote lock/wipe — the standard for managing off-premises Mac/iOS assets."
+      },
+      {
+       "name": "Fleet (osquery)",
+       "kind": "open-source",
+       "why": "Cross-platform device management and inventory that continuously verifies disk-encryption and lock-screen posture and flags non-compliant machines at scale."
+      },
+      {
+       "name": "Snipe-IT",
+       "kind": "open-source",
+       "why": "IT asset-management system whose check-out/check-in workflow provides the prior-authorization approval and audit trail required for off-site removal of equipment."
+      }
+     ],
+     "stack_notes": "Intune + Jamf cover the unattended-equipment controls (screen lock, session termination, auto-logoff) and encryption for the higher off-premises risk; pick one or run both for a mixed Windows/Apple fleet. Fleet adds vendor-neutral, open-source compliance verification of that posture. Snipe-IT handles the distinct off-site removal authorization and tracking requirement, which MDM tools do not cover. All four are widely adopted and actively maintained as of 2025-2026."
+    },
+    {
+     "name": "Security Incident Detection, Response & Forensics",
+     "category": "Incident & Vulnerability",
+     "description": "An incident-management program with defined roles and runbooks, a staff event-reporting channel, event triage/classification, documented containment-eradication-recovery-communication workflows, post-incident learning feeding control improvements, and legally-admissible evidence collection with chain-of-custody preservation.",
+     "satisfies": [
+      "ISO-A5-24",
+      "ISO-A5-25",
+      "ISO-A5-26",
+      "ISO-A5-27",
+      "ISO-A5-28",
+      "ISO-A6-08"
+     ],
+     "stack": [
+      {
+       "name": "Wazuh",
+       "kind": "open-source",
+       "why": "Open-source SIEM/XDR that ingests host and cloud telemetry to detect, correlate, and classify security events into triaged alerts."
+      },
+      {
+       "name": "TheHive (with Cortex)",
+       "kind": "open-source",
+       "why": "Incident-response case management for triage/classification, runbook-driven CERT workflows, observable analysis, and post-incident review feeding control improvements."
+      },
+      {
+       "name": "incident.io",
+       "kind": "managed",
+       "why": "Managed incident orchestration providing the staff reporting channel, defined roles/on-call, and containment-recovery-communication coordination with automatic timelines."
+      },
+      {
+       "name": "Velociraptor",
+       "kind": "open-source",
+       "why": "DFIR endpoint-forensics platform for evidence collection, live hunting, and artifact preservation supporting chain-of-custody for legally-admissible evidence."
+      }
+     ],
+     "stack_notes": "Coverage map: Wazuh = detection + event triage/classification; TheHive+Cortex = incident program, runbooks, post-incident learning; incident.io = reporting channel, roles, containment/eradication/recovery/communication workflows (PagerDuty or FireHydrant are equivalent managed alternatives); Velociraptor = forensics + chain-of-custody evidence collection. All confirmed current and actively maintained as of 2025-2026 from prior knowledge; no web search needed. Elastic Security or CrowdStrike Falcon are common managed substitutes for the detection layer."
+    },
+    {
+     "name": "Vulnerability Remediation in the Delivery Pipeline",
+     "category": "Incident & Vulnerability",
+     "description": "Security vulnerabilities discovered during design, coding, testing, or acceptance are identified and remediated before systems are promoted to production.",
+     "satisfies": [
+      "ISO-A8-35"
+     ],
+     "stack": [
+      {
+       "name": "Trivy (Aqua Security)",
+       "kind": "open-source",
+       "why": "Single scanner covers dependencies, container images, IaC, and secrets; runs as a CI gate that fails the pipeline on HIGH/CRITICAL so nothing vulnerable is promoted."
+      },
+      {
+       "name": "GitHub Advanced Security (CodeQL + Dependabot)",
+       "kind": "managed",
+       "why": "Native SAST code scanning plus Dependabot alerts and automated fix pull requests, gating merges on the default branch before release."
+      },
+      {
+       "name": "Snyk",
+       "kind": "managed",
+       "why": "Continuous SCA/SAST/container/IaC scanning with one-click and automated remediation PRs, prioritizing reachable/exploitable issues to drive fixes pre-production."
+      },
+      {
+       "name": "OWASP Dependency-Track",
+       "kind": "open-source",
+       "why": "SBOM-driven vulnerability management layer that continuously re-evaluates released and in-flight components against new CVEs and enforces policy gates for promotion."
+      }
+     ],
+     "stack_notes": "All four are current and widely adopted as of 2025-2026. Typical greenfield pairing: Trivy or Snyk for the in-pipeline scan gate, GitHub Advanced Security/Dependabot for VCS-native code + dependency remediation, and Dependency-Track as the central SBOM/CVE tracking and policy layer. Choose the managed (Snyk/GHAS) vs open-source (Trivy/Dependency-Track) mix based on team size and budget; two well-integrated tools are usually sufficient rather than all four."
+    },
+    {
+     "name": "Secure Development Lifecycle & Secure Coding",
+     "category": "Change & SDLC",
+     "description": "Documented secure-development rules spanning the full lifecycle: security requirements specified for built or acquired apps, secure architecture and engineering principles applied, secure coding standards and tooling used, and security testing verifying requirements before release.",
+     "satisfies": [
+      "ISO-A8-25",
+      "ISO-A8-26",
+      "ISO-A8-27",
+      "ISO-A8-28",
+      "ISO-A8-29"
+     ],
+     "stack": [
+      {
+       "name": "OWASP ASVS 5.0 (Application Security Verification Standard)",
+       "kind": "open-source",
+       "why": "Gives you a versionable checklist of security requirements and secure-architecture controls to specify per app and verify before release."
+      },
+      {
+       "name": "Semgrep",
+       "kind": "open-source",
+       "why": "SAST that enforces secure-coding standards as custom rules directly in CI/pre-commit, blocking insecure patterns at the developer's keyboard (managed Semgrep AppSec Platform also available)."
+      },
+      {
+       "name": "GitHub Advanced Security (CodeQL + secret scanning + Dependabot)",
+       "kind": "managed",
+       "why": "One integrated managed layer for deep SAST, secret detection, and dependency/SCA scanning gating pull requests before merge."
+      },
+      {
+       "name": "OWASP ZAP",
+       "kind": "open-source",
+       "why": "DAST that runs automated security tests against the running app in CI to verify runtime security requirements before a release ships."
+      }
+     ],
+     "stack_notes": "These are stable, widely-adopted choices for 2025-2026. Open-source alternatives if avoiding GitHub's managed suite: Trivy (SCA/IaC/container scanning) plus Gitleaks or TruffleHog (secret scanning). Snyk is the common commercial equivalent to GHAS. ASVS is a standard rather than a running tool, but it is the load-bearing artifact for the requirements/architecture stages of this capability; the three scanners cover secure-coding and pre-release testing."
+    },
+    {
+     "name": "Change & Release Management for Production",
+     "category": "Change & SDLC",
+     "description": "Changes to systems and information-processing facilities follow formal change management (assessment, approval, testing, rollback), and installation/updating of software on operational systems is governed so only approved, authorized software reaches production.",
+     "satisfies": [
+      "ISO-A8-13",
+      "ISO-A8-32"
+     ],
+     "stack": [
+      {
+       "name": "GitHub (Enterprise) — PRs + required reviewers + Environment protection rules",
+       "kind": "managed",
+       "why": "Formal change management gate in code: pull-request approvals, CODEOWNERS, and per-environment required reviewers/wait timers give every production change assessment, sign-off, and an immutable audit trail (GitLab is the open-source equivalent)."
+      },
+      {
+       "name": "Argo CD",
+       "kind": "open-source",
+       "why": "CNCF-graduated GitOps delivery: Git is the single source of truth so only merged/approved manifests reach production, with declarative diff, drift detection, and one-click rollback to any prior revision."
+      },
+      {
+       "name": "Argo Rollouts",
+       "kind": "open-source",
+       "why": "Progressive delivery (canary / blue-green) with metric-based analysis and automated rollback, satisfying the testing-in-production and safe-revert parts of the control."
+      },
+      {
+       "name": "Kyverno + Sigstore Cosign",
+       "kind": "open-source",
+       "why": "Kubernetes admission policies that verify image signatures/attestations and enforce provenance, so only signed, authorized software is admitted to the cluster (governs installation/updates to operational systems)."
+      }
+     ],
+     "stack_notes": "Pattern: change approval in Git (GitHub/GitLab) -> GitOps deploy (Argo CD) -> progressive rollout+rollback (Argo Rollouts) -> admission-time authorization of only signed images (Kyverno+Cosign). OPA Gatekeeper is an alternative to Kyverno; Flagger an alternative to Argo Rollouts (esp. with Flux instead of Argo CD). All are current, widely-adopted CNCF projects as of 2025-2026."
+    },
+    {
+     "name": "Environment Separation & Test Data Protection",
+     "category": "Change & SDLC",
+     "description": "Development, test, and production environments are separated with controlled promotion; production/sensitive data is not used in test unless masked, anonymized, or otherwise safeguarded and authorized; and audit access to operational systems is planned and controlled to minimize production impact.",
+     "satisfies": [
+      "ISO-A8-31",
+      "ISO-A8-33",
+      "ISO-A8-34"
+     ],
+     "stack": [
+      {
+       "name": "Argo CD",
+       "kind": "open-source",
+       "why": "GitOps controller enforces separated dev/test/prod environments with reviewed, promotion-gated deploys (each env a distinct app/target), giving auditable controlled promotion."
+      },
+      {
+       "name": "OpenTofu (with per-environment workspaces/state)",
+       "kind": "open-source",
+       "why": "Infrastructure-as-code with isolated state per environment cleanly separates dev/test/prod resources and networks so environments never share live infrastructure by accident."
+      },
+      {
+       "name": "Neosync",
+       "kind": "open-source",
+       "why": "Purpose-built data anonymization/synthetic-data platform that masks and subsets production data before it lands in test, so sensitive prod data is never used unmasked."
+      },
+      {
+       "name": "Teleport",
+       "kind": "open-source",
+       "why": "Identity-aware access proxy for prod databases/servers/k8s with RBAC, short-lived certs, approval workflows and full session recording — planned, controlled, audited operational access."
+      }
+     ],
+     "stack_notes": "Coverage maps to the three requirements: Argo CD + OpenTofu = separated environments with controlled promotion; Neosync = masked/anonymized test data instead of raw production data; Teleport = planned, controlled, audited access to operational systems. All four are widely adopted in 2025-2026. Managed alternatives if a hosted service is preferred: Tonic.ai (data masking) in place of Neosync, and StrongDM/Teleport Cloud for audited prod access. Confidence is high on currency/adoption; no web search was performed."
+    },
+    {
+     "name": "Supplier, ICT Supply-Chain & Cloud Security Management",
+     "category": "Vendor & Third-Party",
+     "description": "A vendor risk-management process with due diligence before and during engagement, security requirements embedded in supplier agreements and flowed down through the ICT/software-component supply chain, continuous monitoring and change management of supplier services, and cloud-service governance covering acquisition, shared-responsibility boundaries, and secure exit.",
+     "satisfies": [
+      "ISO-A5-19",
+      "ISO-A5-20",
+      "ISO-A5-21",
+      "ISO-A5-22",
+      "ISO-A5-23"
+     ],
+     "stack": [
+      {
+       "name": "OneTrust Third-Party Risk Management",
+       "kind": "managed",
+       "why": "Runs the vendor lifecycle end-to-end — intake, due-diligence assessments, risk scoring, contract/security-requirement flow-down, and reassessment workflows — the widely-adopted TPRM system of record."
+      },
+      {
+       "name": "Bitsight (or SecurityScorecard)",
+       "kind": "managed",
+       "why": "Continuous outside-in security ratings that monitor each supplier's posture between assessments and alert on material changes across the ICT supply chain."
+      },
+      {
+       "name": "OWASP Dependency-Track",
+       "kind": "open-source",
+       "why": "Ingests supplier/first-party SBOMs (CycloneDX) to track software-component risk and flow-down obligations down the software supply chain, with continuous CVE/VEX alerting."
+      },
+      {
+       "name": "Wiz (or open-source Prowler)",
+       "kind": "managed",
+       "why": "Cloud-service governance and CSPM — enforces shared-responsibility boundaries, misconfiguration/exposure detection, and inventory needed for secure cloud acquisition and exit."
+      }
+     ],
+     "stack_notes": "Coverage maps to the four sub-capabilities: OneTrust = due diligence + contractual security requirements + change management; Bitsight/SecurityScorecard = continuous supplier monitoring; Dependency-Track = ICT/software-component supply-chain flow-down via SBOMs; Wiz/Prowler = cloud governance, shared-responsibility boundaries, and secure exit. Pair Dependency-Track with Syft/Grype (open-source, Anchore) if SBOM generation and scanning are also needed. Managed ratings vendors (Bitsight vs SecurityScorecard) and CSPM (Wiz vs Prowler) are interchangeable per budget — the open-source alternative is noted for the cloud-governance slot."
+    },
+    {
+     "name": "Outsourced Development Oversight",
+     "category": "Vendor & Third-Party",
+     "description": "Third-party and outsourced development activity is directed, monitored, and reviewed so the organization's security requirements are met throughout the engagement.",
+     "satisfies": [
+      "ISO-A8-30"
+     ],
+     "stack": [
+      {
+       "name": "GitHub Enterprise (CODEOWNERS + branch protection + required reviews + audit log)",
+       "kind": "managed",
+       "why": "Directs and reviews every outsourced contribution: mandatory code owner review, protected branches, and a full audit log of who changed what."
+      },
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "TPRM/vendor security module tracks each development vendor's security posture, contracts, and continuous review so requirements are enforced through the engagement."
+      },
+      {
+       "name": "Semgrep",
+       "kind": "open-source",
+       "why": "Policy-as-code SAST/secrets scanning gate on outsourced-developer PRs so third-party code must meet your security rules before merge."
+      },
+      {
+       "name": "Sigstore / cosign (with SLSA provenance)",
+       "kind": "open-source",
+       "why": "Signs and verifies build provenance of artifacts produced by outsourced pipelines, proving what shipped came from a trusted, reviewed source."
+      }
+     ],
+     "stack_notes": "Focus is oversight of third-party/outsourced dev: GitHub Enterprise governs and records the contribution flow (direct + review), Vanta covers the vendor-risk/monitoring side, Semgrep enforces security requirements on incoming code, and Sigstore/cosign verifies provenance of outsourced build outputs. All are widely adopted and current as of 2025-2026. GitHub Advanced Security or Snyk are viable swaps for Semgrep; Drata or OneTrust for Vanta."
+    },
+    {
+     "name": "PII/Privacy Controls & Legal-Regulatory Register",
+     "category": "Governance & Privacy Ops",
+     "description": "PII-aware data handling (privacy-by-design safeguards, PII discovery/tagging, consent and retention enforcement), a maintained register of applicable legal, statutory, regulatory and contractual obligations mapped to controls, and intellectual-property/software-licensing compliance tracking.",
+     "satisfies": [
+      "ISO-A5-31",
+      "ISO-A5-32",
+      "ISO-A5-34"
+     ],
+     "stack": [
+      {
+       "name": "Microsoft Presidio",
+       "kind": "open-source",
+       "why": "Self-hostable PII discovery, tagging, and de-identification (mask/hash/redact) across text, images, and structured data — the privacy-by-design safeguard you embed directly in data pipelines and LLM guardrails; actively released through 2026 (MIT)."
+      },
+      {
+       "name": "Transcend",
+       "kind": "managed",
+       "why": "Middleware-layer consent management plus DSAR and data-retention/deletion enforcement across every system and region — automates consent capture and retention policy so privacy obligations are enforced, not just documented."
+      },
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "GRC/trust-management platform that maintains the register of applicable legal, regulatory and contractual obligations mapped to controls with continuous evidence collection across GDPR, SOC 2, and ISO 27001 frameworks."
+      },
+      {
+       "name": "OSS Review Toolkit (ORT)",
+       "kind": "open-source",
+       "why": "Linux Foundation toolkit that scans dependencies across 20+ package managers for license/IP obligations, enforces policy, and generates SPDX/CycloneDX SBOMs — covers the intellectual-property and software-licensing compliance leg (FOSSA is the managed alternative)."
+      }
+     ],
+     "stack_notes": "Chosen to cover the three distinct sub-domains of this capability: (1) PII-aware data handling = Presidio; (2) consent + retention enforcement = Transcend; (3) obligations-register-mapped-to-controls = Vanta; (4) IP/software-licensing = ORT. All four verified current as of 2026 via web search. Substitution notes: OneTrust is the higher-mindshare (17.3% DPMS) but heavier alternative to Transcend and can also serve as the obligations register if you prefer one privacy suite over Vanta; Drata is an equivalent managed GRC alternative to Vanta; FOSSA/Black Duck are managed alternatives to ORT with stronger license-edge-case databases. For a greenfield 2026 build, Presidio + ORT (open-source, embed-in-pipeline) plus one managed privacy platform (Transcend) and one managed GRC backbone (Vanta) balances engineering control against auditable, framework-mapped evidence."
+    },
+    {
+     "name": "Security Governance, HR Security & Operating Procedures",
+     "category": "Governance & Privacy Ops",
+     "description": "Documented operating procedures for information-processing facilities plus the people-side program: pre-employment screening, security responsibilities in employment terms, recurring awareness training, a graduated disciplinary process, signed confidentiality/NDA agreements, remote-working controls, and duties that survive termination or role change.",
+     "satisfies": [
+      "ISO-A5-37",
+      "ISO-A6-01",
+      "ISO-A6-02",
+      "ISO-A6-03",
+      "ISO-A6-04",
+      "ISO-A6-05",
+      "ISO-A6-06",
+      "ISO-A6-07",
+      "ISO-A6-09"
+     ],
+     "stack": [
+      {
+       "name": "Vanta",
+       "kind": "managed",
+       "why": "GRC platform that centralizes SOC2/ISO27001/GDPR programs: manages policy publishing and employee acknowledgment (security responsibilities, confidentiality), tracks recurring awareness training and background-check completion, and enforces onboarding/offboarding duties that survive termination."
+      },
+      {
+       "name": "KnowBe4",
+       "kind": "managed",
+       "why": "Market-leading security awareness training and phishing-simulation platform for the recurring training program, with per-user risk scoring that feeds a graduated disciplinary process; actively shipping in 2026 (AIDA orchestration, HRM analytics)."
+      },
+      {
+       "name": "Checkr",
+       "kind": "managed",
+       "why": "Widely-adopted pre-employment background screening API/service (identity, criminal, employment verification) that satisfies the personnel-screening control and integrates cleanly with HRIS and GRC tools like Vanta."
+      },
+      {
+       "name": "BookStack",
+       "kind": "open-source",
+       "why": "Self-hosted, version-controlled documentation wiki for the documented operating procedures for information-processing facilities, giving reviewable, page-level-permissioned SOPs and remote-working guidelines without vendor lock-in."
+      }
+     ],
+     "stack_notes": "All four verified current for 2025-2026. Vanta and KnowBe4 both have active 2026 product releases (Vanta multi-source training assignment; KnowBe4 AIDA phishing orchestration). Division of labor: Vanta = policy/acknowledgment/training-tracking/offboarding governance layer; KnowBe4 = actual awareness-training content + phishing + disciplinary risk signal; Checkr = pre-employment screening; BookStack = the SOP/operating-procedure documentation itself. Alternatives worth noting: Drata or Secureframe substitute for Vanta; Hoxhunt or Curricula substitute for KnowBe4; Certn substitutes for Checkr; GitBook, Notion, or Confluence substitute for BookStack if a managed docs tool is preferred over self-hosting. Counterparty NDA e-signing (vs. internal policy acknowledgment, which Vanta covers) would need a signature tool like DocuSign if that is in scope."
+    },
+    {
+     "name": "ICT Continuity & Disaster Recovery",
+     "category": "Business Continuity",
+     "description": "Backup, redundancy and failover capabilities with defined RTO/RPO targets, plus documented and regularly tested restore procedures so information and systems can be recovered to meet business-continuity objectives.",
+     "satisfies": [
+      "ISO-A5-30"
+     ],
+     "stack": [
+      {
+       "name": "AWS Backup",
+       "kind": "managed",
+       "why": "Policy-driven centralized backups across AWS services with cross-region/cross-account copy and built-in restore testing to enforce RTO/RPO."
+      },
+      {
+       "name": "AWS Elastic Disaster Recovery (DRS)",
+       "kind": "managed",
+       "why": "Continuous block-level replication with automated failover/failback and low-cost staging, giving measurable minutes-scale RTO for whole workloads."
+      },
+      {
+       "name": "Velero",
+       "kind": "open-source",
+       "why": "CNCF-standard Kubernetes backup and cross-cluster restore of cluster state plus persistent volumes, enabling regional failover of containerized apps."
+      },
+      {
+       "name": "pgBackRest",
+       "kind": "open-source",
+       "why": "Reliable PostgreSQL point-in-time recovery with parallel, incremental, encrypted backups to object storage to hit tight database RPO targets."
+      }
+     ],
+     "stack_notes": "Layered coverage: DRS for VM/server-level failover, Velero for Kubernetes, pgBackRest for database PITR, AWS Backup as the governing backup/restore-test policy plane. All are widely adopted and current as of 2025-2026. Cloud-agnostic swaps if not on AWS: Azure Site Recovery / Google Backup and DR for the managed pieces; restic or Kopia as an open-source general-purpose backup engine. Whichever stack is chosen, the compliance requirement demands scheduled restore drills and documented RTO/RPO per system, not just backup configuration."
+    }
+   ]
+  }
+ }
+}

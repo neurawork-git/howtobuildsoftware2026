@@ -96,6 +96,27 @@ Given a plan file and the catalog, the validator agent:
    recommended additions. Be specific and cite constraint ids.
 5. Never fails a plan for an inapplicable constraint. Advisory, not a certification.
 
+## Capability derivation (constraints → capabilities → stack)
+
+`capabilities.py` distils the extracted constraints into per-framework
+**capabilities** and maps them to a greenfield-2026 stack. Agents follow this:
+
+1. A **capability** is a concrete technical building block a new system implements
+   to satisfy constraints (e.g. "immutable audit logging", "data-subject request
+   handling", "encryption in transit") — not a restatement of a control.
+2. **Per-framework lists, overlap kept** — do not merge capabilities across
+   frameworks; each framework is audited on its own.
+3. Every constraint id maps to **exactly one** capability's `satisfies` list — drop
+   none, duplicate none. A deterministic gate fails the run if any mandatory
+   constraint is uncovered.
+4. Each capability's `category` is one of: IAM, Data Protection, Logging &
+   Monitoring, Incident & Vulnerability, Governance & Privacy Ops, Change & SDLC,
+   Infrastructure & Network, Vendor & Third-Party, Business Continuity.
+5. **Stack** recommendations are current (2025-2026) components — 2-4 per
+   capability, each marked `open-source` or `managed`, with a one-line rationale.
+6. Write **only** the JSON to `catalog/.shards/cap-<framework>.json` (cluster) or
+   `catalog/.shards/stack-<slug>.json` (stack) using the Write tool. Nothing else.
+
 ## Index — `catalog/index.md`
 
 Rebuilt by `extract.py` after a run (not hand-authored). One row per framework:
