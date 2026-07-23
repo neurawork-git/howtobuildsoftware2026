@@ -350,17 +350,22 @@ def main() -> int:
     stack_cost = sum(s["cost"] for s in stacks if isinstance(s, dict) and "cost" in s)
     total_cost = cluster_cost + stack_cost
 
-    # ── Assemble + deterministic verify ──
-    catalog = cap_lib.assemble_catalog(clusters, stacks, generated=today_iso())
+    # ── Assemble + deterministic verify (only the frameworks derived this run) ──
+    fresh = cap_lib.assemble_catalog(clusters, stacks, generated=today_iso())
     uncovered = {fw: f["uncovered_mandatory_ids"]
-                 for fw, f in catalog["frameworks"].items()
+                 for fw, f in fresh["frameworks"].items()
                  if f["uncovered_mandatory_ids"]}
+
+    # Preserve frameworks NOT processed this run (subset --frameworks, or a failed
+    # cluster) by carrying their existing entries over — never clobber good data.
+    catalog = cap_lib.merge_preserving(existing, fresh)
 
     # ── Write outputs ──
     _write_json_atomic(CAPABILITIES_JSON, catalog)
     CAPABILITIES_MD.write_text(cap_lib.render_capabilities_md(catalog), encoding="utf-8")
     INDEX_FILE.write_text(
-        cap_lib.render_index(_constraint_meta(frameworks), catalog), encoding="utf-8"
+        cap_lib.render_index(_constraint_meta(list(catalog["frameworks"])), catalog),
+        encoding="utf-8",
     )
 
     # ── Persist per-framework catalog hashes for successfully clustered frameworks ──

@@ -101,6 +101,18 @@ def assemble_catalog(
     }
 
 
+def merge_preserving(existing: dict, fresh: dict) -> dict:
+    """Overlay freshly-derived frameworks onto the existing catalog.
+
+    Any framework NOT re-derived this run (a ``--frameworks`` subset run, or a
+    framework whose cluster agent failed) keeps its existing entry — the combined
+    ``capabilities.json`` is never clobbered down to just this run's frameworks.
+    """
+    frameworks = dict(existing.get("frameworks", {}))
+    frameworks.update(fresh.get("frameworks", {}))
+    return {**fresh, "frameworks": frameworks}
+
+
 def render_capabilities_md(catalog: dict) -> str:
     """Render catalog/capabilities.md from the assembled capability catalog."""
     fws = catalog["frameworks"]

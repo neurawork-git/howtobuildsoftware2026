@@ -110,6 +110,28 @@ class TestAssemble(unittest.TestCase):
                              ["GDPR-ART5-02"])
 
 
+class TestMergePreserving(unittest.TestCase):
+    def test_subset_run_keeps_other_frameworks(self) -> None:
+        existing = {"generated": "2026-01-01", "frameworks": {
+            "gdpr": {"capability_count": 25, "capabilities": []},
+            "soc2": {"capability_count": 25, "capabilities": []},
+            "iso27001": {"capability_count": 18, "capabilities": []},
+        }}
+        # a --frameworks gdpr run only re-derives gdpr
+        fresh = {"generated": "2026-02-02", "frameworks": {
+            "gdpr": {"capability_count": 30, "capabilities": []},
+        }}
+        merged = cap_lib.merge_preserving(existing, fresh)
+        self.assertEqual(set(merged["frameworks"]), {"gdpr", "soc2", "iso27001"})
+        self.assertEqual(merged["frameworks"]["gdpr"]["capability_count"], 30)  # fresh wins
+        self.assertEqual(merged["frameworks"]["soc2"]["capability_count"], 25)  # preserved
+        self.assertEqual(merged["generated"], "2026-02-02")  # top-level from fresh run
+
+    def test_empty_existing_is_just_fresh(self) -> None:
+        fresh = {"generated": "x", "frameworks": {"gdpr": {"capability_count": 1}}}
+        self.assertEqual(cap_lib.merge_preserving({}, fresh), fresh)
+
+
 class TestRender(unittest.TestCase):
     def _catalog_obj(self) -> dict:
         return {
