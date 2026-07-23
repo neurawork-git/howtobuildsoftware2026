@@ -61,10 +61,9 @@ The `co-extract` / `co-validate` (and the compile/update) LLM paths need
 `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`; install, scaffolding, and the
 inline plan precheck run without it.
 
-For the full install/upgrade flow (requirements, recon, seeding, FQN/collision),
-see the [install & upgrade guide](docs/INSTALL.md). For how it differs from the
-`coding-suite` skills of the same name, see [when to use which](docs/WHEN-TO-USE.md),
-and for how the harness is built, [the architecture guide](docs/ARCHITECTURE.md).
+For the full install/upgrade flow (requirements, recon, seeding), see the
+[install & upgrade guide](docs/INSTALL.md), and for how the harness is built,
+[the architecture guide](docs/ARCHITECTURE.md).
 
 ## Sources
 
