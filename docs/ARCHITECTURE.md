@@ -25,9 +25,11 @@ different source (the standards themselves), and adds a validation half: a
 ## Plugin source layout (`plugins/neurawork-cc-harness/`)
 
 ```
-.claude-plugin/plugin.json     plugin manifest
+.claude-plugin/plugin.json     plugin manifest (name, semver version, …)
 skills/<skill>/SKILL.md        install skills (recon → ask → execute)
 commands/                      kc-compile.md, cl-update.md, co-extract.md, co-validate.md
+hooks/                         hooks.json + version-check.py (the only code that runs
+                               FROM the plugin, with CLAUDE_PLUGIN_ROOT — the staleness nudge)
 engines/
   _shared/                     stdlib-only helpers (single source of truth)
   knowledge-compiler/
@@ -108,6 +110,17 @@ path). At runtime it wires a **single** `co-`-prefixed **`PostToolUse`** hook (n
 `SessionStart`/`SessionEnd`) that validates each PRP plan write: a fast inline
 structural precheck plus a detached deep LLM report under `compliance-base/reports/`.
 Manual check: `/neurawork-cc-harness:co-validate <plan>`.
+
+Separately, the **plugin itself** registers one `SessionStart` hook (`hooks/hooks.json`
+→ `hooks/version-check.py`) — the only harness code that runs *from* the plugin with
+`CLAUDE_PLUGIN_ROOT` set, rather than from an installed copy. It compares each installed
+engine's stamped `VERSION` (`<repo>/<dir>/VERSION`) against the plugin's shipped
+`VERSION` (`engines/<engine>/VERSION`), locating the install dir by parsing the engine's
+hook command in `.claude/settings.json`, and prints a staleness nudge when an install is
+behind. It has to live at the plugin level: an installed hook resolves its paths from its
+own on-disk location and never sees the plugin, so it cannot read the shipped `VERSION`.
+The manifest's semver `version` names the plugin *release* and is independent of the three
+per-engine integer `VERSION` counters (which advance separately).
 
 ## Self-hosting in this repo
 
