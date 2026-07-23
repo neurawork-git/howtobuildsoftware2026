@@ -1,8 +1,6 @@
-"""Stdlib helpers for the compliance catalog: state, catalog readers, ID parsing.
-
-Also hosts ``should_extract`` — the pure decision behind the SessionStart
-bootstrap/age gate — kept here (no SDK import) so hooks and tests can use it
-cheaply.
+"""Stdlib helpers for the compliance catalog: state, catalog readers, ID parsing,
+and the plan-validation framework selector — no SDK import, so hooks and tests can
+use them cheaply.
 """
 
 from __future__ import annotations
@@ -82,33 +80,8 @@ def referenced_ids(text: str) -> set[str]:
     return set(CONSTRAINT_ID_RE.findall(text))
 
 
-def catalog_is_missing(frameworks: list[str], catalog_dir: Path | None = None) -> bool:
-    """True when no configured framework has a catalog file yet."""
-    return not any(catalog_file(fw, catalog_dir).exists() for fw in frameworks)
-
-
-# ── Extract trigger gate (pure) ───────────────────────────────────────
-
-def should_extract(
-    now: float,
-    last_ts: float | None,
-    age_hours: float,
-    catalog_missing: bool,
-    in_wt: bool,
-    lock_fresh: bool,
-) -> bool:
-    """Whether SessionStart should spawn a background extraction.
-
-    Never in a worktree or while a fresh lock holds. Otherwise: build when the
-    catalog is missing (bootstrap); when it already exists, only re-extract if a
-    completion stamp is present and older than ``age_hours`` (a missing stamp on
-    an existing catalog means it was built manually — leave it alone, no
-    surprise recurring cost).
-    """
-    if in_wt or lock_fresh:
-        return False
-    if catalog_missing:
-        return True
-    if last_ts is None:
-        return False
-    return (now - last_ts) >= age_hours * 3600
+def validation_frameworks(cfg: dict) -> list[str]:
+    """Frameworks the plan-validator checks against: ``validate_frameworks`` when
+    set, else all extracted ``frameworks``. Extraction is unaffected (it keeps
+    reading ``frameworks``)."""
+    return cfg.get("validate_frameworks") or cfg.get("frameworks", [])

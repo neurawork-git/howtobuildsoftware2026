@@ -20,7 +20,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # engines/ for 
 from _shared.recon import emit_recon_json, git_root_or_none
 
 HOOK_EVENTS = {
-    "SessionStart": "co-session-start.py",
     "PostToolUse": "co-post-tooluse.py",
 }
 

@@ -1,12 +1,12 @@
 {
   "catalog_dir": "compliance-base",
   "model": "",
-  "extract_age_hours": 168,
   "frameworks": [
     "gdpr",
     "soc2",
     "iso27001"
   ],
+  "validate_frameworks": [],
   "max_concurrency": 12,
   "validate_mode": "warn"
 }

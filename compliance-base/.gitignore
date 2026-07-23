@@ -4,7 +4,6 @@ catalog/.shards/
 reports/
 scripts/state.json
 scripts/last-extract.json
-scripts/co-extract.lock
 scripts/*.log
 __pycache__/
 *.pyc

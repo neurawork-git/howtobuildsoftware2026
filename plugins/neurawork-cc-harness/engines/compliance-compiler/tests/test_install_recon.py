@@ -60,15 +60,16 @@ class TestInstall(unittest.TestCase):
             self.assertTrue((cb / "scripts" / "precheck.py").exists())
             self.assertTrue((cb / "scripts" / "capabilities.py").exists())
             self.assertTrue((cb / "scripts" / "cap_lib.py").exists())
-            self.assertTrue((cb / "hooks" / "co-session-start.py").exists())
+            self.assertFalse((cb / "hooks" / "co-session-start.py").exists())  # removed
             self.assertTrue((cb / "hooks" / "co-post-tooluse.py").exists())
             self.assertTrue((cb / ".gitignore").exists())
             self.assertTrue((cb / "config.json").exists())
             self.assertTrue((cb / "AGENTS.md").exists())
 
             settings = json.loads((repo / ".claude" / "settings.json").read_text())
-            for event in ("SessionStart", "PostToolUse"):
-                self.assertIn(event, settings["hooks"])
+            self.assertIn("PostToolUse", settings["hooks"])
+            # compliance-compiler no longer registers a SessionStart hook
+            self.assertNotIn("SessionStart", settings["hooks"])
 
     def test_idempotent_reinstall(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

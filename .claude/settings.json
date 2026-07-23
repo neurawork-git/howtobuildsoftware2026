@@ -13,11 +13,6 @@
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/claudemd-lerner\" python hooks/cl-session-start.py",
             "timeout": 15
-          },
-          {
-            "type": "command",
-            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/compliance-base\" python hooks/co-session-start.py",
-            "timeout": 15
           }
         ]
       }
