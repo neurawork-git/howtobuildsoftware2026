@@ -1,0 +1,729 @@
+{
+  "framework": "iso27001",
+  "title": "ISO/IEC 27001:2022 — Annex A controls",
+  "generated": "2026-07-02",
+  "count": 72,
+  "mandatory": 59,
+  "constraints": [
+    {
+      "id": "ISO-A5-01",
+      "framework": "iso27001",
+      "title": "Inventory of information and associated assets",
+      "requirement": "Maintain an inventory of information and other associated assets, including their owners, so that assets in scope are identified and accountable throughout their lifecycle.",
+      "applies_when": "Always",
+      "check": "Confirm an asset/information inventory exists, is kept current, and records a named owner for each asset.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.9",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-02",
+      "framework": "iso27001",
+      "title": "Acceptable use of information and assets",
+      "requirement": "Define, document, and communicate rules for the acceptable use and handling of information and associated assets to everyone who uses or handles them.",
+      "applies_when": "Always",
+      "check": "Verify a documented acceptable-use policy exists and is distributed to users/personnel who handle the assets.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.10",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-03",
+      "framework": "iso27001",
+      "title": "Return of assets",
+      "requirement": "Ensure personnel and external parties return all organizational assets in their possession upon termination, change of role, or end of the agreement.",
+      "applies_when": "Employees or third parties are issued organizational assets (devices, credentials, data)",
+      "check": "Confirm the offboarding/role-change process includes a tracked step to recover all issued assets and access.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.11",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-04",
+      "framework": "iso27001",
+      "title": "Classification of information",
+      "requirement": "Classify information according to its confidentiality, integrity, and availability needs and applicable legal or business requirements, using a defined classification scheme.",
+      "applies_when": "Always",
+      "check": "Verify a classification scheme is defined and information is assigned classification levels per that scheme.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.12",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-05",
+      "framework": "iso27001",
+      "title": "Labelling of information",
+      "requirement": "Develop and apply procedures for labelling information in line with the adopted classification scheme so its sensitivity is recognizable.",
+      "applies_when": "An information classification scheme is in use",
+      "check": "Confirm labelling procedures exist and classified information (physical and electronic) carries appropriate labels.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.13",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A5-06",
+      "framework": "iso27001",
+      "title": "Information transfer rules and agreements",
+      "requirement": "Establish rules, procedures, and agreements to protect information transferred internally and with external parties across all transfer channels.",
+      "applies_when": "Information is transferred internally or to external parties",
+      "check": "Verify transfer procedures/agreements exist and specify protection controls for each transfer channel (electronic, physical, verbal).",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.14",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A5-07",
+      "framework": "iso27001",
+      "title": "Access control policy",
+      "requirement": "Establish and maintain an access control policy for physical and logical access to information and assets, based on business and information security requirements.",
+      "applies_when": "Always",
+      "check": "Confirm a documented access control policy exists and defines access rules grounded in business/security needs.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.15",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-08",
+      "framework": "iso27001",
+      "title": "Identity management lifecycle",
+      "requirement": "Manage the full lifecycle of identities, ensuring each identity is uniquely attributable to a single person or entity and shared identities are only permitted where justified.",
+      "applies_when": "Always",
+      "check": "Verify identities are uniquely assigned, provisioned and deprovisioned through a managed lifecycle, and shared accounts are exception-approved.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.16",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-09",
+      "framework": "iso27001",
+      "title": "Authentication information management",
+      "requirement": "Control the allocation and management of authentication information (passwords, secrets, keys) through a defined process, and require users to safeguard their credentials.",
+      "applies_when": "Systems authenticate users or services",
+      "check": "Confirm processes govern secure issuance, storage, and handling of authentication secrets and users are instructed to protect them.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.17",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-10",
+      "framework": "iso27001",
+      "title": "Provisioning of access rights",
+      "requirement": "Provision, modify, and remove access rights to information and assets in accordance with the access control policy and the principle of least privilege.",
+      "applies_when": "Always",
+      "check": "Verify access grants follow least privilege and are tied to approved requests aligned with the access control policy.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.18",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-11",
+      "framework": "iso27001",
+      "title": "Review and removal of access rights",
+      "requirement": "Regularly review access rights and revoke or adjust them promptly on role change or termination so access remains appropriate over time.",
+      "applies_when": "Always",
+      "check": "Confirm periodic access reviews occur and access is revoked/updated on leaver and mover events within a defined timeframe.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.18",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-12",
+      "framework": "iso27001",
+      "title": "Special handling for privileged and high-value assets",
+      "requirement": "Apply stricter access, use, and handling controls to privileged accounts and high-classification information/assets identified in the inventory and classification scheme.",
+      "applies_when": "Privileged accounts or highly classified assets exist",
+      "check": "Verify privileged access and top-classification assets are subject to enhanced restriction, approval, and monitoring controls.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.15/5.16/5.18",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A5-19",
+      "framework": "iso27001",
+      "title": "Information security in supplier relationships",
+      "requirement": "Define and apply processes and controls to manage the information security risks that arise from using suppliers' products and services, before engaging and throughout the relationship.",
+      "applies_when": "Uses any third-party suppliers, vendors, or service providers that can access, process, or support the organization's information or systems",
+      "check": "Confirm the plan documents a supplier risk-assessment and onboarding process that identifies and mitigates security risks for each supplier category.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.19",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-20",
+      "framework": "iso27001",
+      "title": "Security requirements in supplier agreements",
+      "requirement": "Establish and agree relevant information security requirements with each supplier in written agreements according to the type of supplier relationship and the access they are granted.",
+      "applies_when": "Enters contracts or agreements with suppliers that handle organizational information or provide IT services",
+      "check": "Verify that supplier contracts include documented security clauses covering data handling, access, obligations, and incident reporting.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.20",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-21",
+      "framework": "iso27001",
+      "title": "Managing security in the ICT supply chain",
+      "requirement": "Define and manage information security requirements that flow down through the ICT products and services supply chain, including subcontractors and component providers.",
+      "applies_when": "Procures or integrates ICT products, software components, or services that depend on downstream suppliers",
+      "check": "Check that the plan requires suppliers to propagate security requirements to their own subcontractors and to disclose relevant supply-chain components.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.21",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A5-22",
+      "framework": "iso27001",
+      "title": "Monitoring and change management of supplier services",
+      "requirement": "Regularly monitor, review, evaluate, and manage changes to suppliers' information security practices and service delivery.",
+      "applies_when": "Relies on ongoing services delivered by third-party suppliers",
+      "check": "Confirm there is a recurring supplier review process (e.g., audits, reports, or SLAs) that reassesses security when supplier services change.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.22",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A5-23",
+      "framework": "iso27001",
+      "title": "Information security for use of cloud services",
+      "requirement": "Establish processes for acquiring, using, managing, and exiting cloud services in line with the organization's information security requirements, including shared-responsibility boundaries.",
+      "applies_when": "Uses cloud services (IaaS/PaaS/SaaS) to store or process information",
+      "check": "Verify the plan defines cloud provider security requirements, shared-responsibility allocation, and a documented exit/data-return strategy.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.23",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-24",
+      "framework": "iso27001",
+      "title": "Incident management planning and preparation",
+      "requirement": "Plan and prepare for managing information security incidents by defining roles, responsibilities, processes, and reporting procedures in advance.",
+      "applies_when": "Always",
+      "check": "Check that a documented incident response plan exists assigning roles, escalation paths, and reporting procedures.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.24",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-25",
+      "framework": "iso27001",
+      "title": "Assessment and decision on security events",
+      "requirement": "Assess information security events and decide whether they are classified as information security incidents, applying a consistent categorization scheme.",
+      "applies_when": "Always",
+      "check": "Verify the plan defines criteria and a triage process for classifying security events and prioritizing incidents.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.25",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-26",
+      "framework": "iso27001",
+      "title": "Response to information security incidents",
+      "requirement": "Respond to information security incidents in accordance with documented procedures, including containment, eradication, recovery, and communication steps.",
+      "applies_when": "Always",
+      "check": "Confirm the incident procedure specifies response steps (containment, recovery, notification) and is exercised or tested.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.26",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-27",
+      "framework": "iso27001",
+      "title": "Learning from information security incidents",
+      "requirement": "Use knowledge gained from information security incidents to strengthen and improve controls and reduce the likelihood or impact of future incidents.",
+      "applies_when": "Always",
+      "check": "Check for a post-incident review process that feeds lessons learned into control improvements.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.27",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-28",
+      "framework": "iso27001",
+      "title": "Collection of evidence",
+      "requirement": "Define and apply procedures for the identification, collection, acquisition, and preservation of evidence related to information security events in a legally admissible manner.",
+      "applies_when": "Handles incidents that may lead to legal, disciplinary, or regulatory action",
+      "check": "Verify evidence-handling procedures exist covering chain of custody, integrity preservation, and forensic acquisition.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.28",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A5-30",
+      "framework": "iso27001",
+      "title": "ICT readiness for business continuity",
+      "requirement": "Plan, implement, maintain, and test ICT continuity capabilities so information and systems can be restored to meet business continuity objectives and defined recovery targets.",
+      "applies_when": "Always",
+      "check": "Confirm the plan defines recovery objectives (RTO/RPO), ICT continuity measures, backups, and periodic continuity testing.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.30",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-31",
+      "framework": "iso27001",
+      "title": "Legal, statutory, regulatory and contractual requirements",
+      "requirement": "Identify, document, and keep current all legal, statutory, regulatory, and contractual requirements relevant to information security and the approach to meeting them.",
+      "applies_when": "Always",
+      "check": "Verify a maintained register of applicable legal/regulatory/contractual security obligations and mapped controls exists.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.31",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-32",
+      "framework": "iso27001",
+      "title": "Intellectual property rights",
+      "requirement": "Implement procedures to protect intellectual property rights, including compliance with software licensing and restrictions on use of copyrighted or proprietary material.",
+      "applies_when": "Uses licensed software, third-party code, or copyrighted/proprietary material",
+      "check": "Check for software license/IP compliance controls such as license inventories and usage-restriction policies.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.32",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-34",
+      "framework": "iso27001",
+      "title": "Privacy and protection of PII",
+      "requirement": "Identify and meet requirements for the preservation of privacy and protection of personally identifiable information according to applicable laws, regulations, and contractual terms.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify the plan documents PII protection measures and privacy-requirement compliance aligned to applicable data-protection law.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.34",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A5-37",
+      "framework": "iso27001",
+      "title": "Documented operating procedures",
+      "requirement": "Document operating procedures for information processing facilities and make them available to the personnel who need them.",
+      "applies_when": "Always",
+      "check": "Confirm that key operational activities (e.g., backups, deployments, access management) have documented, accessible procedures.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 5.37",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-01",
+      "framework": "iso27001",
+      "title": "Background verification screening of candidates",
+      "requirement": "A.6.1 Screening — Perform background verification checks on all candidates for employment before hiring, proportionate to business needs, the classification of information they will access, and applicable laws, with checks such as identity, references, and qualifications.",
+      "applies_when": "Organization hires or engages personnel who will access information assets",
+      "check": "Confirm a documented pre-employment screening procedure exists and that verification records (identity, references, qualifications) are retained for hired personnel, scaled to role sensitivity.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.1 (Screening)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-02",
+      "framework": "iso27001",
+      "title": "Security responsibilities in employment terms",
+      "requirement": "A.6.2 Terms and conditions of employment — Employment contractual agreements must state the personnel's and the organization's information security responsibilities.",
+      "applies_when": "Always (any personnel engagement)",
+      "check": "Inspect employment contracts or onboarding agreements to confirm they include explicit information security responsibilities for the employee.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.2 (Terms and conditions of employment)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-03",
+      "framework": "iso27001",
+      "title": "Security awareness, education and training",
+      "requirement": "A.6.3 Information security awareness, education and training — Provide personnel and relevant interested parties with appropriate security awareness training and regular updates to organizational policies and procedures relevant to their role.",
+      "applies_when": "Always (all personnel with access to systems or data)",
+      "check": "Verify a security awareness/training program exists with a schedule, role-relevant content, and completion records for staff, including refreshers when policies change.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.3 (Information security awareness, education and training)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-04",
+      "framework": "iso27001",
+      "title": "Formalized disciplinary process",
+      "requirement": "A.6.4 Disciplinary process — Establish and communicate a formal, graduated disciplinary process to take action against personnel and other relevant parties who commit an information security policy violation.",
+      "applies_when": "Always (any personnel bound by security policies)",
+      "check": "Confirm a documented disciplinary process for security violations exists, is communicated to staff, and provides for proportionate action.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.4 (Disciplinary process)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-05",
+      "framework": "iso27001",
+      "title": "Security duties surviving termination or role change",
+      "requirement": "A.6.5 Responsibilities after termination or change of employment — Define, enforce, and communicate the information security responsibilities and duties that remain valid after termination or change of employment.",
+      "applies_when": "Personnel leave the organization or change roles",
+      "check": "Verify offboarding/role-change procedures define continuing obligations (e.g., confidentiality, return of assets, access revocation) and that these are communicated to affected personnel.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.5 (Responsibilities after termination or change of employment)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-06",
+      "framework": "iso27001",
+      "title": "Confidentiality / non-disclosure agreements",
+      "requirement": "A.6.6 Confidentiality or non-disclosure agreements — Identify, document, regularly review, and have signed confidentiality or non-disclosure agreements reflecting the organization's needs for protecting information, applied to personnel and external parties.",
+      "applies_when": "Personnel or external parties have access to confidential or non-public information",
+      "check": "Confirm NDA/confidentiality agreements are in place and signed for relevant personnel and third parties, and are reviewed periodically for adequacy.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.6 (Confidentiality or non-disclosure agreements)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-07",
+      "framework": "iso27001",
+      "title": "Security measures for remote working",
+      "requirement": "A.6.7 Remote working — Implement security measures so that information is protected when personnel work remotely or outside organizational premises, covering the working environment, connectivity, and device controls.",
+      "applies_when": "Personnel work remotely or access information outside organizational premises",
+      "check": "Verify a remote-working policy and technical controls (secure connectivity/VPN, endpoint protection, environment guidance) are defined and applied to remote workers.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.7 (Remote working)",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A6-08",
+      "framework": "iso27001",
+      "title": "Reporting of information security events",
+      "requirement": "A.6.8 Information security event reporting — Provide a mechanism for personnel to report observed or suspected information security events through appropriate channels in a timely manner.",
+      "applies_when": "Always (all personnel who may observe security events)",
+      "check": "Confirm a defined reporting channel and procedure exists for security events, is communicated to staff, and specifies timely reporting expectations.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.8 (Information security event reporting)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A6-09",
+      "framework": "iso27001",
+      "title": "Screening re-verification proportionate to role changes",
+      "requirement": "A.6.1 Screening — When personnel move into roles with greater access to sensitive information, re-verify or extend background screening in proportion to the increased risk and information classification.",
+      "applies_when": "Personnel are promoted or reassigned to roles with higher-sensitivity access",
+      "check": "Verify the screening procedure requires re-assessment when personnel take on higher-privilege or higher-classification roles.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.1 (Screening)",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A6-10",
+      "framework": "iso27001",
+      "title": "Access revocation and asset return on exit",
+      "requirement": "A.6.5 Responsibilities after termination or change of employment — On termination or role change, promptly revoke access rights and ensure return of organizational assets, credentials, and information.",
+      "applies_when": "Personnel leave the organization or change roles",
+      "check": "Confirm the offboarding checklist enforces timely access revocation and documented return of assets/credentials.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.6.5 (Responsibilities after termination or change of employment)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-01",
+      "framework": "iso27001",
+      "title": "Clear desk and clear screen",
+      "requirement": "Enforce a clear desk policy for papers and removable media and a clear screen policy for information-processing facilities, so sensitive information is not left exposed when workspaces are unattended.",
+      "applies_when": "Personnel handle sensitive or classified information at physical workstations or shared/open-plan spaces.",
+      "check": "Confirm a documented clear-desk/clear-screen policy exists and is enforced via automatic screen locks/timeouts, secure storage for documents and media, and periodic walkthrough checks.",
+      "source_ref": "ISO 27001:2022 Annex A 7.7 (Clear desk and clear screen)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-02",
+      "framework": "iso27001",
+      "title": "Equipment siting and protection",
+      "requirement": "Site and protect equipment to reduce risks from physical and environmental threats and from unauthorized access, for example minimizing unnecessary access, positioning screens to prevent overlooking, and shielding items handling sensitive data.",
+      "applies_when": "Organization operates physical equipment (servers, workstations, network gear) that processes or stores information.",
+      "check": "Verify equipment placement standards address environmental threats, viewing angles/overlooking, and access restrictions, and confirm through a site inspection of representative equipment locations.",
+      "source_ref": "ISO 27001:2022 Annex A 7.8 (Equipment siting and protection)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-03",
+      "framework": "iso27001",
+      "title": "Protection against environmental threats",
+      "requirement": "Protect equipment against environmental hazards such as fire, flood, dust, heat, power fluctuations, and other physical conditions that could cause damage or disruption.",
+      "applies_when": "Equipment is housed in facilities exposed to environmental or physical hazards (data centers, server rooms, offices).",
+      "check": "Confirm environmental controls (fire detection/suppression, temperature/humidity monitoring, water/dust protection) are installed and monitored for equipment areas.",
+      "source_ref": "ISO 27001:2022 Annex A 7.8 (Equipment siting and protection) / A 7.5 physical threats",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-04",
+      "framework": "iso27001",
+      "title": "Supporting utilities",
+      "requirement": "Protect equipment from disruptions caused by failures in supporting utilities such as electricity, telecommunications, water, and cooling, including redundancy or backup provisions where availability is critical.",
+      "applies_when": "Equipment availability depends on power, cooling, telecom, or other supporting utilities.",
+      "check": "Verify supporting utilities are sized to requirements, monitored, regularly inspected, and backed by measures like UPS/generators or redundant feeds for critical systems.",
+      "source_ref": "ISO 27001:2022 Annex A 7.11 (Supporting utilities)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-05",
+      "framework": "iso27001",
+      "title": "Cabling security",
+      "requirement": "Protect power and telecommunications cabling that carries data or supports services from interception, interference, or damage, for example via routing controls, conduit, or segregation of power and data lines.",
+      "applies_when": "Facility contains power or data/telecom cabling supporting information systems.",
+      "check": "Inspect cabling to confirm it is protected (concealed/armored/conduit), power and comms cables are segregated, and access to patch panels and cable rooms is controlled.",
+      "source_ref": "ISO 27001:2022 Annex A 7.12 (Cabling security)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-06",
+      "framework": "iso27001",
+      "title": "Equipment maintenance",
+      "requirement": "Maintain equipment correctly and at recommended intervals to ensure its continued availability and integrity, using authorized maintenance personnel and controlling maintenance activities.",
+      "applies_when": "Organization owns or operates equipment that supports information processing.",
+      "check": "Confirm a maintenance schedule and records exist, maintenance is performed only by authorized parties, and controls apply when equipment leaves premises or is serviced by third parties.",
+      "source_ref": "ISO 27001:2022 Annex A 7.13 (Equipment maintenance)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-07",
+      "framework": "iso27001",
+      "title": "Data removal before off-site maintenance",
+      "requirement": "Before equipment containing sensitive information is sent off-site for maintenance or repair, remove, sanitize, or otherwise protect the stored information as appropriate.",
+      "applies_when": "Equipment holding confidential or personal data is sent off-premises for servicing.",
+      "check": "Verify a procedure requires assessment and removal/protection of stored data prior to off-site maintenance, with records of what was sanitized.",
+      "source_ref": "ISO 27001:2022 Annex A 7.13 (Equipment maintenance) / 7.10 storage media",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-08",
+      "framework": "iso27001",
+      "title": "Secure disposal or re-use of equipment",
+      "requirement": "Verify that equipment containing storage media is checked to ensure any sensitive data and licensed software has been securely erased or destroyed before the equipment is disposed of or reused.",
+      "applies_when": "Equipment or storage media reaches end of life, is repurposed, or is transferred to another party.",
+      "check": "Confirm a documented secure disposal/reuse process requires verified sanitization or physical destruction of media, with disposal certificates or logs retained.",
+      "source_ref": "ISO 27001:2022 Annex A 7.14 (Secure disposal or re-use of equipment)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-09",
+      "framework": "iso27001",
+      "title": "Security of assets off-premises",
+      "requirement": "Apply protection to assets used or stored off-premises (including remote and home working and equipment in transit), accounting for the increased risks of operating outside controlled facilities.",
+      "applies_when": "Devices or assets are used, transported, or stored outside the organization's premises.",
+      "check": "Verify an off-premises asset policy defines protection measures (encryption, physical safeguards, not leaving assets unattended, insurance/transit controls) and is applied to mobile and remote-work equipment.",
+      "source_ref": "ISO 27001:2022 Annex A 7.9 (Security of assets off-premises)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-10",
+      "framework": "iso27001",
+      "title": "Authorization for removal of assets off-site",
+      "requirement": "Require prior authorization before equipment, information, or software is taken off-site, and track such removals so assets can be accounted for and returned.",
+      "applies_when": "Assets may be removed from organizational premises by staff or third parties.",
+      "check": "Confirm a removal-authorization procedure and asset check-out/return log exist and are enforced, with spot checks reconciling removed assets against records.",
+      "source_ref": "ISO 27001:2022 Annex A 7.9 (Security of assets off-premises) / 7.10",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A7-11",
+      "framework": "iso27001",
+      "title": "Unattended user equipment",
+      "requirement": "Ensure users protect unattended equipment by applying safeguards such as terminating active sessions, locking screens, and logging off when leaving equipment.",
+      "applies_when": "Users operate equipment that could be left unattended in accessible areas.",
+      "check": "Verify policy and technical enforcement (session timeouts, automatic lock, log-off prompts) require unattended equipment to be secured, and confirm via configuration review.",
+      "source_ref": "ISO 27001:2022 Annex A 7.7 (Clear desk and clear screen) / user endpoint controls",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-01",
+      "framework": "iso27001",
+      "title": "Networks security controls",
+      "requirement": "Per control A.8.20 (Networks security), networks and the devices that comprise them must be secured, managed, and controlled to protect the information that travels across them and the connected systems.",
+      "applies_when": "System operates over or connects to any network (internal, cloud, or internet).",
+      "check": "Confirm the plan documents network security controls (firewalls, ACLs, hardened network devices, secure configurations) governing all network paths the system uses.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.20 Networks security",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-02",
+      "framework": "iso27001",
+      "title": "Security of network services",
+      "requirement": "Per control A.8.21 (Security of network services), the security mechanisms, service levels, and management requirements of all network services (whether provided in-house or outsourced) must be identified, agreed, and monitored.",
+      "applies_when": "System relies on network services from internal teams or external providers (ISPs, cloud networking, CDN).",
+      "check": "Verify security requirements and SLAs for each network service are defined, documented in agreements, and monitored.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.21 Security of network services",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-03",
+      "framework": "iso27001",
+      "title": "Segregation of networks",
+      "requirement": "Per control A.8.22 (Segregation of networks), groups of information services, users, and systems must be segregated into separate network zones or segments to limit lateral movement and contain compromise.",
+      "applies_when": "System runs on a network hosting multiple services, trust levels, or user populations.",
+      "check": "Confirm the network design uses segmentation (VLANs, subnets, security groups) separating trust zones such as public-facing, application, and data tiers.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.22 Segregation of networks",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-04",
+      "framework": "iso27001",
+      "title": "Multi-tenant network isolation",
+      "requirement": "Extending A.8.22, in shared or multi-tenant environments each tenant's network traffic and resources must be logically isolated so one tenant cannot reach another's data or services over the network.",
+      "applies_when": "Multi-tenant system serving multiple customers or organizations on shared infrastructure.",
+      "check": "Verify tenant traffic is isolated via per-tenant network boundaries (separate security groups/namespaces/VPCs) and test that cross-tenant network access is denied.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.22 Segregation of networks",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A8-05",
+      "framework": "iso27001",
+      "title": "Web filtering",
+      "requirement": "Per control A.8.23 (Web filtering), access from managed systems to external websites must be controlled to reduce exposure to malicious content and to prevent access to unauthorized or high-risk sites.",
+      "applies_when": "Users or workloads on managed endpoints/servers make outbound web requests to the internet.",
+      "check": "Confirm outbound web access is filtered (proxy, DNS filtering, or category/allow-list controls) blocking known-malicious and disallowed destinations.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.23 Web filtering",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A8-06",
+      "framework": "iso27001",
+      "title": "Cryptography policy and effective use",
+      "requirement": "Per control A.8.24 (Use of cryptography), rules for the effective use of cryptography, including key management, must be defined and implemented to protect the confidentiality, integrity, and authenticity of information.",
+      "applies_when": "Always — any system storing or transmitting information that requires protection.",
+      "check": "Verify a documented cryptography policy exists specifying where and how encryption is applied and that the system's design conforms to it.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.24 Use of cryptography",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-07",
+      "framework": "iso27001",
+      "title": "Encryption of data in transit",
+      "requirement": "Per control A.8.24, information transmitted over networks must be protected in transit using strong encrypted protocols (e.g. TLS) to prevent interception or tampering.",
+      "applies_when": "System transmits sensitive or personal data over any network, including internal service-to-service traffic.",
+      "check": "Confirm all network communications carrying sensitive data use TLS (or equivalent) with weak/plaintext protocols disabled.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.24 Use of cryptography",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-08",
+      "framework": "iso27001",
+      "title": "Encryption of data at rest",
+      "requirement": "Per control A.8.24, sensitive information stored on disk, in databases, or in backups must be encrypted at rest so it is protected if the storage medium is compromised.",
+      "applies_when": "System persists sensitive or personal data to storage, databases, or backups.",
+      "check": "Verify data-at-rest encryption is enabled for the relevant storage, databases, and backups.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.24 Use of cryptography",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-09",
+      "framework": "iso27001",
+      "title": "Approved algorithms and key strength",
+      "requirement": "Per control A.8.24, only strong, current cryptographic algorithms and adequate key lengths may be used; deprecated or weak ciphers and protocols must be disabled.",
+      "applies_when": "System performs any cryptographic operation (encryption, hashing, signing, TLS).",
+      "check": "Confirm the configuration uses vetted algorithms and key sizes and that weak ciphers/protocols (e.g. SSLv3, TLS 1.0/1.1, MD5, DES) are disabled.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.24 Use of cryptography",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-10",
+      "framework": "iso27001",
+      "title": "Cryptographic key management lifecycle",
+      "requirement": "Per control A.8.24, cryptographic keys must be managed across their full lifecycle — secure generation, storage, distribution, rotation, revocation, and destruction — with access to keys restricted.",
+      "applies_when": "System uses cryptographic keys, certificates, or secrets.",
+      "check": "Verify keys are held in a managed store (KMS/HSM/secrets manager), access is restricted, and rotation and revocation procedures are defined.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.24 Use of cryptography",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-11",
+      "framework": "iso27001",
+      "title": "Secure and authenticated remote access",
+      "requirement": "Extending A.8.20/A.8.21, remote and administrative access to the network and systems must occur over authenticated, encrypted channels (e.g. VPN or equivalent) rather than exposed unencrypted services.",
+      "applies_when": "System permits remote administrative or user access over untrusted networks.",
+      "check": "Confirm remote/admin access uses an encrypted, authenticated channel and that management interfaces are not directly exposed to the public internet.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.20 Networks security",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-12",
+      "framework": "iso27001",
+      "title": "Network monitoring for anomalies",
+      "requirement": "Extending A.8.20/A.8.21, network activity must be monitored and logged so that anomalous or unauthorized traffic and security events can be detected and investigated.",
+      "applies_when": "System operates over a network carrying sensitive traffic or exposed to the internet.",
+      "check": "Verify network traffic and events are logged and monitored (IDS/IPS, flow logs, alerting) with a process to review anomalies.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A control A.8.20 Networks security",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A8-13",
+      "framework": "iso27001",
+      "title": "Installation of software on operational systems",
+      "requirement": "Control A.8.19. Govern installation and updating of software on operational systems through controlled procedures, so only approved, authorized software is deployed to production.",
+      "applies_when": "Software runs on operational/production systems",
+      "check": "Verify the plan restricts who can install software on production, requires approval/change control, and permits only vetted software.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A.8.19 Installation of software on operational systems",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-25",
+      "framework": "iso27001",
+      "title": "Secure development lifecycle",
+      "requirement": "Establish and apply documented rules for the secure development of software and systems across the full lifecycle, covering planning, design, build, test, and release phases.",
+      "applies_when": "Organization develops software or systems in-house or under its direction",
+      "check": "Confirm a documented secure development lifecycle (SDLC) policy exists and that development projects follow its defined phases and security gates.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.25 (Secure development life cycle)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-26",
+      "framework": "iso27001",
+      "title": "Application security requirements",
+      "requirement": "Identify, specify, and approve information security requirements when developing or acquiring applications, including requirements for authentication, authorization, and protection of data in transit and at rest.",
+      "applies_when": "Developing or acquiring applications",
+      "check": "Verify that security requirements are documented and reviewed for each application before build, including for transactions and sensitive data handling.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.26 (Application security requirements)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-27",
+      "framework": "iso27001",
+      "title": "Secure architecture and engineering principles",
+      "requirement": "Define, document, maintain, and apply secure system architecture and engineering principles (e.g. least privilege, defense in depth, secure defaults) to all system development activities.",
+      "applies_when": "Designing or engineering systems",
+      "check": "Confirm secure engineering principles are documented and evidence shows they are applied and reviewed during system design.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.27 (Secure system architecture and engineering principles)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-28",
+      "framework": "iso27001",
+      "title": "Secure coding",
+      "requirement": "Apply secure coding principles and practices, including use of approved standards, tooling, and avoidance of known insecure patterns, to reduce vulnerabilities in developed software.",
+      "applies_when": "Writing or maintaining source code",
+      "check": "Verify secure coding standards are adopted and enforced via developer guidance, linters/SAST, and code review.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.28 (Secure coding)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-29",
+      "framework": "iso27001",
+      "title": "Security testing in development and acceptance",
+      "requirement": "Define and perform security testing during development and as part of acceptance, verifying that systems meet their security requirements before release.",
+      "applies_when": "Developing or accepting new or changed systems",
+      "check": "Confirm security test plans, criteria, and acceptance results exist and that releases are gated on passing them.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.29 (Security testing in development and acceptance)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-30",
+      "framework": "iso27001",
+      "title": "Outsourced development",
+      "requirement": "Direct, monitor, and review the activities of outsourced or third-party development to ensure the organization's security requirements are met throughout the engagement.",
+      "applies_when": "Any development is outsourced to third parties",
+      "check": "Verify contracts specify security requirements and that outsourced deliverables undergo security review, testing, and acceptance.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.30 (Outsourced development)",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A8-31",
+      "framework": "iso27001",
+      "title": "Separation of development, test and production environments",
+      "requirement": "Separate development, testing, and production environments and control the transfer of code and data between them to reduce risk of unauthorized changes and exposure.",
+      "applies_when": "Operating distinct development, test, and production systems",
+      "check": "Confirm environments are segregated with access controls and a controlled promotion/deployment process between them.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.31 (Separation of development, test and production environments)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-32",
+      "framework": "iso27001",
+      "title": "Change management",
+      "requirement": "Subject changes to information processing facilities and systems to formal change management procedures covering assessment, approval, testing, and rollback.",
+      "applies_when": "Changing systems or information processing facilities",
+      "check": "Verify a change management process exists with documented requests, security impact assessment, approval, and rollback plans.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.32 (Change management)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-33",
+      "framework": "iso27001",
+      "title": "Test information protection",
+      "requirement": "Select, protect, and manage test information appropriately, avoiding the use of sensitive or production data in test environments unless it is masked, anonymized, or otherwise safeguarded and authorized.",
+      "applies_when": "Test environments use or could use production/sensitive data",
+      "check": "Confirm test data is masked/anonymized or authorized and protected, and that production data use in test is controlled and logged.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.33 (Test information)",
+      "mandatory": true
+    },
+    {
+      "id": "ISO-A8-34",
+      "framework": "iso27001",
+      "title": "Protection during audit testing",
+      "requirement": "Plan and agree audit tests and assessments that access operational systems so that impact on production processes is minimized and access is controlled.",
+      "applies_when": "Audit or assessment activities access operational systems",
+      "check": "Verify audit test activities are pre-agreed, scoped, access-controlled, and scheduled to limit disruption to live systems.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.34 (Protection of information systems during audit testing)",
+      "mandatory": false
+    },
+    {
+      "id": "ISO-A8-35",
+      "framework": "iso27001",
+      "title": "Vulnerability remediation in development",
+      "requirement": "Identify and remediate security vulnerabilities found during design, coding, testing, or acceptance before systems are promoted to production.",
+      "applies_when": "Developing or changing systems",
+      "check": "Confirm vulnerabilities from SAST/DAST/reviews are tracked to closure and release is blocked on unresolved high-severity issues.",
+      "source_ref": "ISO/IEC 27001:2022 Annex A 8.25/8.28/8.29 (secure development, coding, testing)",
+      "mandatory": true
+    }
+  ]
+}

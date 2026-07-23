@@ -1,0 +1,1609 @@
+{
+  "framework": "soc2",
+  "title": "SOC 2 — AICPA Trust Services Criteria",
+  "generated": "2026-07-02",
+  "count": 160,
+  "mandatory": 111,
+  "constraints": [
+    {
+      "id": "SOC2-A1-01",
+      "framework": "soc2",
+      "title": "Capacity usage monitoring",
+      "requirement": "Continuously measure and monitor current utilization of compute, storage, and network resources so that capacity constraints are detected before they threaten availability.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Confirm monitoring/telemetry exists for CPU, memory, storage, and network utilization with dashboards or metrics that reflect current usage against available capacity.",
+      "source_ref": "SOC 2 TSC A1.1 (capacity monitoring and evaluation)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-02",
+      "framework": "soc2",
+      "title": "Capacity demand forecasting",
+      "requirement": "Forecast future capacity demand and evaluate it against available resources to anticipate the need for scaling ahead of exhaustion.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Verify a documented process or model projects future demand (growth, seasonal peaks) and triggers capacity planning decisions.",
+      "source_ref": "SOC 2 TSC A1.1 (evaluate capacity to meet demand)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-03",
+      "framework": "soc2",
+      "title": "Provisioning of additional capacity",
+      "requirement": "Provide a mechanism to add or scale capacity (manually or via auto-scaling) so demand can be met without breaching availability commitments.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Confirm a defined path to provision extra capacity exists (auto-scaling policies, elastic infrastructure, or a documented procurement/scale-out runbook).",
+      "source_ref": "SOC 2 TSC A1.1 (enable additional capacity)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-04",
+      "framework": "soc2",
+      "title": "Environmental threat protections",
+      "requirement": "Implement protections against environmental hazards (fire, flooding, power loss, extreme temperature, humidity) affecting facilities or infrastructure hosting the system.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Verify environmental controls exist (fire suppression, UPS/generators, HVAC, water detection) or that the hosting provider attests to them in a shared-responsibility report.",
+      "source_ref": "SOC 2 TSC A1.2 (environmental protections)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-05",
+      "framework": "soc2",
+      "title": "Environmental condition monitoring and alerting",
+      "requirement": "Monitor environmental conditions and generate alerts on anomalies (temperature, power, smoke, moisture) so responders can act before an outage occurs.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Confirm environmental sensors/alerting are in place, or that the cloud/colocation provider supplies such monitoring per its compliance attestation.",
+      "source_ref": "SOC 2 TSC A1.2 (detection of environmental issues)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-06",
+      "framework": "soc2",
+      "title": "Regular data backups",
+      "requirement": "Perform regular backups of software and data on a defined schedule aligned with recovery objectives.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Verify backup jobs run on a documented schedule with a retention policy and evidence of recent successful completion.",
+      "source_ref": "SOC 2 TSC A1.2 (data backup processes)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-07",
+      "framework": "soc2",
+      "title": "Backup protection and isolation",
+      "requirement": "Protect backups from loss and tampering by storing copies in a separate location or region and encrypting them at rest.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Confirm backups are stored off-site or in a distinct region/account, are encrypted, and access to them is restricted.",
+      "source_ref": "SOC 2 TSC A1.2 (recovery infrastructure and backup integrity)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-08",
+      "framework": "soc2",
+      "title": "Recovery infrastructure and redundancy",
+      "requirement": "Maintain recovery infrastructure (redundancy, failover, or restorable environments) capable of restoring the system after a disruption within committed objectives.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Verify redundant components, failover targets, or a restorable recovery environment exist that align with the defined RTO/RPO.",
+      "source_ref": "SOC 2 TSC A1.2 (recovery infrastructure)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-09",
+      "framework": "soc2",
+      "title": "Recovery objectives defined (RTO/RPO)",
+      "requirement": "Define and document recovery time objectives (RTO) and recovery point objectives (RPO) that reflect the availability commitments made to customers.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Confirm documented RTO and RPO values exist and are traceable to service-level or availability commitments.",
+      "source_ref": "SOC 2 TSC A1.2 / A1.3 (recovery objectives)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-10",
+      "framework": "soc2",
+      "title": "Business continuity / disaster recovery plan",
+      "requirement": "Maintain a documented business continuity and disaster recovery plan describing roles, steps, and procedures to restore the system after a disruption.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Verify a current, approved BC/DR plan exists with defined responsibilities and recovery procedures.",
+      "source_ref": "SOC 2 TSC A1.3 (recovery plan)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-A1-11",
+      "framework": "soc2",
+      "title": "Recovery and backup restoration testing",
+      "requirement": "Periodically test recovery procedures and restoration of backups to confirm the system can be recovered within defined objectives.",
+      "applies_when": "System is scoped to the SOC 2 Availability trust services category",
+      "check": "Confirm evidence of periodic DR tests and backup restore tests, including results and remediation of any gaps found.",
+      "source_ref": "SOC 2 TSC A1.3 (testing of recovery procedures)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-01",
+      "framework": "soc2",
+      "title": "Identify and classify confidential information",
+      "requirement": "Establish criteria to identify information the entity has committed to keep confidential, and classify data at creation or receipt so it can be handled per its confidentiality level (C1.1 - identification of confidential information).",
+      "applies_when": "Entity handles confidential (non-public proprietary or contractually protected) information and has adopted the Confidentiality trust services category.",
+      "check": "Confirm a documented data classification scheme exists that defines a 'confidential' category and criteria, and that data is tagged/classified when created or ingested.",
+      "source_ref": "SOC 2 TSC C1.1 - identifying and maintaining confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-02",
+      "framework": "soc2",
+      "title": "Maintain inventory of confidential information and its locations",
+      "requirement": "Maintain an inventory or record of confidential information assets and the systems, repositories, and third parties where they reside, so confidentiality obligations can be tracked (C1.1).",
+      "applies_when": "Entity stores or processes classified confidential information across one or more systems.",
+      "check": "Verify an asset/data inventory identifies confidential data stores and their locations and is kept current.",
+      "source_ref": "SOC 2 TSC C1.1 - maintaining confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-03",
+      "framework": "soc2",
+      "title": "Label or mark confidential information",
+      "requirement": "Apply labeling or marking (physical or logical) to confidential information so users and systems can recognize and handle it according to its classification (C1.1).",
+      "applies_when": "Entity has classified data as confidential.",
+      "check": "Verify confidential records/documents carry classification labels or metadata tags that drive handling.",
+      "source_ref": "SOC 2 TSC C1.1 - handling of confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-04",
+      "framework": "soc2",
+      "title": "Protect confidential information throughout its retention period",
+      "requirement": "Apply access controls, encryption, and other protections to confidential information for the full duration it is retained, restricting access to authorized parties (C1.1).",
+      "applies_when": "Entity retains confidential information over time.",
+      "check": "Verify access restrictions and protective controls (e.g., encryption, least-privilege access) are enforced on confidential data stores throughout retention.",
+      "source_ref": "SOC 2 TSC C1.1 - protecting confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-05",
+      "framework": "soc2",
+      "title": "Define retention periods aligned to commitments and requirements",
+      "requirement": "Establish retention periods for confidential information consistent with the entity's confidentiality commitments, business objectives, and applicable legal or regulatory requirements (C1.1/C1.2).",
+      "applies_when": "Entity retains confidential information subject to commitments or legal obligations.",
+      "check": "Verify a retention schedule/policy defines how long each class of confidential information is kept and the basis for those periods.",
+      "source_ref": "SOC 2 TSC C1.1/C1.2 - retention of confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-06",
+      "framework": "soc2",
+      "title": "Identify confidential information that has reached end of retention",
+      "requirement": "Establish a process to identify confidential information that is no longer needed or has reached the end of its retention period so it can be scheduled for disposal (C1.2).",
+      "applies_when": "Entity retains confidential information subject to a retention schedule.",
+      "check": "Verify a mechanism (review, automated flagging, or scheduled process) identifies confidential data eligible for disposal.",
+      "source_ref": "SOC 2 TSC C1.2 - disposal of confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-07",
+      "framework": "soc2",
+      "title": "Dispose of confidential information when no longer required",
+      "requirement": "Dispose of confidential information in accordance with the retention policy once it is no longer needed to meet objectives or obligations (C1.2).",
+      "applies_when": "Entity holds confidential information that has passed its retention period or purpose.",
+      "check": "Verify a documented disposal procedure exists and confidential data is removed per the retention schedule.",
+      "source_ref": "SOC 2 TSC C1.2 - disposing of confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-08",
+      "framework": "soc2",
+      "title": "Use secure and irreversible disposal methods",
+      "requirement": "Use disposal methods that render confidential information unrecoverable, such as cryptographic erasure, secure wiping, or physical destruction of media (C1.2).",
+      "applies_when": "Entity disposes of confidential information in electronic or physical form.",
+      "check": "Verify disposal procedures specify secure destruction/erasure techniques appropriate to the media and that they prevent recovery.",
+      "source_ref": "SOC 2 TSC C1.2 - secure disposal methods",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-09",
+      "framework": "soc2",
+      "title": "Dispose of all copies including backups and archives",
+      "requirement": "Ensure disposal of confidential information covers all instances, including backups, archives, replicas, and derived copies, so no recoverable remnants persist (C1.2).",
+      "applies_when": "Confidential information is replicated to backups, archives, or secondary stores.",
+      "check": "Verify disposal processes account for backup/archive/replica copies and confirm removal across all storage locations.",
+      "source_ref": "SOC 2 TSC C1.2 - complete disposal of confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-10",
+      "framework": "soc2",
+      "title": "Retain evidence of confidential information disposal",
+      "requirement": "Record and retain evidence of disposal actions (what was destroyed, when, by whom, and by what method) to demonstrate compliance with disposal commitments (C1.2).",
+      "applies_when": "Entity performs disposal of confidential information.",
+      "check": "Verify disposal logs, certificates of destruction, or equivalent records are generated and retained.",
+      "source_ref": "SOC 2 TSC C1.2 - evidence of disposal",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-11",
+      "framework": "soc2",
+      "title": "Impose confidentiality retention and disposal on third parties",
+      "requirement": "Require vendors and third parties handling the entity's confidential information to meet equivalent retention and secure disposal obligations, typically through contractual terms (C1.1/C1.2).",
+      "applies_when": "Confidential information is shared with or processed by vendors, subprocessors, or other third parties.",
+      "check": "Verify contracts or agreements with third parties include confidentiality, retention, and secure disposal/return obligations, and that adherence is monitored.",
+      "source_ref": "SOC 2 TSC C1.1/C1.2 - third-party handling of confidential information",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-C1-12",
+      "framework": "soc2",
+      "title": "Return or destroy confidential information at contract termination",
+      "requirement": "Ensure confidential information is returned or securely destroyed when a commitment, agreement, or relationship ends, consistent with confidentiality obligations (C1.2).",
+      "applies_when": "Entity holds confidential information tied to a customer, partner, or vendor relationship that may terminate.",
+      "check": "Verify offboarding/termination procedures trigger return or secure destruction of associated confidential information.",
+      "source_ref": "SOC 2 TSC C1.2 - disposal upon end of relationship",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC1-01",
+      "framework": "soc2",
+      "title": "Code of conduct establishes integrity and ethics",
+      "requirement": "The organization must define and communicate a documented code of conduct that sets expectations for integrity and ethical behavior across the entity.",
+      "applies_when": "Always",
+      "check": "Confirm a written code of conduct exists, is approved, and is distributed to all personnel with evidence of acknowledgement.",
+      "source_ref": "SOC 2 CC1.1 (COSO Principle 1 - commitment to integrity and ethical values)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-02",
+      "framework": "soc2",
+      "title": "Ethics violations are evaluated and remediated",
+      "requirement": "The organization must have a process to identify, evaluate, and address deviations from its ethics and conduct standards in a timely manner.",
+      "applies_when": "Always",
+      "check": "Verify a documented process exists for reporting, investigating, and remediating conduct violations, and review evidence of past cases being handled.",
+      "source_ref": "SOC 2 CC1.1 (COSO Principle 1 - addressing deviations)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-03",
+      "framework": "soc2",
+      "title": "Board oversight independent of management",
+      "requirement": "A board or governing body independent of management must exist and exercise oversight of the design and operation of internal controls.",
+      "applies_when": "Always",
+      "check": "Confirm a board or oversight body is established, includes members independent of management, and its oversight role is documented in a charter.",
+      "source_ref": "SOC 2 CC1.2 (COSO Principle 2 - board independence and oversight)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-04",
+      "framework": "soc2",
+      "title": "Board possesses relevant expertise",
+      "requirement": "The governing body must collectively hold the skills and expertise needed to oversee the organization's control environment and challenge management.",
+      "applies_when": "Always",
+      "check": "Review board member qualifications and evidence that oversight discussions cover security, risk, and compliance matters.",
+      "source_ref": "SOC 2 CC1.2 (COSO Principle 2 - board expertise)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-05",
+      "framework": "soc2",
+      "title": "Organizational structure and reporting lines defined",
+      "requirement": "Management must establish, with board oversight, an organizational structure with clear reporting lines that supports the achievement of control objectives.",
+      "applies_when": "Always",
+      "check": "Inspect an org chart and documentation defining reporting lines and structural responsibilities relevant to the system.",
+      "source_ref": "SOC 2 CC1.3 (COSO Principle 3 - structures and reporting lines)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-06",
+      "framework": "soc2",
+      "title": "Authorities and responsibilities assigned",
+      "requirement": "The organization must define and assign authorities and responsibilities for control activities to appropriate roles so duties are clearly owned.",
+      "applies_when": "Always",
+      "check": "Verify documented role definitions or responsibility matrices assign control ownership and decision authority to specific positions.",
+      "source_ref": "SOC 2 CC1.3 (COSO Principle 3 - authority and responsibility)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-07",
+      "framework": "soc2",
+      "title": "Segregation of duties considered",
+      "requirement": "Segregation of incompatible duties must be considered when assigning responsibilities so that no single individual can both perform and conceal errors or misuse.",
+      "applies_when": "Handles sensitive operations, financial data, or privileged system access",
+      "check": "Review responsibility assignments for conflicting duties and confirm mitigating controls where segregation is not feasible.",
+      "source_ref": "SOC 2 CC1.3 (COSO Principle 3 - segregation of duties)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC1-08",
+      "framework": "soc2",
+      "title": "Competence requirements defined for roles",
+      "requirement": "The organization must define the competence expected for each role relevant to internal control and use these as a basis for hiring and evaluation.",
+      "applies_when": "Always",
+      "check": "Confirm job descriptions or role definitions specify required skills and competencies for control-relevant positions.",
+      "source_ref": "SOC 2 CC1.4 (COSO Principle 4 - commitment to competence)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-09",
+      "framework": "soc2",
+      "title": "Personnel are developed and trained",
+      "requirement": "The organization must attract, develop, and retain competent personnel through training and development aligned with control objectives.",
+      "applies_when": "Always",
+      "check": "Review evidence of onboarding, security awareness, and ongoing training programs for staff in control-relevant roles.",
+      "source_ref": "SOC 2 CC1.4 (COSO Principle 4 - develop and retain competence)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-10",
+      "framework": "soc2",
+      "title": "Succession and continuity planning for key roles",
+      "requirement": "The organization should plan for succession and continuity of personnel in roles critical to internal control so control operation is not disrupted by turnover.",
+      "applies_when": "Has key control-relevant roles or single points of personnel dependency",
+      "check": "Verify documented succession or backup arrangements exist for critical control roles.",
+      "source_ref": "SOC 2 CC1.4 (COSO Principle 4 - succession planning)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC1-11",
+      "framework": "soc2",
+      "title": "Individuals held accountable for control responsibilities",
+      "requirement": "The organization must hold individuals accountable for their internal control responsibilities in pursuit of control objectives.",
+      "applies_when": "Always",
+      "check": "Confirm accountability mechanisms such as performance evaluations tied to control responsibilities are defined and applied.",
+      "source_ref": "SOC 2 CC1.5 (COSO Principle 5 - enforce accountability)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-12",
+      "framework": "soc2",
+      "title": "Performance measures and incentives align with objectives",
+      "requirement": "Performance measures, incentives, and rewards must be established and reviewed for ongoing relevance so they reinforce rather than undermine control objectives.",
+      "applies_when": "Always",
+      "check": "Review that performance and incentive structures reference control and compliance responsibilities and are periodically evaluated.",
+      "source_ref": "SOC 2 CC1.5 (COSO Principle 5 - performance measures and incentives)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC1-13",
+      "framework": "soc2",
+      "title": "Consequences applied for accountability failures",
+      "requirement": "The organization must apply appropriate consequences, including disciplinary action, when personnel fail to meet their internal control responsibilities.",
+      "applies_when": "Always",
+      "check": "Verify a documented disciplinary or corrective-action process exists and is enforced for control-responsibility failures.",
+      "source_ref": "SOC 2 CC1.5 (COSO Principle 5 - corrective action)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-01",
+      "framework": "soc2",
+      "title": "Identify information requirements for internal control",
+      "requirement": "The entity must define and identify the information needed to support the functioning of its internal control and the achievement of its security/service commitments and objectives.",
+      "applies_when": "Always",
+      "check": "Confirm there is a documented definition of the information requirements (data, sources, systems) needed to operate and monitor security controls.",
+      "source_ref": "SOC 2 CC2.1 / COSO Principle 13 (relevant quality information)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-02",
+      "framework": "soc2",
+      "title": "Capture information from internal and external sources",
+      "requirement": "The entity must capture relevant data from both internal and external sources and process it into information that supports internal control decisions.",
+      "applies_when": "Always",
+      "check": "Verify pipelines/logs/feeds exist that ingest internal and external data (e.g. system logs, threat feeds, vendor reports) into usable information.",
+      "source_ref": "SOC 2 CC2.1 / COSO Principle 13",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-03",
+      "framework": "soc2",
+      "title": "Ensure information quality (accuracy, timeliness, completeness)",
+      "requirement": "Information used to run and monitor controls must be maintained at sufficient quality — accurate, current, complete, valid, and accessible — for the decisions it supports.",
+      "applies_when": "Always",
+      "check": "Inspect data-quality or validation processes ensuring monitoring information is accurate, timely, and complete before it drives control decisions.",
+      "source_ref": "SOC 2 CC2.1 / COSO Principle 13",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-04",
+      "framework": "soc2",
+      "title": "Internally communicate control objectives and responsibilities",
+      "requirement": "The entity must internally communicate its objectives and each person's responsibilities for internal control so that personnel understand and can carry out their control duties.",
+      "applies_when": "Always",
+      "check": "Confirm documented communication (policies, role descriptions, onboarding material) that conveys security objectives and individual control responsibilities to staff.",
+      "source_ref": "SOC 2 CC2.2 / COSO Principle 14 (internal communication)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-05",
+      "framework": "soc2",
+      "title": "Communicate security commitments and policies to personnel",
+      "requirement": "The entity must communicate its security policies, commitments, and requirements to all internal users, including changes, so they know the standards they must follow.",
+      "applies_when": "Always",
+      "check": "Verify that security policies and any updates are distributed to personnel and acknowledged (e.g. policy acceptance, training records).",
+      "source_ref": "SOC 2 CC2.2 / COSO Principle 14",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-06",
+      "framework": "soc2",
+      "title": "Provide a channel to report failures, incidents, or concerns",
+      "requirement": "The entity must maintain internal communication channels that allow personnel to report control failures, security incidents, non-compliance, or concerns, including a means for anonymous or confidential reporting.",
+      "applies_when": "Always",
+      "check": "Confirm a documented reporting mechanism (whistleblower line, incident/ticketing channel) exists for staff to raise control failures or concerns.",
+      "source_ref": "SOC 2 CC2.2 / COSO Principle 14",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-07",
+      "framework": "soc2",
+      "title": "Communicate control information between management and the board",
+      "requirement": "Relevant internal-control and security information must flow between management and those charged with governance (e.g. the board or oversight body) to support their oversight duties.",
+      "applies_when": "Entity has a board or governance/oversight body",
+      "check": "Verify reporting cadence (e.g. security/risk updates to board or management committee) that conveys control status to governance.",
+      "source_ref": "SOC 2 CC2.2 / COSO Principle 14",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-08",
+      "framework": "soc2",
+      "title": "Communicate security commitments to external users and customers",
+      "requirement": "The entity must communicate its security commitments and system responsibilities to external parties such as customers and users, including the obligations expected of those users.",
+      "applies_when": "Provides a service or system to external users/customers",
+      "check": "Confirm customer-facing artifacts (terms of service, security whitepaper, DPA, system description) that state security commitments and user responsibilities.",
+      "source_ref": "SOC 2 CC2.3 / COSO Principle 15 (external communication)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-09",
+      "framework": "soc2",
+      "title": "Communicate relevant control information to vendors and business partners",
+      "requirement": "The entity must communicate security objectives, requirements, and expectations to external vendors, partners, and other third parties whose actions affect its internal control.",
+      "applies_when": "Relies on vendors, subservice organizations, or business partners",
+      "check": "Verify that security requirements are conveyed to vendors/partners (e.g. contracts, SLAs, vendor security requirements documents).",
+      "source_ref": "SOC 2 CC2.3 / COSO Principle 15",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-10",
+      "framework": "soc2",
+      "title": "Provide external parties a channel to report issues and incidents",
+      "requirement": "The entity must give external parties (customers, users, the public) a means to communicate relevant information, including reporting security incidents, vulnerabilities, or complaints.",
+      "applies_when": "Provides a service or system to external users/customers",
+      "check": "Confirm an external reporting channel exists (e.g. security@ contact, vulnerability disclosure page, support intake) for outside parties to report issues.",
+      "source_ref": "SOC 2 CC2.3 / COSO Principle 15",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-11",
+      "framework": "soc2",
+      "title": "Communicate system changes affecting external users",
+      "requirement": "The entity must notify external users of changes to the system, its security commitments, or its responsibilities that could affect those users' use of the service.",
+      "applies_when": "Provides a service or system to external users/customers",
+      "check": "Verify a process for notifying customers/users of material system or commitment changes (e.g. changelog, status page, advance notices).",
+      "source_ref": "SOC 2 CC2.3 / COSO Principle 15",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC2-12",
+      "framework": "soc2",
+      "title": "Select appropriate methods and timing of communication",
+      "requirement": "The entity must choose communication methods, formats, and timing appropriate to the audience and the sensitivity/urgency of the information for both internal and external communications.",
+      "applies_when": "Always",
+      "check": "Review the communication plan/procedures to confirm channels and timing are matched to audience and urgency (e.g. incident notification timelines, escalation paths).",
+      "source_ref": "SOC 2 CC2.2 & CC2.3 / COSO Principles 14-15",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-01",
+      "framework": "soc2",
+      "title": "Specify objectives with clarity",
+      "requirement": "The entity must define its operational, reporting, and compliance objectives with enough specificity and clarity that risks to achieving them can be identified and assessed.",
+      "applies_when": "Always",
+      "check": "Confirm documented objectives (business/operational, financial/non-financial reporting, and regulatory compliance) exist and are specific enough to derive measurable risks from.",
+      "source_ref": "SOC 2 CC3.1 / COSO Principle 6 (specify suitable objectives)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-02",
+      "framework": "soc2",
+      "title": "Set materiality and tolerances for objectives",
+      "requirement": "When defining objectives, the entity should consider acceptable levels of variation (risk tolerance/materiality) so that risk assessment can be calibrated against them.",
+      "applies_when": "Always",
+      "check": "Verify that objectives include stated tolerances, thresholds, or materiality levels used to judge whether a risk is acceptable.",
+      "source_ref": "SOC 2 CC3.1 / COSO Principle 6 (consider tolerances for risk)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-03",
+      "framework": "soc2",
+      "title": "Identify risks to objectives across the entity",
+      "requirement": "The entity must identify risks to the achievement of its objectives at the entity, subsidiary, division, and functional levels, covering both internal and external sources.",
+      "applies_when": "Always",
+      "check": "Review a maintained risk register showing risks identified across relevant organizational levels and mapped to specific objectives.",
+      "source_ref": "SOC 2 CC3.2 / COSO Principle 7 (identify and analyze risk)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-04",
+      "framework": "soc2",
+      "title": "Analyze likelihood and impact of risks",
+      "requirement": "Identified risks must be analyzed by estimating their likelihood and potential impact (significance) to prioritize them for treatment.",
+      "applies_when": "Always",
+      "check": "Confirm each identified risk has a documented likelihood and impact rating and a resulting severity/priority.",
+      "source_ref": "SOC 2 CC3.2 / COSO Principle 7 (analyze risks)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-05",
+      "framework": "soc2",
+      "title": "Determine risk responses",
+      "requirement": "For analyzed risks the entity must decide how to respond, choosing among accepting, avoiding, reducing, or sharing the risk, and document the rationale.",
+      "applies_when": "Always",
+      "check": "Verify each significant risk has a documented response decision (accept/avoid/reduce/share) with an owner.",
+      "source_ref": "SOC 2 CC3.2 / COSO Principle 7 (determine how to manage risks)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-06",
+      "framework": "soc2",
+      "title": "Involve appropriate management in risk assessment",
+      "requirement": "Risk identification and analysis should engage appropriate levels of management with relevant knowledge of the objectives and processes involved.",
+      "applies_when": "Always",
+      "check": "Confirm risk assessment activities include documented participation or sign-off by responsible management stakeholders.",
+      "source_ref": "SOC 2 CC3.2 / COSO Principle 7 (involve appropriate management)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-07",
+      "framework": "soc2",
+      "title": "Assess the potential for fraud",
+      "requirement": "The entity must explicitly consider the potential for fraud when assessing risks to the achievement of its objectives.",
+      "applies_when": "Always",
+      "check": "Verify the risk assessment includes a documented fraud risk assessment component distinct from generic operational risks.",
+      "source_ref": "SOC 2 CC3.3 / COSO Principle 8 (assess fraud risk)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-08",
+      "framework": "soc2",
+      "title": "Consider fraud incentives, opportunities, and rationalizations",
+      "requirement": "Fraud risk assessment should evaluate incentives and pressures, opportunities (e.g., weak controls or override potential), and attitudes/rationalizations that could enable fraud.",
+      "applies_when": "Always",
+      "check": "Confirm the fraud risk assessment addresses the fraud-triangle factors: pressures/incentives, opportunities, and rationalizations.",
+      "source_ref": "SOC 2 CC3.3 / COSO Principle 8 (consider incentives, opportunities, attitudes)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-09",
+      "framework": "soc2",
+      "title": "Consider multiple fraud types including management override",
+      "requirement": "The fraud assessment must cover different fraud types such as fraudulent reporting, misappropriation of assets, corruption, and the risk of management overriding controls.",
+      "applies_when": "Always",
+      "check": "Verify the fraud risk assessment enumerates fraudulent reporting, asset misappropriation, corruption, and management-override scenarios.",
+      "source_ref": "SOC 2 CC3.3 / COSO Principle 8 (types of fraud, management override)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-10",
+      "framework": "soc2",
+      "title": "Identify changes that could impact internal control",
+      "requirement": "The entity must identify and assess changes in the external environment, business/operating model, leadership, and technology that could significantly affect its system of internal control.",
+      "applies_when": "Always",
+      "check": "Confirm a process exists that flags significant external, organizational, and technology changes and triggers reassessment of controls.",
+      "source_ref": "SOC 2 CC3.4 / COSO Principle 9 (identify and assess significant change)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-11",
+      "framework": "soc2",
+      "title": "Feed change assessment into risk assessment",
+      "requirement": "Significant identified changes must trigger an update of the risk assessment so that new or altered risks to objectives are re-analyzed and responded to.",
+      "applies_when": "Always",
+      "check": "Verify that change events (e.g., new systems, reorganizations, new regulations) are documented as inputs that led to updated risk analysis.",
+      "source_ref": "SOC 2 CC3.4 / COSO Principle 9 (assess changes to internal control)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC3-12",
+      "framework": "soc2",
+      "title": "Assess control impact of technology and vendor changes",
+      "requirement": "Changes to technology, infrastructure, or reliance on third-party vendors must be assessed for their effect on the design and operation of internal controls.",
+      "applies_when": "Uses significant IT systems or relies on third-party/vendor services",
+      "check": "Confirm the change assessment explicitly evaluates technology and vendor/subservice-organization changes for control impact.",
+      "source_ref": "SOC 2 CC3.4 / COSO Principle 9 (technology and external provider changes)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC4-01",
+      "framework": "soc2",
+      "title": "Select and develop ongoing and separate evaluations",
+      "requirement": "The organization defines and performs a mix of ongoing monitoring and periodic separate evaluations to confirm that the components of internal control are present and operating as intended.",
+      "applies_when": "Always",
+      "check": "Confirm the plan documents a monitoring program combining continuous/ongoing checks and scheduled point-in-time evaluations of controls, with defined scope and cadence.",
+      "source_ref": "SOC 2 CC4.1 (COSO Principle 16) - ongoing and separate evaluations",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-02",
+      "framework": "soc2",
+      "title": "Baseline understanding of control design",
+      "requirement": "Evaluators establish and reference a documented baseline of how controls are designed to operate so that evaluations can detect deviations from expected behavior.",
+      "applies_when": "Always",
+      "check": "Verify a current baseline (control descriptions, system boundaries, expected control operation) exists and is used as the reference point for monitoring.",
+      "source_ref": "SOC 2 CC4.1 - establishes baseline understanding",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-03",
+      "framework": "soc2",
+      "title": "Tune monitoring to rate of change",
+      "requirement": "The scope and frequency of separate evaluations are adjusted based on the risk level and the rate of change in the business, systems, and control environment.",
+      "applies_when": "Always",
+      "check": "Check that evaluation frequency/scope is risk-based and is reassessed when systems, personnel, or processes change materially.",
+      "source_ref": "SOC 2 CC4.1 - considers rate of change when scoping evaluations",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-04",
+      "framework": "soc2",
+      "title": "Objective and knowledgeable evaluators",
+      "requirement": "Separate evaluations are performed by personnel with sufficient knowledge and objectivity to assess control operation without evaluating their own work.",
+      "applies_when": "Always",
+      "check": "Confirm evaluators are competent and independent of the controls being assessed (e.g., internal audit or a separate function).",
+      "source_ref": "SOC 2 CC4.1 - objective, knowledgeable evaluators",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-05",
+      "framework": "soc2",
+      "title": "Integrate monitoring into business processes",
+      "requirement": "Ongoing monitoring activities are built into routine operations (e.g., automated alerts, reconciliations, exception reports) to provide near-real-time indication of control performance.",
+      "applies_when": "Always",
+      "check": "Verify the plan embeds automated or operational monitoring (alerts, dashboards, reconciliations) into day-to-day processes rather than relying solely on periodic reviews.",
+      "source_ref": "SOC 2 CC4.1 - ongoing evaluations built into processes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-06",
+      "framework": "soc2",
+      "title": "Monitor controls at service organizations / vendors",
+      "requirement": "The organization monitors the effectiveness of controls operated by subservice organizations and vendors it relies on, for example by reviewing their SOC reports or performing due diligence.",
+      "applies_when": "Relies on third-party service providers or subservice organizations",
+      "check": "Confirm a process reviews vendor/subservice-org control reports (e.g., SOC 2) or equivalent assurance on a defined cadence.",
+      "source_ref": "SOC 2 CC4.1 - monitoring of outsourced/subservice controls",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC4-07",
+      "framework": "soc2",
+      "title": "Evaluate and assess identified deficiencies",
+      "requirement": "Results of ongoing and separate evaluations are assessed to identify control deficiencies and determine their severity and impact.",
+      "applies_when": "Always",
+      "check": "Verify a process exists to evaluate monitoring results, log deficiencies, and rate their severity/impact.",
+      "source_ref": "SOC 2 CC4.2 (COSO Principle 17) - evaluates deficiencies",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-08",
+      "framework": "soc2",
+      "title": "Communicate deficiencies to responsible parties",
+      "requirement": "Identified control deficiencies are communicated to the parties responsible for corrective action and to senior management or the board as appropriate.",
+      "applies_when": "Always",
+      "check": "Confirm deficiencies are reported to remediation owners and escalated to management/board per defined criteria.",
+      "source_ref": "SOC 2 CC4.2 - communicates deficiencies to remediation owners and leadership",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-09",
+      "framework": "soc2",
+      "title": "Track remediation to completion",
+      "requirement": "Corrective actions for identified deficiencies are assigned, tracked, and monitored to confirm timely remediation.",
+      "applies_when": "Always",
+      "check": "Verify a remediation tracking mechanism exists with owners, due dates, and follow-up until deficiencies are resolved and verified.",
+      "source_ref": "SOC 2 CC4.2 - monitors corrective actions to completion",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-10",
+      "framework": "soc2",
+      "title": "Escalation of significant deficiencies",
+      "requirement": "Deficiencies deemed significant are escalated in a timely manner to senior management and the board or those charged with governance for oversight.",
+      "applies_when": "Always",
+      "check": "Confirm the plan defines severity thresholds that trigger timely escalation of significant deficiencies to governance-level oversight.",
+      "source_ref": "SOC 2 CC4.2 - escalation of significant matters to leadership/board",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC4-11",
+      "framework": "soc2",
+      "title": "Document and retain evaluation results",
+      "requirement": "The organization documents and retains the results of monitoring evaluations and deficiency findings to provide evidence of ongoing oversight.",
+      "applies_when": "Always",
+      "check": "Verify monitoring results, findings, and remediation status are documented and retained as auditable evidence.",
+      "source_ref": "SOC 2 CC4.1/CC4.2 - documentation of monitoring and evaluation results",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-01",
+      "framework": "soc2",
+      "title": "Select and develop control activities aligned to risk",
+      "requirement": "Select and develop control activities that reduce risks to the achievement of objectives to acceptable levels, integrating the selection with the outputs of the risk assessment process.",
+      "applies_when": "Always",
+      "check": "Confirm each identified risk from the risk assessment maps to one or more control activities documented in a risk-to-control matrix.",
+      "source_ref": "SOC 2 TSC CC5.1 (COSO Principle 10) - select and develop control activities",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-02",
+      "framework": "soc2",
+      "title": "Consider entity-specific factors in control design",
+      "requirement": "Design control activities that account for the entity's specific environment, complexity, business processes, and the nature and scope of its operations.",
+      "applies_when": "Always",
+      "check": "Review control design documentation for evidence that entity-specific factors (size, complexity, processes) were considered when selecting controls.",
+      "source_ref": "SOC 2 TSC CC5.1 - considers entity-specific factors",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-03",
+      "framework": "soc2",
+      "title": "Identify relevant business processes for controls",
+      "requirement": "Determine which business processes require control activities and where in those processes controls should be applied to mitigate risk.",
+      "applies_when": "Always",
+      "check": "Verify that controls are mapped to the specific business processes and process steps where risks are addressed.",
+      "source_ref": "SOC 2 TSC CC5.1 - determines relevant business processes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-04",
+      "framework": "soc2",
+      "title": "Use a balanced mix of control types",
+      "requirement": "Employ a combination of control activity types, including manual and automated as well as preventive and detective controls, to address risks appropriately.",
+      "applies_when": "Always",
+      "check": "Inspect the control inventory to confirm it includes a mix of preventive/detective and manual/automated controls rather than a single type.",
+      "source_ref": "SOC 2 TSC CC5.1 - evaluates a mix of control activity types",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-05",
+      "framework": "soc2",
+      "title": "Enforce segregation of duties",
+      "requirement": "Consider and implement segregation of incompatible duties so that no single individual can both perform and conceal errors or fraud; where segregation is impractical, implement compensating controls.",
+      "applies_when": "Always",
+      "check": "Review role/permission assignments and approval workflows for separation of conflicting responsibilities, and confirm compensating controls exist where segregation is not feasible.",
+      "source_ref": "SOC 2 TSC CC5.1 - addresses segregation of duties",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-06",
+      "framework": "soc2",
+      "title": "Determine technology dependency of processes",
+      "requirement": "Identify the dependencies between the technology used in business processes and the technology general controls needed to support reliable operation of that technology.",
+      "applies_when": "Business processes rely on IT systems or automated processing",
+      "check": "Confirm a mapping exists linking automated business-process controls to the underlying technology general controls they depend on.",
+      "source_ref": "SOC 2 TSC CC5.2 (COSO Principle 11) - determines dependency between technology and general controls",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-07",
+      "framework": "soc2",
+      "title": "Establish technology infrastructure controls",
+      "requirement": "Select and develop general control activities over technology infrastructure to support the completeness, accuracy, and availability of processing.",
+      "applies_when": "Operates or relies on IT infrastructure (networks, servers, cloud)",
+      "check": "Verify documented infrastructure controls (e.g., configuration, capacity, availability monitoring) are in place and operating.",
+      "source_ref": "SOC 2 TSC CC5.2 - establishes relevant technology infrastructure control activities",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-08",
+      "framework": "soc2",
+      "title": "Establish security management process controls",
+      "requirement": "Select and develop general control activities over the security management process, including access authorization and restriction to authorized users, to protect against unauthorized access.",
+      "applies_when": "Systems process or store data requiring protection",
+      "check": "Confirm access management controls (provisioning, authentication, authorization, restriction) are defined and enforced over relevant systems.",
+      "source_ref": "SOC 2 TSC CC5.2 - establishes relevant security management process control activities",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-09",
+      "framework": "soc2",
+      "title": "Control technology acquisition, development, and maintenance",
+      "requirement": "Select and develop control activities over the acquisition, development, and maintenance of technology and its infrastructure to achieve objectives.",
+      "applies_when": "Develops, acquires, or maintains software or systems",
+      "check": "Review SDLC and change-management procedures for controls governing technology acquisition, development, and maintenance.",
+      "source_ref": "SOC 2 TSC CC5.2 - establishes technology acquisition, development, and maintenance controls",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-10",
+      "framework": "soc2",
+      "title": "Deploy controls through documented policies and procedures",
+      "requirement": "Establish policies that state what is expected and procedures that put those policies into action, so control activities are deployed consistently across the entity.",
+      "applies_when": "Always",
+      "check": "Verify that control activities are backed by documented, approved policies and corresponding operating procedures.",
+      "source_ref": "SOC 2 TSC CC5.3 (COSO Principle 12) - establishes policies and procedures to support deployment",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-11",
+      "framework": "soc2",
+      "title": "Assign responsibility and accountability for controls",
+      "requirement": "Establish responsibility and accountability for executing each policy and procedure with the personnel or roles responsible for the related control activity.",
+      "applies_when": "Always",
+      "check": "Confirm each control/policy names an accountable owner or role responsible for its execution.",
+      "source_ref": "SOC 2 TSC CC5.3 - establishes responsibility and accountability for executing policies and procedures",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-12",
+      "framework": "soc2",
+      "title": "Perform control activities timely and take corrective action",
+      "requirement": "Perform control activities in a timely manner as defined by policy and investigate and act on matters identified as a result of executing the control activity.",
+      "applies_when": "Always",
+      "check": "Review evidence that controls run on their defined cadence and that exceptions or issues trigger documented corrective action.",
+      "source_ref": "SOC 2 TSC CC5.3 - performs in a timely manner and takes corrective action",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC5-13",
+      "framework": "soc2",
+      "title": "Use competent personnel and periodically reassess controls",
+      "requirement": "Ensure control activities are performed by personnel with sufficient competence and authority, and periodically reassess policies and procedures for continued relevance, updating them as needed.",
+      "applies_when": "Always",
+      "check": "Confirm control operators meet competency requirements and that policies/procedures are reviewed on a defined schedule and updated when conditions change.",
+      "source_ref": "SOC 2 TSC CC5.3 - uses competent personnel and reassesses policies and procedures",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-01",
+      "framework": "soc2",
+      "title": "Logical access controls over protected assets (CC6.1)",
+      "requirement": "Implement logical access security software, infrastructure, and architectures that restrict access to information assets to authorized identities, protecting them from unauthorized use, disclosure, or modification.",
+      "applies_when": "Always",
+      "check": "Confirm the plan defines an authentication/authorization layer that gates access to systems and data, with an inventory of protected assets and the controls guarding each.",
+      "source_ref": "SOC 2 TSC CC6.1 - logical access security measures for protected information assets",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-02",
+      "framework": "soc2",
+      "title": "Unique identity and credential management (CC6.1)",
+      "requirement": "Assign each user and system a unique identifier and manage credentials (issuance, rotation, revocation) so that actions can be attributed and shared/generic accounts are avoided.",
+      "applies_when": "Always",
+      "check": "Verify each account maps to a single identity, shared logins are prohibited, and a documented credential lifecycle (creation, rotation, revocation) exists.",
+      "source_ref": "SOC 2 TSC CC6.1 - identification and authentication of users via unique credentials",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-03",
+      "framework": "soc2",
+      "title": "Strong authentication for sensitive or remote access (CC6.1)",
+      "requirement": "Require multi-factor authentication or equivalently strong authentication for privileged, remote, and externally exposed access paths.",
+      "applies_when": "Exposes remote/admin access or handles sensitive data",
+      "check": "Confirm MFA is enforced for administrative, VPN/remote, and internet-facing authenticated access.",
+      "source_ref": "SOC 2 TSC CC6.1 - authentication strength for access to protected assets",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC6-04",
+      "framework": "soc2",
+      "title": "Encryption of data at rest (CC6.1)",
+      "requirement": "Protect stored sensitive information with encryption and manage the associated cryptographic keys securely throughout their lifecycle.",
+      "applies_when": "Stores sensitive or personal data",
+      "check": "Verify at-rest encryption is specified for sensitive datastores and that key management (storage, rotation, access restriction) is defined.",
+      "source_ref": "SOC 2 TSC CC6.1 - encryption and key management for data at rest",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-05",
+      "framework": "soc2",
+      "title": "Authorized user registration and provisioning (CC6.2)",
+      "requirement": "Register and authorize new internal and external users through a documented approval process before granting credentials, and grant access only after authorization.",
+      "applies_when": "Always",
+      "check": "Confirm an access-request/approval workflow exists that authorizes users prior to credential issuance and records the approval.",
+      "source_ref": "SOC 2 TSC CC6.2 - registration and authorization of new users prior to access",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-06",
+      "framework": "soc2",
+      "title": "Timely deprovisioning of access (CC6.2/CC6.3)",
+      "requirement": "Remove or disable access promptly when users leave, change roles, or no longer require it, so that credentials do not outlive the business need.",
+      "applies_when": "Always",
+      "check": "Verify a deprovisioning procedure ties termination/role-change events to prompt access removal, with a defined SLA and periodic verification.",
+      "source_ref": "SOC 2 TSC CC6.2/CC6.3 - removal of access upon termination or change of role",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-07",
+      "framework": "soc2",
+      "title": "Role-based access and least privilege (CC6.3)",
+      "requirement": "Grant, modify, and remove access based on roles and the principle of least privilege, and enforce segregation of duties for sensitive functions.",
+      "applies_when": "Always",
+      "check": "Confirm access is assigned via defined roles scoped to minimum necessary permissions, and that conflicting duties are separated.",
+      "source_ref": "SOC 2 TSC CC6.3 - role-based, least-privilege authorization and segregation of duties",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-08",
+      "framework": "soc2",
+      "title": "Periodic access review and recertification (CC6.3)",
+      "requirement": "Review user and privileged access rights on a recurring basis to confirm they remain appropriate, and revoke any that are no longer justified.",
+      "applies_when": "Always",
+      "check": "Verify a scheduled access-review/recertification process exists (owner, cadence, evidence) covering standard and privileged accounts.",
+      "source_ref": "SOC 2 TSC CC6.3 - periodic review of access appropriateness",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-09",
+      "framework": "soc2",
+      "title": "Physical access restriction to facilities and assets (CC6.4)",
+      "requirement": "Restrict physical access to facilities, data centers, and hardware housing protected information to authorized personnel, and review physical access rights periodically.",
+      "applies_when": "Operates own facilities/data centers or on-premise hardware",
+      "check": "Confirm physical access controls (badges, locks, visitor logs) and periodic physical-access reviews are defined; for cloud-hosted systems, confirm provider physical controls are inherited via the vendor's attestation.",
+      "source_ref": "SOC 2 TSC CC6.4 - physical access controls to protected facilities and assets",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-10",
+      "framework": "soc2",
+      "title": "Secure disposal and data removal from assets (CC6.5)",
+      "requirement": "Securely erase or destroy data and decommission physical and logical assets before disposal or reuse so that residual sensitive information cannot be recovered.",
+      "applies_when": "Retires, reuses, or disposes of media or assets holding data",
+      "check": "Verify a media sanitization/asset-disposal procedure specifies secure erasure or destruction methods and records completion.",
+      "source_ref": "SOC 2 TSC CC6.5 - removal of data before asset disposal or reuse",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-11",
+      "framework": "soc2",
+      "title": "Network boundary protection (CC6.6)",
+      "requirement": "Deploy boundary protection controls (firewalls, network segmentation, intrusion detection/prevention) to defend against threats from outside the system boundary.",
+      "applies_when": "Exposes systems to untrusted networks or the internet",
+      "check": "Confirm the architecture defines perimeter controls, network segmentation, and monitoring at trust boundaries between internal and external networks.",
+      "source_ref": "SOC 2 TSC CC6.6 - protection against threats from sources outside system boundaries",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-12",
+      "framework": "soc2",
+      "title": "Encryption of data in transit (CC6.7)",
+      "requirement": "Protect sensitive information moving over networks or removable media using encryption and restrict how and where such data can be transmitted or transported.",
+      "applies_when": "Transmits sensitive data over networks or external channels",
+      "check": "Verify TLS/strong encryption is enforced for data in transit and that controls govern movement of data to removable media or external endpoints.",
+      "source_ref": "SOC 2 TSC CC6.7 - restriction and encryption of data in transmission and movement",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC6-13",
+      "framework": "soc2",
+      "title": "Prevention and detection of unauthorized software (CC6.8)",
+      "requirement": "Implement controls to prevent, detect, and remediate the introduction of unauthorized or malicious software into the environment.",
+      "applies_when": "Always",
+      "check": "Confirm anti-malware, allowlisting/change controls, and integrity monitoring are defined to block and detect unauthorized software.",
+      "source_ref": "SOC 2 TSC CC6.8 - controls against unauthorized and malicious software",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-01",
+      "framework": "soc2",
+      "title": "Vulnerability detection via configuration baselines",
+      "requirement": "CC7.1 - Define and use detection and monitoring procedures that identify changes to configurations which introduce new vulnerabilities, and scan infrastructure and software for known vulnerabilities on a defined schedule.",
+      "applies_when": "Always",
+      "check": "Confirm the plan defines a configuration baseline and runs scheduled vulnerability scans (e.g. authenticated scans, dependency/SCA scanning) against systems and code, with results tracked.",
+      "source_ref": "SOC 2 TSC CC7.1 (detection of config changes and vulnerabilities)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-02",
+      "framework": "soc2",
+      "title": "Continuous monitoring for anomalies",
+      "requirement": "CC7.2 - Continuously monitor system components and their operation for anomalies that could indicate malicious activity, processing errors, or other conditions that threaten the system's ability to meet its objectives.",
+      "applies_when": "Always",
+      "check": "Verify monitoring/telemetry (logs, metrics, IDS/EDR, cloud monitoring) covers key components and is actively watched, not just collected.",
+      "source_ref": "SOC 2 TSC CC7.2 (monitoring for anomalous activity)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-03",
+      "framework": "soc2",
+      "title": "Alerting thresholds and detection tooling",
+      "requirement": "CC7.2 - Implement detection tools with defined alerting criteria and thresholds so that anomalous or suspicious events generate timely, actionable alerts to responsible personnel.",
+      "applies_when": "Always",
+      "check": "Confirm alert rules/thresholds are configured, route to an owner or on-call, and generate notifications for security-relevant events.",
+      "source_ref": "SOC 2 TSC CC7.2 (detection tooling and alerts)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-04",
+      "framework": "soc2",
+      "title": "Evaluate and triage security events",
+      "requirement": "CC7.3 - Evaluate detected security events to determine whether they constitute an incident that could prevent meeting objectives, and assign a severity so response can be prioritized.",
+      "applies_when": "Always",
+      "check": "Verify a documented triage/severity classification process exists that distinguishes events from incidents and prioritizes them.",
+      "source_ref": "SOC 2 TSC CC7.3 (evaluate events as incidents)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-05",
+      "framework": "soc2",
+      "title": "Documented incident response plan",
+      "requirement": "CC7.4 - Maintain a documented incident response plan that defines roles, responsibilities, communication paths, and response procedures for handling identified security incidents.",
+      "applies_when": "Always",
+      "check": "Confirm an incident response plan/runbook exists naming roles, escalation contacts, and step-by-step response actions.",
+      "source_ref": "SOC 2 TSC CC7.4 (incident response program)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-06",
+      "framework": "soc2",
+      "title": "Contain, remediate, and mitigate incidents",
+      "requirement": "CC7.4 - Execute response procedures to contain, eradicate, and mitigate identified security incidents so their impact is limited and recurrence is reduced.",
+      "applies_when": "Always",
+      "check": "Verify the plan includes containment and eradication steps and assigns remediation ownership with tracking to closure.",
+      "source_ref": "SOC 2 TSC CC7.4 (contain and remediate incidents)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-07",
+      "framework": "soc2",
+      "title": "Incident communication and breach notification",
+      "requirement": "CC7.4 - Define internal and external communication procedures for incidents, including notifying affected customers, regulators, and stakeholders within required timeframes when applicable.",
+      "applies_when": "Processes customer data or has contractual/regulatory notification obligations",
+      "check": "Confirm the plan specifies who is notified, by when, and through what channel for qualifying incidents (including breach notification).",
+      "source_ref": "SOC 2 TSC CC7.4 (incident communication)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-08",
+      "framework": "soc2",
+      "title": "Recovery from incidents",
+      "requirement": "CC7.5 - Identify, develop, and implement activities to recover from identified security incidents and restore affected systems and data to normal operation.",
+      "applies_when": "Always",
+      "check": "Verify recovery procedures (including restoration from backups where relevant) are defined and can return systems to a known-good state.",
+      "source_ref": "SOC 2 TSC CC7.5 (recovery activities)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-09",
+      "framework": "soc2",
+      "title": "Post-incident review and lessons learned",
+      "requirement": "CC7.5 - After significant incidents, perform a post-incident review to determine root cause and implement corrective actions that prevent recurrence.",
+      "applies_when": "Always",
+      "check": "Confirm a post-incident/root-cause review process exists and feeds corrective actions back into controls.",
+      "source_ref": "SOC 2 TSC CC7.5 (post-incident improvement)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-10",
+      "framework": "soc2",
+      "title": "Remediate identified vulnerabilities within SLA",
+      "requirement": "CC7.1 - Track vulnerabilities identified through scanning and monitoring to resolution, prioritizing remediation by risk severity within defined timeframes.",
+      "applies_when": "Always",
+      "check": "Verify vulnerabilities are logged with severity and remediation SLAs, and that patching/mitigation is tracked to closure.",
+      "source_ref": "SOC 2 TSC CC7.1 (vulnerability remediation)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-11",
+      "framework": "soc2",
+      "title": "Log retention supporting detection and investigation",
+      "requirement": "CC7.2/CC7.3 - Retain security-relevant logs for a sufficient period and protect their integrity so that anomalies can be detected and incidents can be investigated after the fact.",
+      "applies_when": "Always",
+      "check": "Confirm logs are centrally retained for a defined period, access-controlled, and tamper-resistant to support forensic investigation.",
+      "source_ref": "SOC 2 TSC CC7.2/CC7.3 (logging for detection and analysis)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC7-12",
+      "framework": "soc2",
+      "title": "Test the incident response plan periodically",
+      "requirement": "CC7.4 - Periodically test or exercise the incident response plan (e.g. tabletop or simulation) to validate that procedures work and responders understand their roles.",
+      "applies_when": "Always",
+      "check": "Verify the plan is exercised on a defined cadence and findings from tests are used to update procedures.",
+      "source_ref": "SOC 2 TSC CC7.4 (incident response testing)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC8-01",
+      "framework": "soc2",
+      "title": "Formal change management process",
+      "requirement": "Maintain a defined, repeatable change management process governing how changes to infrastructure, data, software, and procedures are authorized, designed, developed or acquired, configured, documented, tested, approved, and implemented.",
+      "applies_when": "Always",
+      "check": "Confirm a documented change management policy/procedure exists and is referenced by the actual change workflow (e.g., ticketing system) used for production changes.",
+      "source_ref": "SOC 2 CC8.1 (2017 TSC) - change management process",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-02",
+      "framework": "soc2",
+      "title": "Change authorization / request",
+      "requirement": "Require that every change be formally requested and authorized before work begins, so unauthorized or ad-hoc changes to production systems are prevented.",
+      "applies_when": "Always",
+      "check": "Verify each production change has an authorized request record (ticket) capturing requester, description, and authorization prior to development.",
+      "source_ref": "SOC 2 CC8.1 - authorize changes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-03",
+      "framework": "soc2",
+      "title": "Design and impact assessment of changes",
+      "requirement": "Assess and document the design, scope, and potential impact of a change (including security and availability effects) before it is developed and deployed.",
+      "applies_when": "Always",
+      "check": "Confirm change records include a design/impact assessment section that is completed before build, covering affected systems and risks.",
+      "source_ref": "SOC 2 CC8.1 - design changes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-04",
+      "framework": "soc2",
+      "title": "Testing before deployment",
+      "requirement": "Test changes prior to production deployment to confirm they function as intended and do not introduce defects, security weaknesses, or regressions.",
+      "applies_when": "Always",
+      "check": "Verify change records show test evidence (test results, QA sign-off, CI runs) completed before promotion to production.",
+      "source_ref": "SOC 2 CC8.1 - test changes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-05",
+      "framework": "soc2",
+      "title": "Approval before implementation",
+      "requirement": "Require documented approval from an authorized party (independent of the developer where feasible) before a change is released into production.",
+      "applies_when": "Always",
+      "check": "Confirm each production change carries a recorded approval by an authorized approver, dated before deployment.",
+      "source_ref": "SOC 2 CC8.1 - approve and implement changes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-06",
+      "framework": "soc2",
+      "title": "Segregation of duties in the change pipeline",
+      "requirement": "Separate the roles of developing, approving, and deploying changes so that no single individual can author and unilaterally release a production change without independent review.",
+      "applies_when": "Always",
+      "check": "Verify deployment controls (e.g., branch protection, required reviewers, CI/CD gates) prevent the same person from authoring, approving, and deploying a change unchecked.",
+      "source_ref": "SOC 2 CC8.1 - segregation within change management",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-07",
+      "framework": "soc2",
+      "title": "Version control and change tracking",
+      "requirement": "Track code and configuration changes under version control so each change is attributable, auditable, and its history reconstructable.",
+      "applies_when": "System is software/infrastructure with code or config artifacts",
+      "check": "Confirm source and infrastructure config are managed in a version control system with commit history tied to authorized change records.",
+      "source_ref": "SOC 2 CC8.1 - configure and document changes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-08",
+      "framework": "soc2",
+      "title": "Change documentation",
+      "requirement": "Document each change with sufficient detail (what changed, why, who, when, test and approval evidence) to support review and audit.",
+      "applies_when": "Always",
+      "check": "Sample change tickets and confirm they capture description, rationale, actors, dates, and links to test/approval evidence.",
+      "source_ref": "SOC 2 CC8.1 - document changes",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-09",
+      "framework": "soc2",
+      "title": "Segregation of development and production environments",
+      "requirement": "Develop and test changes in environments separate from production so untested changes and non-production data cannot affect live systems.",
+      "applies_when": "System has distinct build/run environments",
+      "check": "Verify separate dev/test and production environments exist with controlled promotion between them and no direct dev edits to production.",
+      "source_ref": "SOC 2 CC8.1 - configure/deploy changes across environments",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC8-10",
+      "framework": "soc2",
+      "title": "Emergency change procedure",
+      "requirement": "Define an emergency/expedited change path that still requires post-implementation review and documented retroactive approval, so urgent fixes remain controlled.",
+      "applies_when": "System supports emergency or hotfix changes",
+      "check": "Confirm an emergency change procedure exists requiring documentation and after-the-fact approval, and review that emergency changes followed it.",
+      "source_ref": "SOC 2 CC8.1 - controlled emergency changes",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC8-11",
+      "framework": "soc2",
+      "title": "Rollback / backout capability",
+      "requirement": "Provide a documented rollback or backout plan for changes so a failed or defective deployment can be reverted to a known good state.",
+      "applies_when": "Change affects production availability or integrity",
+      "check": "Verify change records include a rollback plan and that deployment tooling supports reverting to the prior version.",
+      "source_ref": "SOC 2 CC8.1 - implement changes with recovery",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC8-12",
+      "framework": "soc2",
+      "title": "Baseline configuration management",
+      "requirement": "Establish and maintain approved baseline configurations for infrastructure and software, and manage deviations from baseline through the change process.",
+      "applies_when": "System has configurable infrastructure or software components",
+      "check": "Confirm baseline configurations are defined (e.g., IaC, hardening standards) and that config drift is detected and reconciled via change control.",
+      "source_ref": "SOC 2 CC8.1 - configure infrastructure and software",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC8-13",
+      "framework": "soc2",
+      "title": "Security review of changes",
+      "requirement": "Incorporate security review (e.g., code review, vulnerability/dependency scanning) into the change process so changes do not introduce or reintroduce security weaknesses.",
+      "applies_when": "System processes sensitive data or exposes network-accessible services",
+      "check": "Verify the pipeline enforces security checks (peer review, SAST/dependency scan) as gates before changes reach production.",
+      "source_ref": "SOC 2 CC8.1 - develop/test secure changes",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC9-01",
+      "framework": "soc2",
+      "title": "Identify risks from potential business disruptions",
+      "requirement": "CC9.1 - The entity must identify risks that could arise from potential business disruptions and select mitigation activities to address them.",
+      "applies_when": "Always",
+      "check": "Confirm a documented process exists that enumerates business-disruption scenarios (e.g., outages, disasters, supply-chain failures) and links each to selected mitigation activities.",
+      "source_ref": "SOC 2 CC9.1 (Risk mitigation for business disruptions)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-02",
+      "framework": "soc2",
+      "title": "Develop and implement risk-mitigation activities",
+      "requirement": "CC9.1 - The entity must develop and put in place mitigation activities (controls, redundancy, response plans) proportionate to the identified disruption risks.",
+      "applies_when": "Always",
+      "check": "Verify mitigation controls (e.g., backups, failover, contingency plans) are implemented and mapped to the disruption risks they address.",
+      "source_ref": "SOC 2 CC9.1 (Develop mitigation activities)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-03",
+      "framework": "soc2",
+      "title": "Consider insurance and risk-transfer options",
+      "requirement": "CC9.1 - The entity should consider risk-transfer mechanisms such as insurance as part of its mitigation strategy for residual disruption risk.",
+      "applies_when": "Always",
+      "check": "Check whether risk-transfer options (insurance coverage, contractual indemnities) were evaluated and documented for residual risks.",
+      "source_ref": "SOC 2 CC9.1 (Risk transfer / insurance)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC9-04",
+      "framework": "soc2",
+      "title": "Maintain a vendor and business-partner inventory",
+      "requirement": "CC9.2 - The entity must maintain an inventory of vendors and business partners whose services could affect the security or availability of the system.",
+      "applies_when": "Uses third-party vendors or business partners",
+      "check": "Confirm a maintained register of vendors/business partners exists identifying which handle or affect in-scope data and services.",
+      "source_ref": "SOC 2 CC9.2 (Vendor identification)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-05",
+      "framework": "soc2",
+      "title": "Assess vendor and partner risk before and during engagement",
+      "requirement": "CC9.2 - The entity must assess the risks that vendors and business partners pose, both during onboarding and on an ongoing basis.",
+      "applies_when": "Uses third-party vendors or business partners",
+      "check": "Verify documented risk assessments (e.g., due-diligence reviews, security questionnaires) exist for vendors at onboarding and are refreshed periodically.",
+      "source_ref": "SOC 2 CC9.2 (Vendor risk assessment)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-06",
+      "framework": "soc2",
+      "title": "Define vendor responsibilities in contracts and agreements",
+      "requirement": "CC9.2 - The entity must establish agreements that define vendors' and business partners' security, confidentiality, and availability responsibilities.",
+      "applies_when": "Uses third-party vendors or business partners",
+      "check": "Inspect contracts/SLAs/DPAs to confirm they specify security, confidentiality, and service commitments for each material vendor.",
+      "source_ref": "SOC 2 CC9.2 (Vendor contractual commitments)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-07",
+      "framework": "soc2",
+      "title": "Communicate entity requirements to vendors",
+      "requirement": "CC9.2 - The entity must communicate its security, confidentiality, and compliance requirements to relevant vendors and business partners.",
+      "applies_when": "Uses third-party vendors or business partners",
+      "check": "Confirm evidence that vendor obligations, policies, or requirements were formally communicated to and acknowledged by vendors.",
+      "source_ref": "SOC 2 CC9.2 (Vendor communication)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-08",
+      "framework": "soc2",
+      "title": "Monitor ongoing vendor and partner performance and compliance",
+      "requirement": "CC9.2 - The entity must monitor vendors and business partners for continued compliance with its requirements and for changes in their risk profile.",
+      "applies_when": "Uses third-party vendors or business partners",
+      "check": "Verify ongoing monitoring occurs (e.g., review of vendor SOC 2 reports, attestations, performance reviews) on a defined cadence.",
+      "source_ref": "SOC 2 CC9.2 (Ongoing vendor monitoring)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-09",
+      "framework": "soc2",
+      "title": "Assess and manage subservice-organization risk",
+      "requirement": "CC9.2 - The entity must assess risks arising from subservice organizations relied upon by its vendors and confirm those risks are managed.",
+      "applies_when": "Relies on vendors that use subservice organizations",
+      "check": "Confirm the entity identifies fourth-party/subservice dependencies and reviews the controls (e.g., carve-out/complementary controls) covering them.",
+      "source_ref": "SOC 2 CC9.2 (Subservice organization risk)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-CC9-10",
+      "framework": "soc2",
+      "title": "Define procedures for vendor termination and offboarding",
+      "requirement": "CC9.2 - The entity must have procedures to manage the risks of ending a vendor or business-partner relationship, including data return or destruction and access revocation.",
+      "applies_when": "Uses third-party vendors or business partners",
+      "check": "Verify offboarding procedures exist requiring revocation of vendor access and return/destruction of entity data at termination.",
+      "source_ref": "SOC 2 CC9.2 (Vendor termination / offboarding)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-CC9-11",
+      "framework": "soc2",
+      "title": "Take corrective action on identified vendor deficiencies",
+      "requirement": "CC9.2 - The entity must respond to and remediate deficiencies or noncompliance identified in vendor or business-partner risk assessments and monitoring.",
+      "applies_when": "Uses third-party vendors or business partners",
+      "check": "Check for a documented process that tracks vendor deficiencies to remediation, escalation, or relationship termination.",
+      "source_ref": "SOC 2 CC9.2 (Corrective action on vendor issues)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P1-01",
+      "framework": "soc2",
+      "title": "Privacy notice of objectives and practices",
+      "requirement": "Publish a privacy notice describing the entity's objectives for collecting, using, retaining, disclosing, and disposing of personal information, so data subjects understand how their data is handled.",
+      "applies_when": "Handles personal data (PII) and the SOC 2 Privacy category is in scope",
+      "check": "Confirm a documented privacy notice exists that enumerates purposes for collection, use, retention, disclosure, and disposal of personal information.",
+      "source_ref": "TSC Privacy P1.1 (notice and communication of objectives)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P1-02",
+      "framework": "soc2",
+      "title": "Notice timing and updates",
+      "requirement": "Provide the privacy notice at or before the point of personal information collection and re-communicate it whenever privacy practices materially change.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify collection flows surface the notice before/at capture and that a change-management process re-issues notice on practice changes.",
+      "source_ref": "TSC Privacy P1.1 (notice provided timely and on change)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P2-01",
+      "framework": "soc2",
+      "title": "Choice and consent for collection and use",
+      "requirement": "Communicate the choices available to data subjects and obtain their consent for the collection, use, retention, and disclosure of personal information consistent with the stated objectives.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm a consent capture mechanism records the data subject's choice tied to specific purposes and that consent is retained as evidence.",
+      "source_ref": "TSC Privacy P2.1 (choice and consent)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P2-02",
+      "framework": "soc2",
+      "title": "Explicit consent for sensitive data",
+      "requirement": "Obtain explicit (affirmative) consent before collecting or processing sensitive categories of personal information, and document the basis for that consent.",
+      "applies_when": "Processes sensitive personal information (e.g. health, biometric, financial, racial/ethnic, religious data)",
+      "check": "Verify sensitive-data workflows require a distinct explicit opt-in that is logged separately from general consent.",
+      "source_ref": "TSC Privacy P2.1 (explicit consent for sensitive information)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-P3-01",
+      "framework": "soc2",
+      "title": "Collection limited to stated purposes",
+      "requirement": "Collect only personal information that is necessary for the purposes identified in the notice, using fair and lawful means.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Map each collected data field to a documented purpose and confirm no data is gathered beyond those purposes.",
+      "source_ref": "TSC Privacy P3.1 (collection consistent with objectives)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P3-02",
+      "framework": "soc2",
+      "title": "Consent for data from third-party sources",
+      "requirement": "When personal information is obtained from sources other than the individual, ensure the source had authority to provide it and that use aligns with the entity's stated purposes.",
+      "applies_when": "Acquires personal data from third parties or data brokers rather than directly from the individual",
+      "check": "Confirm contracts or attestations exist for third-party data sources establishing lawful provenance and permitted use.",
+      "source_ref": "TSC Privacy P3.2 (collection from third parties / explicit consent)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-P4-01",
+      "framework": "soc2",
+      "title": "Use limited to consented purposes",
+      "requirement": "Use personal information only for the purposes identified in the notice and for which the data subject has provided consent.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Review processing activities and confirm each use maps to a purpose disclosed in the notice and covered by consent.",
+      "source_ref": "TSC Privacy P4.1 (use consistent with purposes)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P4-02",
+      "framework": "soc2",
+      "title": "Retention limited to necessity",
+      "requirement": "Retain personal information only for as long as needed to fulfill the stated purposes or to meet legal/regulatory obligations, per a defined retention schedule.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify a documented retention schedule exists and that automated or reviewed deletion enforces retention limits.",
+      "source_ref": "TSC Privacy P4.2 (retention for identified purposes)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P4-03",
+      "framework": "soc2",
+      "title": "Secure disposal of personal information",
+      "requirement": "Securely and irreversibly dispose of or anonymize personal information once retention requirements are met, preventing later recovery.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm disposal procedures (secure deletion, media destruction, anonymization) exist and produce evidence of execution.",
+      "source_ref": "TSC Privacy P4.3 (disposal of personal information)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P5-01",
+      "framework": "soc2",
+      "title": "Data subject access to their information",
+      "requirement": "Provide data subjects a means to access their personal information held by the entity for review, upon authenticated request.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify an access-request process exists that authenticates the requester and returns their personal data within a defined timeframe.",
+      "source_ref": "TSC Privacy P5.1 (access to personal information)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P5-02",
+      "framework": "soc2",
+      "title": "Correction, amendment, and deletion of information",
+      "requirement": "Allow data subjects to update, correct, amend, or request deletion of their personal information, and act on such requests, notifying relevant third parties where required.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm a workflow accepts correction/deletion requests, applies changes, and propagates them to downstream recipients.",
+      "source_ref": "TSC Privacy P5.2 (correction and amendment)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P6-01",
+      "framework": "soc2",
+      "title": "Disclosure limited to authorized recipients",
+      "requirement": "Disclose personal information to third parties only for purposes covered by the notice and consent, and only under agreements requiring equivalent privacy protection.",
+      "applies_when": "Discloses or shares personal data with third parties or subprocessors",
+      "check": "Verify third-party disclosures map to consented purposes and are governed by contracts imposing equivalent privacy and confidentiality obligations.",
+      "source_ref": "TSC Privacy P6.1 / P6.2 (disclosure to third parties)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P6-02",
+      "framework": "soc2",
+      "title": "Notification of unauthorized disclosure",
+      "requirement": "Maintain a process to identify, track, and notify affected data subjects and relevant authorities of unauthorized use or disclosure (breach) of personal information.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm an incident process defines breach detection, affected-party notification, and record-keeping of privacy incidents.",
+      "source_ref": "TSC Privacy P6.3 / P6.5 / P6.6 (notification of unauthorized disclosure)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P7-01",
+      "framework": "soc2",
+      "title": "Quality of personal information",
+      "requirement": "Maintain personal information that is accurate, complete, and relevant for the purposes for which it is used.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Verify controls exist to validate and update personal data (e.g. verification at entry, periodic review) so it stays accurate and relevant.",
+      "source_ref": "TSC Privacy P7.1 (data quality)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-P8-01",
+      "framework": "soc2",
+      "title": "Monitoring, enforcement, and complaint handling",
+      "requirement": "Operate a process to receive, address, and resolve privacy-related inquiries, complaints, and disputes, and to monitor compliance with privacy commitments including corrective action.",
+      "applies_when": "Handles personal data (PII)",
+      "check": "Confirm a documented complaint/dispute intake and resolution process exists with monitoring, escalation, and corrective-action tracking.",
+      "source_ref": "TSC Privacy P8.1 (monitoring and enforcement)",
+      "mandatory": true
+    },
+    {
+      "id": "SOC2-PI1-01",
+      "framework": "soc2",
+      "title": "Processing specifications and objectives defined",
+      "requirement": "Define and document the specifications for how data must be processed, including the objectives, expected outputs, and quality criteria, so completeness and accuracy can be measured against a known baseline.",
+      "applies_when": "System processes, transforms, or computes data on behalf of users or customers, and Processing Integrity is in audit scope",
+      "check": "Confirm there is documented processing specification (data dictionary, transformation rules, or functional spec) that states expected inputs, outputs, and quality thresholds for each processing flow",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.1 (quality information about processing objectives)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-02",
+      "framework": "soc2",
+      "title": "Input completeness controls",
+      "requirement": "Ensure all expected inputs are captured and no records are lost at intake, for example via record counts, batch totals, or sequence checks at the point data enters the system.",
+      "applies_when": "System ingests batches, feeds, or transactions from users or upstream systems",
+      "check": "Verify the plan includes intake completeness controls (expected-vs-received record counts, batch control totals, or gap/sequence detection) that flag missing inputs",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.2 (inputs are complete)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-03",
+      "framework": "soc2",
+      "title": "Input validity and accuracy checks",
+      "requirement": "Validate inputs for correct format, type, range, and business-rule conformance before processing, rejecting or quarantining data that fails so invalid values do not enter processing.",
+      "applies_when": "System accepts external or user-supplied data that feeds processing logic",
+      "check": "Confirm input validation rules (schema, type, range, referential/business-rule checks) exist and that invalid inputs are rejected or routed to an exception path rather than silently processed",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.2 (inputs are accurate and valid)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-04",
+      "framework": "soc2",
+      "title": "Authorised inputs and processing requests",
+      "requirement": "Accept and process only inputs and processing requests that originate from authorised sources or authenticated actors, so unauthorised data cannot drive processing.",
+      "applies_when": "System processes data submitted by identifiable users, tenants, or upstream integrations",
+      "check": "Verify each processing entry point authenticates and authorises the source before accepting input (API keys, signed requests, role checks) and logs the originating identity",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.2 / PI1.3 (processing is authorised)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-05",
+      "framework": "soc2",
+      "title": "Processing completeness (no dropped records)",
+      "requirement": "Ensure every accepted input is processed exactly once and produces a corresponding result, so records are not dropped, skipped, or silently duplicated during processing.",
+      "applies_when": "System runs multi-step, batched, or asynchronous processing pipelines",
+      "check": "Confirm the pipeline reconciles input record counts to processed/output counts and detects dropped or duplicated records (idempotency keys, end-to-end counts)",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.3 (processing is complete)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-06",
+      "framework": "soc2",
+      "title": "Processing accuracy",
+      "requirement": "Ensure processing produces correct results per the documented specifications, verified through automated calculations checks, test cases, or comparison to expected values.",
+      "applies_when": "System performs calculations, transformations, or aggregations whose correctness matters",
+      "check": "Verify there are automated correctness controls (unit/regression tests against expected outputs, checksum or control-total comparisons) covering the processing logic",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.3 (processing is accurate)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-07",
+      "framework": "soc2",
+      "title": "Processing timeliness",
+      "requirement": "Ensure processing completes within the defined time windows or service levels, with monitoring that detects and alerts on delayed or stalled processing.",
+      "applies_when": "System has time-sensitive processing, scheduled jobs, or committed SLAs",
+      "check": "Confirm processing SLAs/schedules are defined and that latency or job-duration monitoring alerts when processing runs late or fails to complete on time",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.3 (processing is timely)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-08",
+      "framework": "soc2",
+      "title": "Processing error detection and remediation",
+      "requirement": "Detect processing errors and exceptions, route failed items to an exception queue or dead-letter mechanism, and track them through resolution so failures are not lost.",
+      "applies_when": "System runs automated processing that can partially fail",
+      "check": "Verify failed or rejected items are captured in an exception/dead-letter queue with alerting and a documented remediation/reprocessing workflow",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.3 (identification and correction of processing errors)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-09",
+      "framework": "soc2",
+      "title": "Output completeness and accuracy verification",
+      "requirement": "Verify that outputs are complete and accurate before release, for example by reconciling output totals or counts against inputs and expected results.",
+      "applies_when": "System generates outputs, reports, files, or results consumed downstream or by customers",
+      "check": "Confirm outputs are reconciled to inputs/expected values (control totals, record-count matching, validation of generated files) prior to delivery",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.4 (outputs are complete and accurate)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-10",
+      "framework": "soc2",
+      "title": "Timely delivery to authorised recipients",
+      "requirement": "Deliver outputs only to authorised recipients and within the required timeframe, ensuring results are not disclosed to or accessible by unauthorised parties.",
+      "applies_when": "System distributes processed outputs to specific users, tenants, or systems",
+      "check": "Verify output delivery enforces recipient authorisation (access controls, tenant scoping) and meets defined delivery timing, with logging of what was delivered to whom",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.4 (outputs delivered to intended recipients timely)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-11",
+      "framework": "soc2",
+      "title": "Complete and accurate storage of inputs and outputs",
+      "requirement": "Store processing inputs and outputs completely, accurately, and in a timely manner, protecting them from unauthorised or unintended alteration while retained.",
+      "applies_when": "System persists processed data, inputs, or outputs for later use or retrieval",
+      "check": "Confirm stored inputs/outputs are written durably with integrity protection (checksums, transactional writes, immutability or change controls) and match what was processed",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.5 (storage of inputs and outputs is complete, accurate, timely)",
+      "mandatory": false
+    },
+    {
+      "id": "SOC2-PI1-12",
+      "framework": "soc2",
+      "title": "End-to-end reconciliation controls",
+      "requirement": "Maintain reconciliation controls that trace data from input through processing to output and storage, so any imbalance in counts or totals is detected and investigated.",
+      "applies_when": "System processes data across multiple stages or components where records could be lost or altered in transit",
+      "check": "Verify an end-to-end reconciliation exists (input vs processed vs output vs stored counts/totals) with a defined process to investigate and resolve discrepancies",
+      "source_ref": "SOC 2 Trust Services Criteria PI1.2-PI1.5 (completeness and accuracy across the processing lifecycle)",
+      "mandatory": false
+    }
+  ]
+}

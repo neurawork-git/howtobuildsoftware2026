@@ -26,6 +26,7 @@ from pathlib import Path
 
 ENGINE_DIR = Path(__file__).resolve().parent
 PAYLOAD = ENGINE_DIR / "payload"
+SEED_DIR = PAYLOAD / "catalog-seed"
 SHARED_SRC = ENGINE_DIR.parent / "_shared"
 DEFAULTS_FILE = ENGINE_DIR / "config.default.json"
 VERSION_FILE = ENGINE_DIR / "VERSION"
@@ -88,6 +89,22 @@ def _scaffold(target: Path, cdir: str) -> None:
         gitignore.write_text(GITIGNORE, encoding="utf-8")
 
     shutil.copy2(VERSION_FILE, target / "VERSION")
+
+
+def _seed_catalog(target: Path) -> None:
+    """Copy the shipped prebuilt catalog into the target — only for files not already
+    present, so a fresh install has a working catalog with no LLM run while ADOPT never
+    clobbers a repo's own extracted catalog."""
+    if not SEED_DIR.is_dir():
+        return
+    catalog = target / "catalog"
+    catalog.mkdir(parents=True, exist_ok=True)
+    for src in SEED_DIR.iterdir():
+        if src.suffix not in (".json", ".md"):
+            continue
+        dst = catalog / src.name
+        if not dst.exists():
+            shutil.copy2(src, dst)
 
 
 def _hooks(cdir: str) -> list[tuple[str, str, int, str]]:
@@ -181,6 +198,7 @@ def main() -> int:
 
     _copy_code(target)
     _scaffold(target, cdir)
+    _seed_catalog(target)
 
     try:
         changed = merge_hooks(root, _hooks(cdir))

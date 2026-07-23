@@ -171,5 +171,77 @@ class TestRender(unittest.TestCase):
         self.assertIn("| gdpr | 1 | 2/2 | 2026-01-01 |", idx)
 
 
+class TestConstraintDelta(unittest.TestCase):
+    CAPS = [
+        {"name": "Encryption", "satisfies": ["GDPR-ART5-01", "GDPR-ART5-02"],
+         "stack": [{"name": "OpenBao"}], "stack_notes": "n"},
+        {"name": "Consent", "satisfies": ["GDPR-ART7-01"], "stack": [], "stack_notes": ""},
+    ]
+
+    def test_new_id_detected(self) -> None:
+        d = cap_lib.constraint_delta(
+            {"GDPR-ART5-01", "GDPR-ART5-02", "GDPR-ART7-01", "GDPR-ART9-01"}, self.CAPS)
+        self.assertEqual(d["new_ids"], ["GDPR-ART9-01"])
+        self.assertEqual(d["orphaned_ids"], [])
+        self.assertFalse(d["unchanged"])
+
+    def test_orphaned_id_detected(self) -> None:
+        d = cap_lib.constraint_delta({"GDPR-ART5-01", "GDPR-ART5-02"}, self.CAPS)
+        self.assertEqual(d["new_ids"], [])
+        self.assertEqual(d["orphaned_ids"], ["GDPR-ART7-01"])
+        self.assertFalse(d["unchanged"])
+
+    def test_identical_set_is_unchanged(self) -> None:
+        d = cap_lib.constraint_delta(
+            {"GDPR-ART5-01", "GDPR-ART5-02", "GDPR-ART7-01"}, self.CAPS)
+        self.assertTrue(d["unchanged"])
+        self.assertEqual(d["new_ids"], [])
+        self.assertEqual(d["orphaned_ids"], [])
+
+
+class TestPruneOrphaned(unittest.TestCase):
+    def test_strips_id_and_drops_emptied_cap(self) -> None:
+        caps = [
+            {"name": "A", "satisfies": ["X1", "X2"], "stack": [1]},
+            {"name": "B", "satisfies": ["X3"], "stack": [2]},
+        ]
+        out = cap_lib.prune_orphaned_ids(caps, ["X3"])
+        self.assertEqual([c["name"] for c in out], ["A"])          # B emptied -> dropped
+        self.assertEqual(out[0]["satisfies"], ["X1", "X2"])
+        self.assertEqual(caps[1]["satisfies"], ["X3"])             # input untouched
+
+    def test_partial_strip_keeps_cap(self) -> None:
+        caps = [{"name": "A", "satisfies": ["X1", "X2"], "stack": [1]}]
+        out = cap_lib.prune_orphaned_ids(caps, ["X1"])
+        self.assertEqual(out[0]["satisfies"], ["X2"])
+        self.assertEqual(out[0]["stack"], [1])                     # stack carried over
+
+
+class TestMergeDeltaCapabilities(unittest.TestCase):
+    def test_assign_by_name_and_add_new_cap(self) -> None:
+        existing = [
+            {"name": "Encryption", "satisfies": ["X1"], "stack": [{"n": 1}], "stack_notes": "k"},
+            {"name": "Consent", "satisfies": ["X2"], "stack": [{"n": 2}], "stack_notes": ""},
+        ]
+        out = cap_lib.merge_delta_capabilities(
+            existing,
+            {"Encryption": ["X9"]},
+            [{"name": "Portability", "category": "Data Protection",
+              "description": "d", "satisfies": ["X8"]}],
+        )
+        by = {c["name"]: c for c in out}
+        self.assertEqual(by["Encryption"]["satisfies"], ["X1", "X9"])   # gained id
+        self.assertEqual(by["Consent"]["satisfies"], ["X2"])            # unchanged
+        self.assertEqual(by["Consent"]["stack"], [{"n": 2}])            # stack carried
+        self.assertEqual(by["Portability"]["satisfies"], ["X8"])        # new cap
+        self.assertEqual(by["Portability"]["stack"], [])               # empty -> will be stacked
+        self.assertEqual(existing[0]["satisfies"], ["X1"])             # input not mutated
+
+    def test_assign_by_slug_fallback(self) -> None:
+        existing = [{"name": "Audit logging", "satisfies": ["X1"], "stack": [], "stack_notes": ""}]
+        out = cap_lib.merge_delta_capabilities(existing, {"audit-logging": ["X2"]}, [])
+        self.assertEqual(out[0]["satisfies"], ["X1", "X2"])
+
+
 if __name__ == "__main__":
     unittest.main()
