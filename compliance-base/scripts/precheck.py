@@ -12,7 +12,7 @@ from pathlib import Path
 
 import rules_block
 import stack
-from config import PRP_SUBPATH
+from config import DEFAULT_CFG
 from utils import (
     load_capability_catalog,
     load_constraints,
@@ -23,6 +23,7 @@ from utils import (
 )
 
 _COMPLIANCE_SECTION_RE = re.compile(r"^##\s+Compliance", re.MULTILINE)
+_MISSING = object()
 
 # The machine-readable capability declaration a plan carries in its `## Compliance`
 # section, e.g. `**Capabilities**: gdpr/audit-logging, soc2/change-management` or
@@ -67,36 +68,60 @@ _TEST_FILE_RES = (
 )
 
 
-def is_plan_path(path_str: str, repo_root: Path | str) -> bool:
-    """True iff ``path_str`` is a live PRP plan file (not an archived one).
+def _cfg_strings(cfg: dict, key: str) -> tuple[str, ...]:
+    """A plan-matching config value as a tuple of strings (accepts one or many).
 
-    Two layouts count, both under ``.claude/PRPs``: the canonical ``plans/`` directory, and
-    the one prp-core's store resolver produces when ``PRP_HOME`` points at the repo —
-    ``<store>/plans/``, where ``<store>`` is its ``<repo-name>-<hash>`` key. Exactly one
-    store segment is allowed, so this stays a whitelist rather than a search for "plans"
-    anywhere in the path.
+    Falls back to the default when the key is absent or not a string/list, so an
+    ADOPT install whose ``config.json`` predates these keys keeps the documented
+    behaviour instead of silently matching nothing. An explicitly empty list is
+    honoured — that is how you switch the matcher off without uninstalling.
+    """
+    value = cfg.get(key, _MISSING)
+    if not isinstance(value, (str, list, tuple)):
+        value = DEFAULT_CFG[key]
+    if isinstance(value, str):
+        value = [value]
+    return tuple(v.strip() for v in value if isinstance(v, str) and v.strip())
+
+
+def _segments(subpath: str) -> tuple[str, ...]:
+    """Split a configured subpath into path segments, tolerating either slash
+    style and stray separators (``./.planning/phases/`` → ``.planning``, ``phases``)."""
+    return tuple(s for s in subpath.replace("\\", "/").split("/") if s and s != ".")
+
+
+def _matches(parts: tuple[str, ...], plans: tuple[str, ...]) -> bool:
+    """True iff ``parts`` starts with ``plans``, where a ``*`` segment in ``plans``
+    matches exactly one segment of ``parts`` (``.claude/PRPs/*/plans``)."""
+    return len(parts) >= len(plans) and all(
+        want == "*" or want == have for want, have in zip(plans, parts)
+    )
+
+
+def is_plan_path(path_str: str, repo_root: Path | str, cfg: dict | None = None) -> bool:
+    """True iff ``path_str`` is a live plan file (not an archived one).
+
+    Which files qualify is configurable via ``plans_subpath``, ``plan_suffix`` and
+    ``plan_archive_segments`` (see ``config.DEFAULT_CFG``). Omitting ``cfg`` applies
+    those defaults, i.e. the PRP layout ``.claude/PRPs/plans/*.plan.md``.
     """
     if not path_str:
         return False
+    cfg = cfg if isinstance(cfg, dict) else {}
     p = Path(path_str)
-    if not p.name.endswith(".plan.md"):
+    if not any(p.name.endswith(s) for s in _cfg_strings(cfg, "plan_suffix")):
         return False
     try:
         rel = p.resolve().relative_to(Path(repo_root).resolve())
     except (ValueError, OSError):
         return False
-    prp = tuple(PRP_SUBPATH.split("/"))
     parts = rel.parts
-    if parts[: len(prp)] != prp:
-        return False
-    rest = parts[len(prp):]
-    if rest[:1] == ("plans",):
-        tail = rest[1:]
-    elif rest[1:2] == ("plans",):  # one store segment: <repo-name>-<hash>/plans/...
-        tail = rest[2:]
-    else:
-        return False
-    return "completed" not in tail
+    archived = _cfg_strings(cfg, "plan_archive_segments")
+    for subpath in _cfg_strings(cfg, "plans_subpath"):
+        plans = _segments(subpath)
+        if plans and _matches(parts, plans):
+            return not any(seg in archived for seg in parts[len(plans):])
+    return False
 
 
 def declared_capabilities(plan_text: str) -> dict:

@@ -31,16 +31,6 @@ STATE_FILE = SCRIPTS_DIR / "state.json"
 # Completion stamp written by extract.py after a run.
 LAST_EXTRACT_FILE = SCRIPTS_DIR / "last-extract.json"
 
-# PRP plan files the validator hook checks (relative to the REPO root, which is
-# ROOT_DIR.parent for a top-level catalog dir).
-PLANS_SUBPATH = ".claude/PRPs/plans"
-
-# prp-core resolves its artifact store as ``"${PRP_HOME:-$HOME/.prp}/<repo-name>-<hash>"``,
-# so with PRP_HOME=".claude/PRPs" (what install.py sets) plans land one level deeper:
-# ``.claude/PRPs/<repo-name>-<hash>/plans/``. Both layouts are checked — see
-# precheck.is_plan_path.
-PRP_SUBPATH = ".claude/PRPs"
-
 # Display names for the supported frameworks.
 FRAMEWORK_TITLES = {
     "gdpr": "GDPR / DSGVO — Regulation (EU) 2016/679",
@@ -49,6 +39,11 @@ FRAMEWORK_TITLES = {
 }
 
 # ── Config defaults (overridden by <catalog_dir>/config.json) ──────────
+# The three `plan*` keys define which files the validator hook treats as a plan.
+# The defaults reproduce the PRP layout (`.claude/PRPs/plans/*.plan.md`); repos
+# with another convention (e.g. GSD's `.planning/phases/<phase>/NN-NN-PLAN.md`)
+# override them. Each accepts a single string or a list of strings. Paths are
+# relative to the REPO root, which is ROOT_DIR.parent for a top-level catalog dir.
 DEFAULT_CFG = {
     "catalog_dir": "compliance-base",
     "model": "",
@@ -56,6 +51,11 @@ DEFAULT_CFG = {
     "validate_frameworks": [],  # empty → validate plans against all `frameworks`
     "max_concurrency": 12,
     "validate_mode": "warn",
+    # A "*" matches one path segment. The second default covers the store prp-core
+    # resolves when PRP_HOME points at the repo: `.claude/PRPs/<repo-name>-<hash>/plans/`.
+    "plans_subpath": [".claude/PRPs/plans", ".claude/PRPs/*/plans"],
+    "plan_suffix": ".plan.md",
+    "plan_archive_segments": ["completed"],  # path segment below plans_subpath → archived
 }
 
 
