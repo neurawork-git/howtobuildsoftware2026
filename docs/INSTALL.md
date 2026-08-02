@@ -116,11 +116,40 @@ with the other two. On install it builds the constraint **catalog**
 (`catalog/{gdpr,soc2,iso27001}.json` + `index.md` + `capabilities.{json,md}`) by
 fanning out ~30 parallel SDK agents. From then on:
 
-- Every PRP plan write (`.claude/PRPs/plans/*.plan.md`) is validated automatically:
-  a fast inline structural precheck plus a detached deep LLM report under
-  `compliance-base/reports/`.
+- Every plan write is validated automatically: a fast inline structural precheck
+  plus a detached deep LLM report under `compliance-base/reports/`. Which files
+  count as a plan defaults to the PRP layout (`.claude/PRPs/plans/*.plan.md`) and
+  is configurable — see below.
 - Rebuild the catalog on demand: `/neurawork-cc-harness:co-extract`.
 - Validate a plan manually: `/neurawork-cc-harness:co-validate <path-to-plan>`.
+
+#### Plans that do not live in `.claude/PRPs/plans`
+
+The validator hook only fires for files it recognises as a plan. Three keys in
+`<catalog_dir>/config.json` define that; each takes a single string or a list.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `plans_subpath` | `.claude/PRPs/plans` | directory prefix(es), relative to the repo root |
+| `plan_suffix` | `.plan.md` | filename suffix(es) |
+| `plan_archive_segments` | `["completed"]` | path segment below the prefix that marks a plan as archived (skipped) |
+
+For a repo whose plans live at `.planning/phases/<phase>/NN-NN-PLAN.md`:
+
+```json
+{
+  "plans_subpath": ".planning/phases",
+  "plan_suffix": "-PLAN.md"
+}
+```
+
+Both layouts side by side: pass lists, e.g.
+`"plans_subpath": [".claude/PRPs/plans", ".planning/phases"]`.
+
+Keys absent from an existing `config.json` fall back to the defaults, so an
+upgrade over an older install keeps behaving exactly as before. An explicitly
+empty list (`[]`) matches nothing — that is how you switch the validator off
+without uninstalling the hook.
 
 The catalog stores only official control/article identifiers, short titles, and
 *paraphrased* requirements — never verbatim text of the copyrighted standards.

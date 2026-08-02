@@ -11,9 +11,12 @@ Installs the compliance-compiler engine into the current repo. Two halves:
    agents (one per framework shard) that distil GDPR/DSGVO, SOC 2, and ISO 27001
    into `<catalog_dir>/catalog/{gdpr,soc2,iso27001}.json` — atomic constraints with
    an `applies_when` predicate and a `check`.
-2. **Validation** — a `PostToolUse` hook checks each PRP plan file
-   (`.claude/PRPs/plans/*.plan.md`) as it is written: a fast structural precheck
-   inline, plus a detached deep LLM report in `<catalog_dir>/reports/`.
+2. **Validation** — a `PostToolUse` hook checks each plan file as it is written: a
+   fast structural precheck inline, plus a detached deep LLM report in
+   `<catalog_dir>/reports/`. Plans are `.claude/PRPs/plans/*.plan.md` by default;
+   `plans_subpath` / `plan_suffix` / `plan_archive_segments` in
+   `<catalog_dir>/config.json` point it at another layout (each takes a string or a
+   list). Absent keys fall back to the defaults, so an ADOPT install is unaffected.
 
 The catalog always lives inside the repo, never under `.claude/`.
 
@@ -63,6 +66,9 @@ uv sync --directory <NAME>
 ```
 
 Then tell the user to commit `<NAME>/` and `.claude/settings.json`. After install:
-- Every PRP plan write is checked automatically.
+- Every plan write is checked automatically. If the repo keeps its plans somewhere
+  other than `.claude/PRPs/plans/*.plan.md`, say so and point at `plans_subpath` /
+  `plan_suffix` in `<NAME>/config.json` — otherwise the hook stays silent and looks
+  like it is working.
 - Manual extract: `/neurawork-cc-harness:co-extract`.
 - Manual validate: `/neurawork-cc-harness:co-validate <plan>`.
