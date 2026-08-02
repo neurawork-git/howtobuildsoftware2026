@@ -4,5 +4,8 @@
   "frameworks": ["gdpr", "soc2", "iso27001"],
   "validate_frameworks": [],
   "max_concurrency": 12,
-  "validate_mode": "warn"
+  "validate_mode": "warn",
+  "plans_subpath": ".claude/PRPs/plans",
+  "plan_suffix": ".plan.md",
+  "plan_archive_segments": ["completed"]
 }

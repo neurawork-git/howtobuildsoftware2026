@@ -10,28 +10,59 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from config import PLANS_SUBPATH
+from config import DEFAULT_CFG
 from utils import load_constraints, mandatory_ids, referenced_ids, validation_frameworks
 
 _COMPLIANCE_SECTION_RE = re.compile(r"^##\s+Compliance", re.MULTILINE)
+_MISSING = object()
 
 
-def is_plan_path(path_str: str, repo_root: Path | str) -> bool:
-    """True iff ``path_str`` is a live PRP plan file (not an archived one)."""
+def _cfg_strings(cfg: dict, key: str) -> tuple[str, ...]:
+    """A plan-matching config value as a tuple of strings (accepts one or many).
+
+    Falls back to the default when the key is absent or not a string/list, so an
+    ADOPT install whose ``config.json`` predates these keys keeps the documented
+    behaviour instead of silently matching nothing. An explicitly empty list is
+    honoured — that is how you switch the matcher off without uninstalling.
+    """
+    value = cfg.get(key, _MISSING)
+    if not isinstance(value, (str, list, tuple)):
+        value = DEFAULT_CFG[key]
+    if isinstance(value, str):
+        value = [value]
+    return tuple(v.strip() for v in value if isinstance(v, str) and v.strip())
+
+
+def _segments(subpath: str) -> tuple[str, ...]:
+    """Split a configured subpath into path segments, tolerating either slash
+    style and stray separators (``./.planning/phases/`` → ``.planning``, ``phases``)."""
+    return tuple(s for s in subpath.replace("\\", "/").split("/") if s and s != ".")
+
+
+def is_plan_path(path_str: str, repo_root: Path | str, cfg: dict | None = None) -> bool:
+    """True iff ``path_str`` is a live plan file (not an archived one).
+
+    Which files qualify is configurable via ``plans_subpath``, ``plan_suffix`` and
+    ``plan_archive_segments`` (see ``config.DEFAULT_CFG``). Omitting ``cfg`` applies
+    those defaults, i.e. the PRP layout ``.claude/PRPs/plans/*.plan.md``.
+    """
     if not path_str:
         return False
+    cfg = cfg if isinstance(cfg, dict) else {}
     p = Path(path_str)
-    if not p.name.endswith(".plan.md"):
+    if not any(p.name.endswith(s) for s in _cfg_strings(cfg, "plan_suffix")):
         return False
     try:
         rel = p.resolve().relative_to(Path(repo_root).resolve())
     except (ValueError, OSError):
         return False
-    plans = tuple(PLANS_SUBPATH.split("/"))
     parts = rel.parts
-    if parts[: len(plans)] != plans:
-        return False
-    return "completed" not in parts[len(plans):]
+    archived = _cfg_strings(cfg, "plan_archive_segments")
+    for subpath in _cfg_strings(cfg, "plans_subpath"):
+        plans = _segments(subpath)
+        if plans and parts[: len(plans)] == plans:
+            return not any(seg in archived for seg in parts[len(plans):])
+    return False
 
 
 def precheck(plan_text: str, cfg: dict, catalog_dir: Path | None = None) -> dict:
