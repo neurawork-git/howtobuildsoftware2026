@@ -114,24 +114,24 @@ class TestPrecheck(unittest.TestCase):
 
 
 class TestIsPlanPath(unittest.TestCase):
+    def _touch(self, root: Path, *parts: str) -> Path:
+        p = root.joinpath(*parts)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("x", encoding="utf-8")
+        return p
+
     def test_matches_live_plan(self) -> None:
         with tempfile.TemporaryDirectory() as t:
             root = Path(t)
-            p = root / ".claude" / "PRPs" / "plans" / "x.plan.md"
-            p.parent.mkdir(parents=True)
-            p.write_text("x", encoding="utf-8")
+            p = self._touch(root, ".claude", "PRPs", "plans", "x.plan.md")
             self.assertTrue(precheck.is_plan_path(str(p), root))
 
     def test_rejects_completed_and_non_plan(self) -> None:
         with tempfile.TemporaryDirectory() as t:
             root = Path(t)
-            done = root / ".claude" / "PRPs" / "plans" / "completed" / "x.plan.md"
-            done.parent.mkdir(parents=True)
-            done.write_text("x", encoding="utf-8")
+            done = self._touch(root, ".claude", "PRPs", "plans", "completed", "x.plan.md")
             self.assertFalse(precheck.is_plan_path(str(done), root))
-            other = root / "src" / "x.plan.md"
-            other.parent.mkdir(parents=True)
-            other.write_text("x", encoding="utf-8")
+            other = self._touch(root, "src", "x.plan.md")
             self.assertFalse(precheck.is_plan_path(str(other), root))
 
     def test_matches_prp_home_store_layout(self) -> None:
@@ -163,6 +163,79 @@ class TestIsPlanPath(unittest.TestCase):
             deep.write_text("x", encoding="utf-8")
             self.assertFalse(precheck.is_plan_path(str(deep), root))
             self.assertFalse(precheck.is_plan_path(str(root / "a.md"), root))
+
+    def test_defaults_apply_when_config_omits_the_keys(self) -> None:
+        """An ADOPT install keeps a config.json written before these keys existed."""
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            p = self._touch(root, ".claude", "PRPs", "plans", "x.plan.md")
+            legacy_cfg = {"catalog_dir": "compliance-base", "validate_mode": "warn"}
+            self.assertTrue(precheck.is_plan_path(str(p), root, legacy_cfg))
+            self.assertTrue(precheck.is_plan_path(str(p), root, {}))
+
+    def test_configured_layout_gsd(self) -> None:
+        """The case this config exists for: GSD's .planning/phases/<phase>/NN-PLAN.md."""
+        cfg = {"plans_subpath": ".planning/phases", "plan_suffix": "-PLAN.md"}
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            p = self._touch(root, ".planning", "phases", "01-fundament", "01-01-PLAN.md")
+            self.assertTrue(precheck.is_plan_path(str(p), root, cfg))
+            # the old default no longer matches once overridden
+            prp = self._touch(root, ".claude", "PRPs", "plans", "x.plan.md")
+            self.assertFalse(precheck.is_plan_path(str(prp), root, cfg))
+
+    def test_multiple_subpaths_and_suffixes(self) -> None:
+        cfg = {"plans_subpath": [".claude/PRPs/plans", ".planning/phases"],
+               "plan_suffix": [".plan.md", "-PLAN.md"]}
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            for parts in ((".claude", "PRPs", "plans", "x.plan.md"),
+                          (".planning", "phases", "01-a", "01-01-PLAN.md")):
+                p = self._touch(root, *parts)
+                self.assertTrue(precheck.is_plan_path(str(p), root, cfg))
+            self.assertFalse(
+                precheck.is_plan_path(str(self._touch(root, "docs", "x.plan.md")), root, cfg))
+
+    def test_archive_segments_are_configurable(self) -> None:
+        cfg = {"plans_subpath": ".planning/phases", "plan_suffix": "-PLAN.md",
+               "plan_archive_segments": ["archive", "done"]}
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            for seg in ("archive", "done"):
+                p = self._touch(root, ".planning", "phases", seg, "01-PLAN.md")
+                self.assertFalse(precheck.is_plan_path(str(p), root, cfg))
+            # "completed" is no longer special once the key is overridden
+            live = self._touch(root, ".planning", "phases", "completed", "01-PLAN.md")
+            self.assertTrue(precheck.is_plan_path(str(live), root, cfg))
+
+    def test_empty_archive_segments_keeps_every_plan_live(self) -> None:
+        cfg = {"plan_archive_segments": []}
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            done = self._touch(root, ".claude", "PRPs", "plans", "completed", "x.plan.md")
+            self.assertTrue(precheck.is_plan_path(str(done), root, cfg))
+
+    def test_subpath_tolerates_separator_noise(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            p = self._touch(root, ".planning", "phases", "01-a", "x.plan.md")
+            for subpath in ("./.planning/phases/", ".planning\\phases", "/.planning/phases"):
+                self.assertTrue(
+                    precheck.is_plan_path(str(p), root, {"plans_subpath": subpath}), subpath)
+
+    def test_unusable_values_fall_back_to_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            p = self._touch(root, ".claude", "PRPs", "plans", "x.plan.md")
+            for bad in (None, 42, {"nested": "dict"}):
+                self.assertTrue(
+                    precheck.is_plan_path(str(p), root, {"plans_subpath": bad}), repr(bad))
+
+    def test_empty_subpath_list_disables_matching(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            p = self._touch(root, ".claude", "PRPs", "plans", "x.plan.md")
+            self.assertFalse(precheck.is_plan_path(str(p), root, {"plans_subpath": []}))
 
 
 CAP_CFG = {"frameworks": ["gdpr", "soc2"]}
