@@ -15,7 +15,9 @@ Steps:
    append a dated entry to knowledge/log.md describing this seed.
 
 Hard constraints:
-- Write ONLY under the knowledge/ directory. Do not touch any other file.
+- Write ONLY under the directory named in "Write articles under" below; the
+  knowledge/... paths in the steps above are relative to it. Do not touch any
+  other file.
 - Use ONLY facts grounded in the files you read. Do not invent details. If
   something is unknown, leave it out rather than guessing.
 - Cite the repository files you drew from in each article's Sources section.
