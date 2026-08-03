@@ -145,7 +145,7 @@ def main() -> int:
     print(f"  git add {kdir} .claude/settings.json && git commit -m 'Add knowledge-compiler'")
 
     if args.seed:
-        print("\nSeeding (requires ANTHROPIC_API_KEY)...")
+        print("\nSeeding (requires ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN)...")
         subprocess.run(["uv", "sync", "--directory", str(target)], check=False)
         rc = subprocess.run(
             ["uv", "run", "--directory", str(target), "python", "scripts/seed.py"],

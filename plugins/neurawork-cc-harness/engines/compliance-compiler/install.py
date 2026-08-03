@@ -222,7 +222,7 @@ def main() -> int:
     print(f"  git add {cdir} .claude/settings.json && git commit -m 'Add compliance-compiler'")
 
     if args.extract:
-        print("\nExtracting catalog (requires ANTHROPIC_API_KEY)...")
+        print("\nExtracting catalog (requires ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN)...")
         subprocess.run(["uv", "sync", "--directory", str(target)], check=False)
         rc = subprocess.run(
             ["uv", "run", "--directory", str(target), "python", "scripts/extract.py"],
