@@ -45,6 +45,16 @@ python3 -m unittest discover -s tests
 
 The tests use a real git temp repo and subprocess; they make no network/LLM calls.
 
+The plugin-level `SessionStart` hook is Node (see `docs/ARCHITECTURE.md` for why), so its
+tests run on the built-in `node:test` runner instead. From the repo root:
+
+```bash
+node --test plugins/neurawork-cc-harness/hooks/version-check.test.js
+```
+
+Name the file, not the directory: `node --test <dir>` resolves a bare directory path as a
+module and fails with `MODULE_NOT_FOUND`.
+
 **Lint:** `ruff` is configured (`line-length = 100`) in each `pyproject.toml`:
 
 ```bash
