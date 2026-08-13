@@ -110,6 +110,9 @@ class TestScaffold(unittest.TestCase):
             self.assertEqual(enc["options"], ["OpenBao", "age"])
             self.assertIsNone(enc["chosen"])
             self.assertEqual(enc["rationale"], "")
+            self.assertTrue(enc["applicable"])          # unscoped default: everything applies
+            self.assertEqual(enc["applicability_reason"], "")
+            self.assertIsNone(enc["scoped_from"])
             self.assertFalse(out["choices"]["gdpr/consent-capture"]["mandatory_linked"])
 
     def test_preserves_human_fields_and_refreshes_machine_fields(self) -> None:
@@ -131,6 +134,23 @@ class TestScaffold(unittest.TestCase):
             self.assertEqual(enc["capability"], "Encryption at rest")    # machine, refreshed
             self.assertTrue(enc["mandatory_linked"])                     # machine, refreshed
             self.assertEqual(enc["options"], ["OpenBao", "age"])         # machine, refreshed
+
+    def test_preserves_applicability_scoping(self) -> None:
+        """A re-scaffold must not erase the stack-compiler's product scoping."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            existing = {"choices": {"gdpr/encryption-at-rest": {
+                "chosen": None,
+                "rationale": "",
+                "applicable": False,
+                "applicability_reason": "product stores no data at rest",
+                "scoped_from": "scope-7f3a",
+            }}}
+            out = stack.scaffold(_capabilities(), existing, catalog_dir=catalog)
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            self.assertFalse(enc["applicable"])
+            self.assertEqual(enc["applicability_reason"], "product stores no data at rest")
+            self.assertEqual(enc["scoped_from"], "scope-7f3a")
 
     def test_adds_new_capability_unchosen(self) -> None:
         with tempfile.TemporaryDirectory() as t:

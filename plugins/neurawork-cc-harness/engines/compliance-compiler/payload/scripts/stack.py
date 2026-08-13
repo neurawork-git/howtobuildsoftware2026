@@ -10,9 +10,15 @@ kept, so the same capability name may legitimately appear under two frameworks.
 
 ``--scaffold`` (re)generates ``stack.json``: machine-owned fields (``capability``,
 ``framework``, ``mandatory_linked``, ``options``) are recomputed every run, while
-the human-owned ``chosen`` and ``rationale`` are carried over by key. New
+the decision-owned ``chosen``, ``rationale``, ``applicable``,
+``applicability_reason`` and ``scoped_from`` are carried over by key. New
 capabilities appear with ``chosen: null``; keys the catalog no longer knows are
 reported as orphaned before being dropped.
+
+The three applicability fields are written by the ``stack-compiler`` skill's
+product-scoping pass (a capability that does not apply to the product at hand is
+recorded as such, with a reason — never silently omitted). They are carried over
+here so a re-scaffold cannot erase that scoping work.
 
 A plain run computes the gap — mandatory-linked capabilities with no chosen
 component — writes ``reports/stack-gaps-<date>.md`` and prints a one-line summary.
@@ -97,9 +103,10 @@ def scaffold(
 ) -> dict:
     """Build catalog/stack.json from the capability catalog.
 
-    Machine-owned fields are recomputed from ``catalog``; the human-owned
-    ``chosen``/``rationale`` are carried over from ``existing`` by key. Keys are
-    emitted sorted so a re-scaffold produces a stable, reviewable diff.
+    Machine-owned fields are recomputed from ``catalog``; the decision-owned
+    ``chosen``/``rationale`` and the ``stack-compiler``-owned applicability fields
+    are carried over from ``existing`` by key. Keys are emitted sorted so a
+    re-scaffold produces a stable, reviewable diff.
     """
     prev_choices = (existing or {}).get("choices") or {}
     linked = mandatory_linked_keys(catalog, catalog_dir)
@@ -117,6 +124,9 @@ def scaffold(
                 "options": component_options(cap),
                 "chosen": prev.get("chosen"),
                 "rationale": prev.get("rationale", ""),
+                "applicable": prev.get("applicable", True),
+                "applicability_reason": prev.get("applicability_reason", ""),
+                "scoped_from": prev.get("scoped_from"),
             }
     return {
         "generated": generated or today_iso(),
