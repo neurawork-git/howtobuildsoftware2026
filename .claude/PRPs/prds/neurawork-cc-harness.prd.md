@@ -15,12 +15,31 @@ NeuraWork and its customers re-explain the same context to Claude in every new s
 
 ## Proposed Solution
 
-Build **`neurawork-cc-harness`**, a Claude Code plugin bundling two **independently installable** skills, each with its own install slash-command, interactive recon, and SessionEnd/PreCompact/SessionStart hooks:
+Build **`neurawork-cc-harness`**, a Claude Code plugin bundling **independently installable** skills, each with its own install slash-command, interactive recon, and hooks:
 
 1. **`knowledge-compiler`** — a clean re-implementation of the coleam00/claude-memory-compiler concept (Python + `claude-agent-sdk`): captures session transcripts → `daily/` logs → LLM-compiled per-repo knowledge base (`knowledge/concepts/`, `knowledge/connections/`, `knowledge/index.md`).
 2. **`claudemd-lerner`** — learns from each session (git-diff + conversation) and keeps the **CLAUDE.md hierarchy + `docs/`** current. It compiles/searches the same kind of session logs but produces **no** knowledge wiki — only updated CLAUDE.md files and docs.
+3. **`compliance-compiler`** — parallel SDK agents distil GDPR / SOC 2 / ISO 27001 into a tracked constraint catalog; a `PostToolUse` hook validates PRP documents against it. Shipped after this PRD was first written (originally Phase 6 below).
 
-Both share two differentiators over the basis repo: an **interactive recon** at install (e.g. CLAUDE.md level-depth, docs structure, language, excluded dirs) and a **seed/bootstrap pass** that analyzes an existing repo on first install. Knowledge/docs always live **inside the repo** (per-repo), **never** in `.claude/`. Chosen over forking coleam00 directly because that repo has **no license** (cannot legally copy) and no recon/seed.
+### Skill registry
+
+| Skill | Install dir | Hook prefix | Owning PRD | Status |
+|-------|-------------|-------------|------------|--------|
+| `knowledge-compiler` | `knowledge-base/` | *(none)* | this PRD, Phase 2 | shipped |
+| `claudemd-lerner` | `claudemd-lerner/` | `cl-` | this PRD, Phase 3 | shipped |
+| `compliance-compiler` | `compliance-base/` | `co-` | this PRD Phase 6 + [`compliance-capabilities.prd.md`](compliance-capabilities.prd.md) | shipped |
+| `stack-compiler` | `stack-base/` | `st-` | [`stack-compiler.prd.md`](stack-compiler.prd.md) | planned (supersedes Phase 5) |
+
+### Vocabulary
+
+Four repo concepts share the word "stack". Fixed meanings, plugin-wide:
+
+- **capability** — a compliance-derived technical building block (`compliance-base/catalog/capabilities.json`).
+- **component** — a concrete OSS project that can deliver a capability (`stack[]` entries in that file).
+- **stack.json** — the components *chosen* for a given product (`compliance-base/catalog/stack.json`; schema owned by `compliance-compiler`, written by both it and `stack-compiler`).
+- **inventory** — which version runs where, right now (external `stack-tools` plugin; not produced here).
+
+The two learning skills share two differentiators over the basis repo: an **interactive recon** at install (e.g. CLAUDE.md level-depth, docs structure, language, excluded dirs) and a **seed/bootstrap pass** that analyzes an existing repo on first install. Knowledge/docs always live **inside the repo** (per-repo), **never** in `.claude/`. Chosen over forking coleam00 directly because that repo has **no license** (cannot legally copy) and no recon/seed.
 
 ## Key Hypothesis
 
@@ -32,7 +51,7 @@ We'll know we're right when, after install, CLAUDE.md/docs stay current without 
 - **Global / cross-repo memory store** — knowledge is strictly per-repo, never in `~/.claude/`. (Explicit user constraint.)
 - **Vector/RAG retrieval** — index-based markdown retrieval only (follows coleam00 design rationale; revisit only at ~2000+ articles).
 - **A fork/copy of coleam00 code** — no license there; we reimplement the concept clean.
-- **TechStack Validator & Compliance Validator** — defined and scoped here but deferred to **Session 2** (Phases 5–6 below). Not cut, just sequenced after the two core skills ship.
+- ~~**TechStack Validator & Compliance Validator** — deferred to Session 2 (Phases 5–6).~~ *Superseded 2026-08-13:* the Compliance Validator **shipped** as `compliance-compiler` (Phase 6, complete). The TechStack Validator moved out of this PRD into [`stack-compiler.prd.md`](stack-compiler.prd.md) (Phase 5, superseded).
 
 ## Success Metrics
 
@@ -88,12 +107,12 @@ When I (or a customer) start work in a repo, I want the agent to already know th
 | Must | Independent installs → **separate hooks per skill**, plugin-namespaced (`neurawork-cc-harness:knowledge-compiler`, `:claudemd-lerner`) to avoid clash with global `coding-suite:*` | User flagged collision risk |
 | Should | Shared session-capture infra (opt-in) when both installed | Avoid duplicate hooks if user wants |
 | Should | `lint`/health-check (broken links, stale, orphans) for knowledge base | From coleam00; quality guard |
-| Won't (Session 2) | 🧩 TechStack Validator — checks plans/code vs. chosen stack allowlist | Deferred; separate phase |
-| Won't (Session 2) | 🛡️ Compliance Validator — checks plans/PRDs vs. chosen constraints | Deferred; separate phase |
+| Moved | 🧩 TechStack Validator — checks plans/code vs. chosen stack allowlist | Now [`stack-compiler.prd.md`](stack-compiler.prd.md) Phase 4 |
+| Shipped | 🛡️ Compliance Validator — checks plans/PRDs vs. chosen constraints | Delivered by `compliance-compiler` (`co-` hook); PRD-write coverage is Phase 7 below |
 
 ### MVP Scope
 
-Full v1 = **both skills, fully featured**: install commands + interactive recon + brownfield seed + the specified compile triggers + in-repo per-repo stores + plugin-namespaced separate hooks. Nothing in the two-skill scope is cut. Validators are documented (Phases 5–6) but ship in Session 2.
+Full v1 = **both skills, fully featured**: install commands + interactive recon + brownfield seed + the specified compile triggers + in-repo per-repo stores + plugin-namespaced separate hooks. Nothing in the two-skill scope is cut. The validators were documented as Phases 5–6 and sequenced after: Phase 6 shipped as `compliance-compiler`, Phase 5 moved to [`stack-compiler.prd.md`](stack-compiler.prd.md).
 
 ### User Flow
 
@@ -147,9 +166,9 @@ Shortest path to value (per skill):
 | 1 | Plugin scaffold & shared infra | `neurawork-cc-harness` plugin skeleton (plugin.json, dirs), shared session-capture + hook patterns, namespacing, in-repo write-guard | complete | - | - | [scaffold plan](../plans/completed/neurawork-cc-harness-scaffold.plan.md) |
 | 2 | knowledge-compiler skill | Clean reimpl of compile/flush/query/lint + install command + recon + seed + triggers | complete | with 3 | 1 | [kc plan](../plans/completed/neurawork-cc-harness-knowledge-compiler.plan.md) |
 | 3 | claudemd-lerner skill | Session→CLAUDE.md hierarchy + docs maintenance (no wiki) + install command + recon + seed + triggers | complete | with 2 | 1 | [cl plan](../plans/completed/neurawork-cc-harness-claudemd-lerner.plan.md) |
-| 4 | Exemplary docs & self-host | Apply both skills to THIS repo as the worked example; write install/upgrade guide; choose license | in-progress | - | 2, 3 | [docs/self-host plan](../plans/neurawork-cc-harness-exemplary-docs-selfhost.plan.md) |
-| 5 | TechStack Validator (Session 2) | Checks plans/code vs. chosen stack allowlist | pending | with 6 | 4 | - |
-| 6 | Compliance Validator (Session 2) | Checks plans/PRDs vs. chosen constraints | pending | with 5 | 4 | - |
+| 4 | Exemplary docs & self-host | Apply both skills to THIS repo as the worked example; write install/upgrade guide; choose license | complete | - | 2, 3 | [docs/self-host plan](../plans/completed/neurawork-cc-harness-exemplary-docs-selfhost.plan.md) |
+| 5 | ~~TechStack Validator~~ | Superseded 2026-08-13 — moved to [`stack-compiler.prd.md`](stack-compiler.prd.md) as a fourth skill | superseded | - | 4 | - |
+| 6 | Compliance Validator | Checks plans/PRDs vs. chosen constraints — shipped as the `compliance-compiler` skill + `compliance-base/` self-host | complete | - | 4 | [workflow engine](../plans/completed/compliance-workflow-engine.plan.md), [capabilities engine](../plans/completed/compliance-capabilities-engine.plan.md), [prebuilt catalog](../plans/completed/compliance-prebuilt-catalog-incremental.plan.md), [hook + validate config](../plans/completed/compliance-hook-removal-validate-config.plan.md) |
 
 ### Phase Details
 
@@ -173,14 +192,26 @@ Shortest path to value (per skill):
 - **Scope**: Install both skills on `howtobuildsoftware2026` itself; write upgrade/install guide; pick + add license; document FQN invocation + when-to-use vs. coding-suite.
 - **Success signal**: A second repo can be upgraded by following the guide; license present; this repo self-hosts the harness.
 
-**Phase 5–6: Validators (Session 2)**
-- **Goal**: Gate plans/code/PRDs against chosen stack allowlist (TechStack) and constraints (Compliance).
-- **Scope**: TBD in Session 2 — define allowlist/constraint config format, where checks hook in (plan/PRD review, pre-commit?).
-- **Success signal**: A plan using a disallowed stack item / violating a constraint is flagged.
+**Phase 5: TechStack Validator — superseded**
+- Scope moved out of this PRD on 2026-08-13 into [`stack-compiler.prd.md`](stack-compiler.prd.md): a fourth skill covering product scoping, component selection from the capability catalog, and an `st-` allowlist gate. Its open TBDs (allowlist format, hook location) are answered there.
+
+**Phase 6: Compliance Validator — complete**
+- **Goal**: Gate plans/PRDs against chosen compliance constraints.
+- **Delivered**: `compliance-compiler` skill — ~30 parallel SDK agents distil GDPR/SOC2/ISO27001 into `catalog/*.json`, a `co-`-prefixed `PostToolUse` hook validates each PRP plan write, `co-extract` / `co-validate` commands, self-hosted in `compliance-base/`.
+- **Gap**: the hook matches **plans only** (`precheck.is_plan_path()` → `.claude/PRPs/plans/**/*.plan.md`). PRDs are never checked. Closed by Phase 7.
+
+**Phase 7: `co-` hook on PRD writes** *(pending)*
+- **Goal**: Every PRD write is validated against the constraint catalog, not just plans — user requirement 2026-08-13.
+- **Scope**:
+  - `is_plan_path()` → `is_target_path()` returning `"plan" | "prd" | None`; new `PRDS_SUBPATH = ".claude/PRPs/prds"`. Both in `compliance-base/scripts/precheck.py` and the `engines/compliance-compiler/payload/` source of truth.
+  - **Doc-type-aware check level.** The precheck measures constraint-ID references; a PRD never carries IDs, so reusing it verbatim would report "279/279 mandatory unreferenced" on every PRD write — and would block every write under `validate_mode: "block"`. For PRDs: skip the ID precheck, run `validate.py` in a PRD mode that checks semantically which mandatory constraint *areas* the product touches and whether the PRD acknowledges them.
+  - **Debounce.** `Write` + `Edit` both fire, and `/prp-prd` writes a PRD many times in one interactive run — each spawning a detached SDK agent. Hash the last-validated text in `reports/.state.json`; unchanged → skip.
+  - `validate_targets: ["plans", "prds"]` in `config.json`, with a per-target mode. PRDs default to `warn`.
+- **Success signal**: a PRD write produces a report; a repeated save with no content change spawns no second agent; a PRD write is never blocked by default.
 
 ### Parallelism Notes
 
-Phases 2 and 3 can run in parallel (separate worktrees) — both depend only on Phase 1's shared infra and touch independent skill dirs (`knowledge-compiler/` vs. `claudemd-lerner/`). Phases 5 and 6 likewise parallel in Session 2. Phase 4 is a barrier after 2+3.
+Phases 2 and 3 can run in parallel (separate worktrees) — both depend only on Phase 1's shared infra and touch independent skill dirs (`knowledge-compiler/` vs. `claudemd-lerner/`). Phase 4 is a barrier after 2+3. Phases 5 and 6 were planned as a parallel pair; 6 shipped, 5 moved to its own PRD. Phase 7 touches `compliance-base/` only and can run in parallel with the `stack-compiler` phases — but both add a `PostToolUse` entry and both need debounce, so build the debounce helper once, in Phase 7, and let the `st-` hook reuse it.
 
 ---
 
@@ -208,6 +239,9 @@ Phases 2 and 3 can run in parallel (separate worktrees) — both depend only on 
 | Install model | Independent installs, separate hooks per skill | Single shared install | User: "unabhängig installierbar" |
 | Release | Public repo | Internal-only | User: "ist öffentliches repo" |
 | Validators | Deferred to Session 2 (documented, not cut) | In v1 | User repeatedly scoped them to Session 2 |
+| Validator outcome (2026-08-13) | Compliance Validator shipped here as `compliance-compiler`; TechStack Validator split into its own PRD + fourth skill | Keep both as phases of this PRD | Stack choice is driven by product requirements, not only compliance; one PRD per skill stops the two-PRD duplication |
+| One `stack.json` (2026-08-13) | Single artifact at `compliance-base/catalog/stack.json`, schema owned by `compliance-compiler`, written by both engines | Second file in `stack-base/`; two layered files | Two stack files would recreate the drift the harness exists to remove |
+| PRD validation (2026-08-13) | `co-` hook extended to PRD writes, checked at a doc-type-appropriate level (Phase 7) | Reuse the plan precheck verbatim; leave PRDs unchecked | User requirement; verbatim reuse would report all mandatory constraints missing on every PRD write |
 
 ---
 
