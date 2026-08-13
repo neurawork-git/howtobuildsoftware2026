@@ -60,6 +60,7 @@ class TestInstall(unittest.TestCase):
             self.assertTrue((cb / "scripts" / "precheck.py").exists())
             self.assertTrue((cb / "scripts" / "capabilities.py").exists())
             self.assertTrue((cb / "scripts" / "cap_lib.py").exists())
+            self.assertTrue((cb / "scripts" / "stack.py").exists())
             self.assertFalse((cb / "hooks" / "co-session-start.py").exists())  # removed
             self.assertTrue((cb / "hooks" / "co-post-tooluse.py").exists())
             self.assertTrue((cb / ".gitignore").exists())
