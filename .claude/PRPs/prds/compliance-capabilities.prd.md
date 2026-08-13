@@ -46,9 +46,9 @@ We'll know we're right when a stack decision cites `capabilities.json`, every ma
 
 ## Open Questions
 
-- [ ] **Stack file format & location** — `compliance-base/catalog/stack.json` (capability→chosen component) vs a repo-root `stack.yaml`? Who owns it?
+- [x] **Stack file format & location** — resolved 2026-08-13: `compliance-base/catalog/stack.json` (tracked JSON, stdlib-parseable, owned by `compliance-base`), scaffolded by `scripts/stack.py --scaffold` with `chosen`/`rationale` human-owned; gap report is report-only (exit 0) into gitignored `reports/`.
 - [ ] Should the capability engine be **deterministic-idempotent** like `compile.py` (skip if catalog unchanged) or always re-run? LLM extraction is non-deterministic — likely need a content hash + pinned output, human-reviewed.
-- [ ] Does `validate.py` gate on **capabilities** (coarse) or stay on **constraints** (fine), or both layers?
+- [x] Does `validate.py` gate on **capabilities** (coarse) or stay on **constraints** (fine), or both layers? — resolved 2026-08-13: **both, split by document type.** A **PRD** is checked at capability/component level (it never carries constraint IDs); a **plan** additionally at constraint level, as today. Component-allowlist and license checks live in the separate `st-` hook — see [`stack-compiler.prd.md`](stack-compiler.prd.md). Extending the `co-` hook from plans to PRDs is `neurawork-cc-harness.prd.md` Phase 7.
 - [ ] Greenfield stack recs came from model knowledge (Jan 2026 cutoff), not live research on every capability — do we want a periodic web-research refresh of component currency?
 
 ---
@@ -129,8 +129,8 @@ The **catalog already shipped this session** (`catalog/capabilities.json`, `capa
 |---|-------|-------------|--------|----------|---------|----------|
 | 0 | Bootstrap catalog | v1 `capabilities.json`+`.md` produced via ultracode; index updated | complete | - | - | - |
 | 1 | Extraction engine | Wrap the workflow as reproducible `capabilities.py` with coverage-verify gate | complete | - | 0 | [engine plan](../plans/completed/compliance-capabilities-engine.plan.md) |
-| 2 | Stack mapping | Capability→chosen-component file + uncovered-capability gap report | pending | with 3 | 1 | - |
-| 3 | Capability validator | Extend `validate.py`: plans declare capabilities, gate on mandatory coverage | pending | with 2 | 1 | - |
+| 2 | Stack mapping | Capability→chosen-component file + uncovered-capability gap report. **Owns the `stack.json` schema** — the product-scoping, ranking and selection layer that fills it lives in [`stack-compiler.prd.md`](stack-compiler.prd.md) and writes through this script | complete | with 3 | 1 | [stack mapping plan](../plans/completed/compliance-capabilities-stack-mapping.plan.md) |
+| 3 | Capability validator | Extend `validate.py`: documents declare capabilities, gate on mandatory coverage. Stays here (capability level); the component-allowlist gate is `stack-compiler` Phase 4 | pending | with 2 | 1 | - |
 | 4 | Wire & document | `/co-capabilities` command, SessionStart bootstrap, docs/CLAUDE.md | pending | - | 2, 3 | - |
 
 ### Phase Details
