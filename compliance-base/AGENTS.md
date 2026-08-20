@@ -96,6 +96,47 @@ Given a plan file and the catalog, the validator agent:
    recommended additions. Be specific and cite constraint ids.
 5. Never fails a plan for an inapplicable constraint. Advisory, not a certification.
 
+## Capability validation rules (PRP plan → capability verdict)
+
+Beside the constraint report, the validator decides which derived **capabilities** a
+plan makes applicable. Constraints answer "what must be proven"; capabilities answer
+"what must be built", so a plan is checked at both levels.
+
+A plan declares the capabilities it delivers with one line in its `## Compliance`
+section, using the `<framework>/<capability-slug>` keys listed in `capabilities.md`:
+
+```markdown
+**Capabilities**: gdpr/immutable-audit-logging, soc2/change-management
+```
+
+A plan with no compliance surface declares that explicitly, with a reason:
+
+```markdown
+**Capabilities**: none — internal batch script, no personal data, no runtime surface
+```
+
+The declaration runs to the next blank line, so a long list may wrap. Everything else
+in the section stays free prose.
+
+Given the plan, the capability catalog, and the declared keys, the validator agent:
+
+1. Decides which capability keys the plan makes applicable **from the plan's own
+   content**, not from its declaration. A plan that stores personal data makes the
+   data-protection capabilities applicable whether or not it says so; a plan that
+   declares a capability it does not deliver does not make it applicable.
+2. Copies every key **verbatim** from the supplied capability catalog. Inventing a key
+   is an error — an unknown key is discarded before the verdict is computed.
+3. Writes **only** this JSON to `reports/<plan-stem>.capabilities.json` using the Write
+   tool: `{"applicable": ["<key>", …], "reasoning": "<one or two sentences>"}`. An
+   empty list is a valid verdict.
+4. Closes the markdown report with a short `Capabilities` section naming the applicable
+   keys and which of them the plan does not declare.
+
+`validate.py` — not the agent — then computes `applicable ∩ mandatory-linked −
+declared` and exits non-zero when that set is non-empty. Judge applicability honestly:
+the deterministic hook check is advisory, so this verdict is the enforcing one, and
+softening it to avoid failing someone is the one way this check becomes worthless.
+
 ## Capability derivation (constraints → capabilities → stack)
 
 `capabilities.py` distils the extracted constraints into per-framework
