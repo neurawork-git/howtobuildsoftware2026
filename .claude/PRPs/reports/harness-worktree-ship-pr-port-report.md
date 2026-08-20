@@ -98,8 +98,8 @@ itself, per repo convention. Excluded: `.claude/PRPs/specs/grillme.spec.md` (unr
 
 ## Delivery
 
-- **Commits:** `Not created`
-- **Pull Request:** `Not opened`
+- **Commits:** `a2b03bd — feat(harness): the plugin now carries a change from worktree to merged PR`
+- **Pull Request:** `https://github.com/neurawork-git/howtobuildsoftware2026/pull/29`
 - **Base / Head:** `main <- feature/harness-worktree-ship-pr-port`
 - **Source PRD:** `None`
 - **Tracked follow-ups:** `None`
