@@ -49,19 +49,46 @@ def _plan_path_from(data: dict) -> str:
     return tool_input.get("file_path") or tool_input.get("path") or ""
 
 
+def _capability_summary(cp: dict) -> str:
+    """One advisory sentence about the plan's capability declaration, or "" when the
+    capability layer is not built. Never blocks — applicability is decided by the
+    detached validator, not here."""
+    if not cp["catalog_built"]:
+        return ""
+    if not cp["declaration_present"]:
+        return (" No '**Capabilities**:' declaration found — add one to the '## Compliance' "
+                "section listing the capability keys this plan delivers (e.g. "
+                "`gdpr/audit-logging`, see catalog/capabilities.md), or "
+                "`**Capabilities**: none — <reason>`.")
+    if cp["unknown_keys"]:
+        return (f" {len(cp['unknown_keys'])} declared capability key(s) not in the catalog: "
+                f"{', '.join(cp['unknown_keys'])}.")
+    if cp["declared_none"]:
+        reason = "" if cp["none_reason"] else " (no reason given)"
+        return f" Plan declares no compliance capabilities{reason}."
+    extra = []
+    if cp["declared_unchosen"]:
+        extra.append(f"{len(cp['declared_unchosen'])} with no chosen component in stack.json")
+    if cp["declared_not_applicable"]:
+        extra.append(f"{len(cp['declared_not_applicable'])} marked not applicable")
+    tail = f" ({'; '.join(extra)})" if extra else ""
+    return f" Plan declares {len(cp['declared'])} capability/capabilities{tail}."
+
+
 def _summary(pc: dict) -> str:
     if not pc["catalog_built"]:
         return ("Compliance catalog not built yet — run "
                 "`/neurawork-cc-harness:co-extract` to enable plan checks.")
+    caps = _capability_summary(pc["capabilities"])
     missing = pc["missing_mandatory_ids"]
     if not missing:
         return (f"Compliance precheck: all {pc['mandatory_total']} mandatory "
-                f"constraints are referenced by this plan.")
+                f"constraints are referenced by this plan.{caps}")
     shown = ", ".join(missing[:15]) + (" …" if len(missing) > 15 else "")
     section = "" if pc["has_compliance_section"] else " (plan has no '## Compliance' section)"
     return (f"Compliance precheck: {len(missing)}/{pc['mandatory_total']} mandatory "
             f"constraints not referenced by this plan{section}. A deeper report is "
-            f"being generated in the compliance reports/ dir. Unreferenced: {shown}")
+            f"being generated in the compliance reports/ dir. Unreferenced: {shown}{caps}")
 
 
 def main() -> None:

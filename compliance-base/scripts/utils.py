@@ -70,6 +70,31 @@ def load_constraints(frameworks: list[str], catalog_dir: Path | None = None) -> 
     return out
 
 
+def _load_json_obj(path: Path) -> dict:
+    """Read a JSON object, or ``{}`` when absent/corrupt/not-an-object. Never raises."""
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def load_capability_catalog(catalog_dir: Path | None = None) -> dict:
+    """The derived capability catalog (``catalog/capabilities.json``), or ``{}``.
+
+    An install that never ran ``capabilities.py`` simply yields no capabilities —
+    callers treat that as "capability layer not built", never as an error.
+    """
+    return _load_json_obj((catalog_dir or CATALOG_DIR) / "capabilities.json")
+
+
+def load_stack(catalog_dir: Path | None = None) -> dict:
+    """The chosen-component record (``catalog/stack.json``), or ``{}``."""
+    return _load_json_obj((catalog_dir or CATALOG_DIR) / "stack.json")
+
+
 def mandatory_ids(constraints: list[dict]) -> set[str]:
     """IDs of constraints flagged mandatory (default True when unspecified)."""
     return {c["id"] for c in constraints if c.get("mandatory", True)}
