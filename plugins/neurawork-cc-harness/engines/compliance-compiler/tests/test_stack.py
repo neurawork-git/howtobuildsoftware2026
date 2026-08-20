@@ -11,7 +11,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "payload" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-import stack  # noqa: E402
+import stack
 
 
 def _constraints(tmp: Path) -> Path:
@@ -254,6 +254,117 @@ class TestGaps(unittest.TestCase):
             self.assertFalse(stack.gaps(_capabilities(), s, catalog_dir=catalog,
                                         capabilities_hash="new")["stale"])
 
+    def test_non_applicable_is_not_a_gap_and_leaves_the_total(self) -> None:
+        """A capability scoped out of the product is a decision, not a pending one."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scaffolded(catalog)
+            s["choices"]["gdpr/encryption-at-rest"].update(
+                applicable=False, applicability_reason="product stores no data at rest")
+            res = stack.gaps(_capabilities(), s, catalog_dir=catalog)
+            self.assertEqual(res["mandatory_unchosen"], [])
+            self.assertEqual(res["mandatory_total"], 0)     # excluded from the denominator too
+            self.assertEqual(res["non_applicable"], ["gdpr/encryption-at-rest"])
+            self.assertEqual(res["unexplained_non_applicable"], [])
+            self.assertEqual(res["mandatory_linked"], ["gdpr/encryption-at-rest"])  # still known
+
+    def test_non_applicable_without_reason_is_flagged(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            for reason in ("", "   "):
+                s = self._scaffolded(catalog)
+                s["choices"]["gdpr/encryption-at-rest"].update(
+                    applicable=False, applicability_reason=reason)
+                res = stack.gaps(_capabilities(), s, catalog_dir=catalog)
+                self.assertEqual(res["unexplained_non_applicable"],
+                                 ["gdpr/encryption-at-rest"], repr(reason))
+
+    def test_unscoped_stack_is_unaffected(self) -> None:
+        """Every entry applicable (the scaffold default) ⇒ pre-scoping behaviour."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            res = stack.gaps(_capabilities(), self._scaffolded(catalog), catalog_dir=catalog)
+            self.assertEqual(res["mandatory_total"], 1)
+            self.assertEqual(res["mandatory_unchosen"], ["gdpr/encryption-at-rest"])
+            self.assertEqual(res["non_applicable"], [])
+            self.assertEqual(res["unexplained_non_applicable"], [])
+
+
+class TestApplyScope(unittest.TestCase):
+    """The single write path the stack-compiler skill uses for applicability."""
+
+    def _scaffolded(self, catalog: Path) -> dict:
+        return stack.scaffold(_capabilities(), None, catalog_dir=catalog)
+
+    def _all_applicable(self, s: dict) -> dict:
+        return {k: {"applicable": True, "applicability_reason": ""} for k in s["choices"]}
+
+    def test_writes_all_three_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scaffolded(catalog)
+            decisions = self._all_applicable(s)
+            decisions["gdpr/consent-capture"] = {
+                "applicable": False, "applicability_reason": "no consent is ever collected"}
+            out = stack.apply_scope(s, decisions, "prod-9f21")
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            con = out["choices"]["gdpr/consent-capture"]
+            self.assertTrue(enc["applicable"])
+            self.assertEqual(enc["scoped_from"], "prod-9f21")
+            self.assertFalse(con["applicable"])
+            self.assertEqual(con["applicability_reason"], "no consent is ever collected")
+            self.assertEqual(con["scoped_from"], "prod-9f21")
+
+    def test_never_touches_the_component_decision(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scaffolded(catalog)
+            s["choices"]["gdpr/encryption-at-rest"].update(
+                chosen="OpenBao", rationale="already self-hosted")
+            out = stack.apply_scope(s, self._all_applicable(s), "prod-1")
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            self.assertEqual(enc["chosen"], "OpenBao")
+            self.assertEqual(enc["rationale"], "already self-hosted")
+
+    def test_missing_decision_refuses_the_whole_write(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scaffolded(catalog)
+            decisions = self._all_applicable(s)
+            del decisions["gdpr/consent-capture"]
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_scope(s, decisions, "prod-1")
+            self.assertIn("gdpr/consent-capture", str(cm.exception))
+
+    def test_unknown_decision_key_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scaffolded(catalog)
+            decisions = self._all_applicable(s)
+            decisions["gdpr/invented-capability"] = {"applicable": True}
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_scope(s, decisions, "prod-1")
+            self.assertIn("gdpr/invented-capability", str(cm.exception))
+
+    def test_non_applicable_without_reason_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scaffolded(catalog)
+            decisions = self._all_applicable(s)
+            decisions["gdpr/consent-capture"] = {"applicable": False, "applicability_reason": "  "}
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_scope(s, decisions, "prod-1")
+            self.assertIn("gdpr/consent-capture", str(cm.exception))
+
+    def test_a_refused_write_leaves_the_input_untouched(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scaffolded(catalog)
+            decisions = {"gdpr/encryption-at-rest": {"applicable": True}}  # incomplete
+            with self.assertRaises(ValueError):
+                stack.apply_scope(s, decisions, "prod-1")
+            self.assertIsNone(s["choices"]["gdpr/encryption-at-rest"]["scoped_from"])
+
 
 class TestRenderGapReport(unittest.TestCase):
     def test_lists_unchosen_mandatory_capability(self) -> None:
@@ -264,8 +375,10 @@ class TestRenderGapReport(unittest.TestCase):
             res = stack.gaps(cat, s, catalog_dir=catalog)
             md = stack.render_gap_report(cat, s, res, "2026-02-02")
             self.assertIn("# Stack Gap Report", md)
-            self.assertIn("| Framework | Capabilities | Mandatory-linked | Chosen | Unchosen |", md)
-            self.assertIn("**1 of 1 mandatory-linked capabilities have no chosen component.**", md)
+            self.assertIn("| Framework | Capabilities | Mandatory-linked | Not applicable "
+                          "| Chosen | Unchosen |", md)
+            self.assertIn("**1 of 1 applicable mandatory-linked capabilities have no chosen "
+                          "component.**", md)
             self.assertIn("`gdpr/encryption-at-rest`", md)
             self.assertIn("options: OpenBao; age", md)
             self.assertIn("`gdpr/consent-capture`", md)          # optional, informational
@@ -287,8 +400,35 @@ class TestRenderGapReport(unittest.TestCase):
             s["choices"]["gdpr/consent-capture"]["chosen"] = "Klaro!"
             res = stack.gaps(cat, s, catalog_dir=catalog)
             md = stack.render_gap_report(cat, s, res, "2026-02-02")
-            self.assertIn("**0 of 1 mandatory-linked capabilities have no chosen component.**", md)
+            self.assertIn("**0 of 1 applicable mandatory-linked capabilities have no chosen "
+                          "component.**", md)
             self.assertIn("Nothing to report.", md)
+
+    def test_lists_non_applicable_capability_with_its_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            cat = _capabilities()
+            s = stack.scaffold(cat, None, catalog_dir=catalog)
+            s["choices"]["gdpr/encryption-at-rest"].update(
+                applicable=False, applicability_reason="product stores no data at rest")
+            res = stack.gaps(cat, s, catalog_dir=catalog)
+            md = stack.render_gap_report(cat, s, res, "2026-02-02")
+            self.assertIn("**0 of 0 applicable mandatory-linked capabilities have no chosen "
+                          "component.**", md)
+            self.assertIn("**Not applicable (1)**", md)
+            self.assertIn("`gdpr/encryption-at-rest` — product stores no data at rest", md)
+            self.assertNotIn("Unexplained omission", md)
+
+    def test_unexplained_omission_is_called_out(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            cat = _capabilities()
+            s = stack.scaffold(cat, None, catalog_dir=catalog)
+            s["choices"]["gdpr/encryption-at-rest"]["applicable"] = False
+            res = stack.gaps(cat, s, catalog_dir=catalog)
+            md = stack.render_gap_report(cat, s, res, "2026-02-02")
+            self.assertIn("Unexplained omission", md)
+            self.assertIn("**no reason recorded**", md)
 
 
 if __name__ == "__main__":

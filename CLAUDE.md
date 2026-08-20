@@ -84,6 +84,15 @@ its catalog is built at install time and rebuilt on demand via `co-extract`. A
   uses a `co-`-prefixed `PostToolUse` hook (no `SessionStart`) so it coexists with
   the other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
   (`asyncio.gather` + a semaphore) — the harness's only parallel compile path.
+- **`stack-base/`** — a self-host install of `stack-compiler` (product scoping),
+  **installed by hand**: its `install.py` / `recon.py` / slash commands land in a
+  later phase, so `plugins/…/engines/stack-compiler/payload/` and `stack-base/` are
+  kept byte-identical by `tests/test_payload_drift.py`, not by an installer. It owns
+  **no data artifact**: `scripts/scope.py` reads the tracked `product.md`, decides
+  per capability whether it applies to this product and why, and writes those
+  decisions into `compliance-base/catalog/stack.json` through
+  `compliance-base/scripts/stack.py --apply-scope` — the single schema owner.
+  `product.md` is tracked; `.shards/` and `reports/` are gitignored.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Each skill's behaviour is specified by an `AGENTS.md` constitution copied into the

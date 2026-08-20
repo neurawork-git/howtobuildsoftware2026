@@ -1,0 +1,7 @@
+{
+  "stack_dir": "stack-base",
+  "compliance_dir": "compliance-base",
+  "model": "",
+  "max_concurrency": 12,
+  "product_file": "product.md"
+}

@@ -1,0 +1,10 @@
+# stack-compiler runtime (product.md is TRACKED — it is the scoping input of
+# record; everything below is local machinery)
+.shards/
+reports/
+scripts/state.json
+scripts/*.log
+__pycache__/
+*.pyc
+.venv/
+uv.lock
