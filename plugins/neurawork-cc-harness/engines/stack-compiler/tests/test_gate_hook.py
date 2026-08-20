@@ -23,8 +23,8 @@ ENGINES = ENGINE.parent
 PAYLOAD = ENGINE / "payload"
 sys.path.insert(0, str(PAYLOAD / "scripts"))
 
-import gate_lib
-import scope_lib
+import gate_lib  # type: ignore[reportMissingImports]  # on sys.path only at runtime
+import scope_lib  # type: ignore[reportMissingImports]
 
 CAPABILITIES = {
     "license_policy": {"embeddable": ["MIT"], "not_in_product": ["AGPL-3.0"]},

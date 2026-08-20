@@ -21,7 +21,7 @@ ENGINES = ENGINE.parent
 PAYLOAD = ENGINE / "payload"
 sys.path.insert(0, str(PAYLOAD / "scripts"))
 
-import validate
+import validate  # type: ignore[reportMissingImports]  # on sys.path only at runtime
 
 CAPABILITIES = {
     "license_policy": {"embeddable": ["MIT"], "not_in_product": ["AGPL-3.0"]},

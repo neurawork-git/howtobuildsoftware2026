@@ -18,7 +18,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "payload" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-import gate_lib
+import gate_lib  # type: ignore[reportMissingImports]  # on sys.path only at runtime
 
 REPO = Path(__file__).resolve().parents[5]  # the self-host repo, when there is one
 CFG = {"prds_subpath": ".claude/PRPs/prds", "plans_subpath": ".claude/PRPs/plans",
@@ -163,7 +163,7 @@ class TestGateMode(unittest.TestCase):
     """A hand-edited config must not be able to crash a tool call."""
 
     def setUp(self) -> None:
-        import config
+        import config  # type: ignore[reportMissingImports]  # on sys.path only at runtime
         self.gate_mode = config.gate_mode
 
     def test_absent_string_and_garbage_all_degrade_to_warn(self) -> None:
