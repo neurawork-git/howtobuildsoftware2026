@@ -1,14 +1,16 @@
 {
-  "SessionStart": [
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/version-check.py\"",
-          "timeout": 10
-        }
-      ]
-    }
-  ]
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/version-check.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }
