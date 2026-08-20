@@ -13,7 +13,7 @@
         "url": "https://github.com/neurawork-git/howtobuildsoftware2026.git",
         "path": "plugins/neurawork-cc-harness"
       },
-      "description": "Three independently installable skills: knowledge-compiler (per-repo knowledge base) + claudemd-lerner (keeps CLAUDE.md hierarchy + docs/ current) + compliance-compiler (distils GDPR/SOC2/ISO27001 into a constraint catalog, derives the capabilities and stack components they require, and validates PRP plans against both). Interactive recon + brownfield seed on install.",
+      "description": "Three independently installable skills: knowledge-compiler (per-repo knowledge base) + claudemd-lerner (keeps CLAUDE.md hierarchy + docs/ current) + compliance-compiler (distils GDPR/SOC2/ISO27001 into a constraint catalog, derives the capabilities and stack components they require, and validates PRP plans against both). Interactive recon + brownfield seed on install. Plus two install-free workflow surfaces: /nw-worktree (create + enter a Hand worktree) and /nw-ship-pr (commit → push → PR → review → approval gate → merge → cleanup).",
       "license": "MIT"
     }
   ]

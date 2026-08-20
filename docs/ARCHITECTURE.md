@@ -26,8 +26,12 @@ different source (the standards themselves), and adds a validation half: a
 ```
 .claude-plugin/plugin.json     plugin manifest (name, semver version, …)
 skills/<skill>/SKILL.md        install skills (recon → ask → execute)
+                               + nw-worktree/ (workflow skill, no engine)
 commands/                      kc-compile.md, cl-update.md, co-extract.md,
-                               co-capabilities.md, co-validate.md
+                               co-capabilities.md, co-validate.md, nw-ship-pr.md
+workflows/                     nw-ship-pr-review.js (auto-discovered by the runtime and
+                               namespaced as neurawork-cc-harness:nw-ship-pr-review)
+tests/                         structural tests over the prompt-only assets
 hooks/                         hooks.json + version-check.py (the only code that runs
                                FROM the plugin, with CLAUDE_PLUGIN_ROOT — the staleness nudge)
 engines/
@@ -43,6 +47,19 @@ engines/
 The repo-root `.claude-plugin/marketplace.json` (marketplace `neurawork-harness`)
 distributes `plugins/neurawork-cc-harness` via a `git-subdir` source; with no pinned
 `version`, installs track the latest commit on the default branch.
+
+### install skills vs. workflow skills
+
+Two component categories live side by side. An **install skill** (`knowledge-compiler`,
+`claudemd-lerner`, `compliance-compiler`) exists to copy an `engines/<engine>/payload/`
+into a target repo and merge hooks into `.claude/settings.json`; it owns an `install.py`,
+a `recon.py`, a `VERSION`, and a data artifact in the repo. A **workflow skill**
+(`nw-worktree`, and the `nw-ship-pr` command with its `nw-ship-pr-review.js`) copies
+nothing and installs nothing — it is a prompt procedure that lazily writes one
+`.claude/*.local.md` config on first run. It therefore has no engine, no payload, no
+`VERSION`, and no entry in `hooks/version-check.py`'s `ENGINES` map (which keys off
+installed hook commands — a component that installs no hook can never appear there).
+That absence is intended, not an omission.
 
 ### engine vs. payload
 
