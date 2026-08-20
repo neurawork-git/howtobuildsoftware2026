@@ -183,10 +183,10 @@ def render_scope_report(
     lines = [
         "# Product Scope Report",
         "",
-        f"Generated {generated} by `scripts/scope.py` from `{product_path or 'product.md'}` "
-        f"(scope hash `{scoped_from}`).",
-        f"{len(by_key)} capabilities in scope-set, {len(by_key) - len(ruled_out)} applicable, "
-        f"{len(ruled_out)} ruled out.",
+        (f"Generated {generated} by `scripts/scope.py` from `{product_path or 'product.md'}` "
+         f"(scope hash `{scoped_from}`)."),
+        (f"{len(by_key)} capabilities in scope-set, {len(by_key) - len(ruled_out)} applicable, "
+         f"{len(ruled_out)} ruled out."),
         "",
     ]
     if not gate["ok"] or refuted:
@@ -244,8 +244,8 @@ def render_scope_report(
         lines += [
             f"## Mandatory constraints traced to a justified drop ({len(gate['justified_drops'])})",
             "",
-            "Every capability covering these was ruled out, each with a recorded reason. "
-            "This is the audit trail for narrowing the compliance surface:",
+            ("Every capability covering these was ruled out, each with a recorded reason. "
+             "This is the audit trail for narrowing the compliance surface:"),
             "",
         ]
         for item in gate["justified_drops"]:
@@ -257,8 +257,8 @@ def render_scope_report(
         lines += [
             f"## Uncovered upstream ({len(gate['uncovered_upstream'])})",
             "",
-            "These mandatory constraints are covered by no capability at all — a gap in "
-            "`capabilities.json`, not in this scoping pass. Re-run `scripts/capabilities.py`:",
+            ("These mandatory constraints are covered by no capability at all — a gap in "
+             "`capabilities.json`, not in this scoping pass. Re-run `scripts/capabilities.py`:"),
             "",
         ]
         lines += [f"- `{cid}`" for cid in gate["uncovered_upstream"]]

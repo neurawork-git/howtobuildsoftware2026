@@ -11,7 +11,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "payload" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-import scope_lib  # noqa: E402
+import scope_lib
 
 MAND = {"gdpr": {"GDPR-ART5-01", "GDPR-ART32-01"}}
 

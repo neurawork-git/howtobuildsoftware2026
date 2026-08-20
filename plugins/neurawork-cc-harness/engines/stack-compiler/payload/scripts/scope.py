@@ -189,7 +189,7 @@ def parse_scope_shard(raw: object, expected_keys: set[str], fw: str) -> dict:
     fails the run.
     """
     if not isinstance(raw, list):
-        raise RuntimeError(f"scope {fw}: shard is not a JSON array")
+        raise TypeError(f"scope {fw}: shard is not a JSON array")
     decisions: dict[str, dict] = {}
     for item in raw:
         if not isinstance(item, dict) or not item.get("key"):
@@ -218,7 +218,7 @@ def parse_challenge_shard(raw: object, expected_keys: set[str]) -> list[dict]:
     unevidenced refusal is unarguable and would block a correct run.
     """
     if not isinstance(raw, list):
-        raise RuntimeError("challenge: shard is not a JSON array")
+        raise TypeError("challenge: shard is not a JSON array")
     refuted: list[dict] = []
     for item in raw:
         if not isinstance(item, dict) or not item.get("key"):
@@ -517,7 +517,7 @@ def main() -> int:
     )
     proc = subprocess.run(  # fixed argv, no shell; the return code is inspected below
         [sys.executable, str(stack_py), "--apply-scope", str(decisions_path)],
-        cwd=str(comp), capture_output=True, text=True,
+        cwd=str(comp), capture_output=True, text=True, check=False,
     )
     sys.stdout.write(proc.stdout)
     if proc.returncode != 0:

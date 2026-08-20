@@ -11,7 +11,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "payload" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-import stack  # noqa: E402
+import stack
 
 
 def _constraints(tmp: Path) -> Path:

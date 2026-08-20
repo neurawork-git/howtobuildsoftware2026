@@ -258,8 +258,8 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
     lines = [
         "# Stack Gap Report",
         "",
-        f"Generated {generated} by `scripts/stack.py` from `catalog/capabilities.json` "
-        f"(derived {catalog.get('generated', '?')}) and `catalog/stack.json`.",
+        (f"Generated {generated} by `scripts/stack.py` from `catalog/capabilities.json` "
+         f"(derived {catalog.get('generated', '?')}) and `catalog/stack.json`."),
         "Report-only: an unchosen capability is a pending decision, not a failure.",
         "",
         "| Framework | Capabilities | Mandatory-linked | Not applicable | Chosen | Unchosen |",
@@ -277,28 +277,28 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
         )
     lines += [
         "",
-        f"**{len(unchosen)} of {result['mandatory_total']} applicable mandatory-linked "
-        "capabilities have no chosen component.**",
+        (f"**{len(unchosen)} of {result['mandatory_total']} applicable mandatory-linked "
+         "capabilities have no chosen component.**"),
         "",
     ]
     if non_applicable:
         lines += [
-            f"{len(non_applicable)} capability/-ies were scoped out of this product and are "
-            "not counted above — see *Not applicable* below.",
+            (f"{len(non_applicable)} capability/-ies were scoped out of this product and are "
+             "not counted above — see *Not applicable* below."),
             "",
         ]
     if result.get("unexplained_non_applicable"):
         lines += [
-            "> **Unexplained omission** — "
-            f"{len(result['unexplained_non_applicable'])} capability/-ies are marked not "
-            "applicable with no recorded reason. An untracked narrowing is indistinguishable "
-            "from an oversight; re-run the product-scoping pass.",
+            ("> **Unexplained omission** — "
+             f"{len(result['unexplained_non_applicable'])} capability/-ies are marked not "
+             "applicable with no recorded reason. An untracked narrowing is indistinguishable "
+             "from an oversight; re-run the product-scoping pass."),
             "",
         ]
     if result["stale"]:
         lines += [
-            "> **Stale** — stack.json was scaffolded against an older capabilities.json. "
-            "Re-run `scripts/stack.py --scaffold`.",
+            ("> **Stale** — stack.json was scaffolded against an older capabilities.json. "
+             "Re-run `scripts/stack.py --scaffold`."),
             "",
         ]
     lines.append("---")

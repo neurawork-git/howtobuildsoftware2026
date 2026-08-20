@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────
@@ -69,9 +69,9 @@ def product_file(cfg: dict) -> Path:
 
 def now_iso() -> str:
     """Current local time, ISO 8601 with offset, second precision."""
-    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    return datetime.now(UTC).astimezone().isoformat(timespec="seconds")
 
 
 def today_iso() -> str:
     """Current local date as YYYY-MM-DD."""
-    return datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d")
+    return datetime.now(UTC).astimezone().strftime("%Y-%m-%d")

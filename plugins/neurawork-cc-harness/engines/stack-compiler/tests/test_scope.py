@@ -17,7 +17,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent.parent / "payload" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
-import scope  # noqa: E402
+import scope
 
 CAPS = [
     {"key": "gdpr/encryption-at-rest", "framework": "gdpr", "capability": "Encryption at rest",
@@ -79,7 +79,7 @@ class TestParseScopeShard(unittest.TestCase):
         self.assertTrue(got["gdpr/encryption-at-rest"]["applicable"])
 
     def test_rejects_a_non_array(self) -> None:
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(TypeError):
             scope.parse_scope_shard({"key": "x"}, SCOPE_KEYS, "gdpr")
 
     def test_rejects_a_dropped_key(self) -> None:
@@ -141,7 +141,8 @@ class TestPreflight(unittest.TestCase):
     def _run(self, root: Path, *args: str) -> subprocess.CompletedProcess:
         env = dict(os.environ, STACK_ROOT=str(root))
         return subprocess.run([sys.executable, str(SCRIPTS / "scope.py"), *args],
-                              capture_output=True, text=True, env=env, timeout=60)
+                              capture_output=True, text=True, env=env,
+                              timeout=60, check=False)
 
     def _stack_dir(self, tmp: Path) -> Path:
         root = tmp / "stack-base"
