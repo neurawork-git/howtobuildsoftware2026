@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -25,7 +26,14 @@ WORKFLOWS = PLUGIN_ROOT / "workflows"
 
 SHIP_PR = COMMANDS / "nw-ship-pr.md"
 WORKTREE_SKILL = SKILLS / "nw-worktree" / "SKILL.md"
+RULES_SKILL = SKILLS / "nw-rules-init" / "SKILL.md"
 REVIEW_WORKFLOW = WORKFLOWS / "nw-ship-pr-review.js"
+
+# The rules block is read on every session in every repo that installs it. Past this the
+# block costs more than the repo-specific rules it sits next to.
+RULES_BLOCK_BUDGET = 1200
+# A command long enough to stand in for a real multi-suite repo when measuring the block.
+SAMPLE_TEST_COMMAND = "python3 -m unittest discover -s engines/knowledge-compiler/tests"
 
 # The is_main_checkout probe: both sides normalised to absolute, or the test compares
 # output formats instead of locations.
@@ -179,6 +187,87 @@ class GuardInvariantTests(unittest.TestCase):
             "an absent or empty validate_commands list must SKIP the gate, never block",
         )
 
+
+
+
+class RulesBlockTests(unittest.TestCase):
+    """The block template is the whole product of nw-rules-init: one span, byte-stable,
+    and small enough to earn its place in a root CLAUDE.md."""
+
+    def template(self) -> str:
+        text = RULES_SKILL.read_text(encoding="utf-8")
+        blocks = re.findall(r"```markdown\n(.*?)```", text, re.DOTALL)
+        templates = [b for b in blocks if "neurawork-cc-harness:rules BEGIN" in b]
+        self.assertEqual(
+            len(templates),
+            1,
+            "the block template must exist exactly once — a second copy is a second thing "
+            "to keep byte-identical, and an inexact copy makes the re-run non-idempotent",
+        )
+        return templates[0]
+
+    def test_template_is_one_well_formed_span(self) -> None:
+        template = self.template()
+        self.assertEqual(template.count("neurawork-cc-harness:rules BEGIN"), 1)
+        self.assertEqual(template.count("neurawork-cc-harness:rules END"), 1)
+        self.assertLess(
+            template.index("BEGIN"),
+            template.index("END"),
+            "END before BEGIN is not a span the guard can protect",
+        )
+
+    def test_template_carries_all_three_clusters_and_the_command_slot(self) -> None:
+        template = self.template()
+        for cluster in ("**Scope**", "**Simplicity**", "**Evaluation first**"):
+            with self.subTest(cluster=cluster):
+                self.assertIn(cluster, template)
+        self.assertIn(
+            "<TEST_COMMAND>",
+            template,
+            "the runner detected in Stage 1 must have a slot; a hard-coded command would "
+            "ship a rule this repo's own unittest suite violates",
+        )
+
+    def test_rendered_block_stays_inside_the_budget(self) -> None:
+        rendered = self.template().replace("<TEST_COMMAND>", SAMPLE_TEST_COMMAND)
+        self.assertLessEqual(
+            len(rendered),
+            RULES_BLOCK_BUDGET,
+            f"the rendered block is {len(rendered)} chars; a root CLAUDE.md is read every "
+            "session, so growth here is paid on every turn in every repo",
+        )
+
+    def test_the_learner_guard_recognises_this_marker(self) -> None:
+        # Import the guard the learner actually ships, so a change to either the marker id
+        # here or the regex there fails a test instead of silently unprotecting the block.
+        scripts = PLUGIN_ROOT / "engines" / "claudemd-lerner" / "payload" / "scripts"
+        sys.path.insert(0, str(scripts))
+        try:
+            import markers
+        finally:
+            sys.path.remove(str(scripts))
+        spans = markers.find_spans(self.template().replace("<TEST_COMMAND>", "make test"))
+        self.assertEqual(
+            [s[0] for s in spans],
+            ["neurawork-cc-harness:rules"],
+            "the block the skill writes must be a span the learner's guard restores",
+        )
+
+    def test_skill_documents_the_refresh_and_no_second_block_rules(self) -> None:
+        text = RULES_SKILL.read_text(encoding="utf-8")
+        self.assertIn("--force", text, "an already-initialised repo needs a refresh path")
+        self.assertIn(
+            "Never write a second block",
+            text,
+            "two spans with the same marker id is the one state the guard cannot resolve",
+        )
+
+    def test_skill_forbids_defaulting_to_pytest(self) -> None:
+        self.assertIn(
+            "Never default to pytest",
+            RULES_SKILL.read_text(encoding="utf-8"),
+            "silently defaulting the runner is the failure mode Stage 1 exists to prevent",
+        )
 
 if __name__ == "__main__":
     unittest.main()

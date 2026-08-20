@@ -139,6 +139,36 @@ The catalog stores only official control/article identifiers, short titles, and
 Extraction and deep validation need an API key (see Requirements); install,
 scaffolding, and the inline precheck run without it.
 
+### 5. Write the baseline coding rules (no install)
+
+```text
+/neurawork-cc-harness:nw-rules-init          # [--force] to refresh an existing block
+```
+
+Installs nothing. It reads the repo's root `CLAUDE.md`, detects the **test runner the
+repo actually uses** (an existing command in the CLAUDE.md, then CI, `pyproject.toml`,
+a `unittest` tests tree, `package.json`, `go.mod`/`Cargo.toml` — never a default), reports
+per-cluster coverage (`already covered` / `conflicts` / `absent`), asks, and then writes
+one marker-delimited block:
+
+```text
+BEGIN comment: neurawork-cc-harness:rules
+### Coding Discipline
+- Scope · Simplicity · Evaluation first (carrying the detected test command)
+END comment: neurawork-cc-harness:rules
+```
+
+(Rendered with the real HTML-comment syntax in the file — spelled out here so this guide
+does not itself look like a marker block to the guard below.)
+
+The block is idempotent — a re-run offers Replace/Keep, `--force` refreshes silently, and
+a second block is never written. It stays under 1,200 characters, enforced by a test.
+
+If `claudemd-lerner` is installed, the block is also **protected**: every update and seed
+run snapshots each `owner:name` marker span and restores it byte-for-byte afterwards,
+printing a `Marker guard:` line when it had to. The guard is marker-generic, so a block
+written by another tool (e.g. `coding-suite:coding-discipline-init`) is protected too.
+
 ---
 
 ## Local development (working ON the plugin)

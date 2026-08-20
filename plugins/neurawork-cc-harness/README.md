@@ -14,6 +14,15 @@ level-depth, docs layout, excluded dirs), and **seed** an existing repo on first
 install. Knowledge and docs are always written **inside the repo** — never under
 `.claude/`.
 
+Alongside them are **install-free surfaces** that copy nothing into a repo:
+
+- **`/nw-worktree`** — create and enter a Hand worktree.
+- **`/nw-ship-pr`** — commit → push → PR → review → approval gate → merge → cleanup.
+- **`/nw-rules-init`** — write the baseline coding rules (scope, simplicity,
+  evaluation-first with the repo's own test command) into the root `CLAUDE.md` as a
+  marker-delimited, idempotent block. `claudemd-lerner` then guards that marker span:
+  any edit the learner makes inside it is restored byte-for-byte.
+
 **Install & upgrade guide:** [`../../docs/INSTALL.md`](../../docs/INSTALL.md).
 
 ## Status
