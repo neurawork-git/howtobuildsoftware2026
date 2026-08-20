@@ -27,3 +27,5 @@ patterns, troubleshooting). Fine-tune the learner so that:
 Requires tuning the `claudemd-lerner` `AGENTS.md` constitution (routing rule:
 category → docs folder + one-line back-link) and the seed/update engine
 (folder scaffolding).
+
+- [ ] **`$MAIN_ROOT` is used in `nw-ship-pr.md` but computed nowhere** — the Phase 4.5 fix removed the only line that resolved it (`MAIN_ROOT=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)`), while eight later usages remain (Phase 6.5 config write + gitignore, 8.1 prose, the 8.4 cleanup block) and the 4.5 escape hatch still recommends it. Shell state does not survive between Bash calls, so the variable was already empty there — the consequence is a failed command, not damage. Resolve it once in the ground rules alongside the `is_main_checkout` probe, and state that the path is inserted literally.  (`plugins/neurawork-cc-harness/commands/nw-ship-pr.md`, ship-pr deferred #29)
