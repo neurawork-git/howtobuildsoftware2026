@@ -16,8 +16,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin reads developer session transcripts and sends repository text to an external API, so its own technical and organisational measures must be documented and evidenced.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/automated-decision-making-profiling-safeguards": {
    "capability": "Automated decision-making & profiling safeguards",
@@ -31,9 +31,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The plugin does not identify or profile anyone and produces derived documents about a repository, not automated decisions about people, and there is no end user beyond the engineer who installed it.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/backup-restore-availability-resilience": {
    "capability": "Backup, restore & availability resilience",
@@ -47,9 +47,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no database, no hosting and no infrastructure the authors run; every output is a tracked file written into the developer's own git repository, whose availability the developer controls.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/breach-detection-register-notification": {
    "capability": "Breach detection, register & notification",
@@ -64,8 +64,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin reads arbitrary local repository and transcript content and makes an outbound network call, so an incident pipeline is needed for a defect that exposes that content or the developer's credentials.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/consent-capture-lifecycle-management": {
    "capability": "Consent capture & lifecycle management",
@@ -78,9 +78,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no sign-up, no account and no customer-facing UI, so there is no data subject from whom the plugin could ever request or record consent.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/cross-border-transfer-safeguards": {
    "capability": "Cross-border transfer safeguards",
@@ -94,8 +94,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Prompt content leaves the developer's machine on the one outbound call to the Anthropic API, so the transfer basis for that flow must be established and documented.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/data-minimisation-accuracy-retention-lifecycle": {
    "capability": "Data minimisation, accuracy & retention lifecycle",
@@ -110,8 +110,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin chooses which session-transcript excerpts to send to the API and which derived markdown and JSON to persist under tracked repository paths, so minimisation and retention of that derived content are design decisions it owns.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/data-portability-structured-export": {
    "capability": "Data portability & structured export",
@@ -125,9 +125,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "No subject provides data to the plugin; everything it produces already sits as structured markdown and JSON inside the developer's own repository on their own disk.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/data-subject-request-intake-access-fulfillment": {
    "capability": "Data-subject request intake & access fulfillment",
@@ -140,9 +140,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The authors receive nothing — there is no telemetry, no phone-home and no service holding anyone's data — so no rights request could ever be addressed to this product.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/data-subject-transparency-complaints-remedies": {
    "capability": "Data-subject transparency, complaints & remedies",
@@ -155,9 +155,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no end user beyond the engineer who installed it and no third party whose data passes through it, so there is no subject-facing intake or complaints flow to provide.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/downstream-recipient-tracking-change-propagation": {
    "capability": "Downstream recipient tracking & change propagation",
@@ -171,9 +171,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is exactly one recipient, fixed by the code rather than configured — the developer's own Anthropic API account — and no data is passed to any other processor, sub-processor or affiliate to propagate changes to.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/dpia-prior-consultation-workflow": {
    "capability": "DPIA & prior consultation workflow",
@@ -186,9 +186,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The plugin performs none of the high-risk triggers — no profiling, no systematic monitoring, no special-category data and no personal data as a product function.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/dpo-designation-governance": {
    "capability": "DPO designation & governance",
@@ -201,9 +201,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "Designation triggers on core-activity monitoring or large-scale special-category processing, and this is local developer tooling with no hosted service, no tenant and no personal data collection.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/encryption-security-of-processing": {
    "capability": "Encryption & security of processing",
@@ -217,8 +217,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin reads ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN from the environment at call time and transmits repository content over the network, so transport security and non-persistence of secrets are core controls.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/instruction-bound-access-control-least-privilege": {
    "capability": "Instruction-bound access control & least privilege",
@@ -233,8 +233,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin's write scope — tracked repository paths only, nothing under .claude/ and nothing outside the repository — is exactly a least-privilege boundary that must be enforced, not merely asserted.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/lawful-basis-purpose-governance": {
    "capability": "Lawful-basis & purpose governance",
@@ -247,9 +247,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The plugin does no processing on behalf of a customer or controller and acts only on the developer's own files on their own machine, so there is no processing activity of the authors to bind to a lawful basis.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/objection-opt-out-management": {
    "capability": "Objection & opt-out management",
@@ -262,9 +262,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no marketing, no profiling and no user-facing surface at all, so there is no processing anyone could object to and no preference state to hold.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/privacy-by-design-default": {
    "capability": "Privacy by design & default",
@@ -279,8 +279,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "What transcript content the hooks read, what is sent to the API and what is written back into the repository are build-time design choices that must default to the minimum necessary.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/privacy-notice-transparency-delivery": {
    "capability": "Privacy notice & transparency delivery",
@@ -294,8 +294,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin sends the developer's own repository text and session-transcript excerpts to the Anthropic API, and that outbound flow must be disclosed plainly to the engineer installing it.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/processor-joint-controller-contracting": {
    "capability": "Processor & joint-controller contracting",
@@ -308,9 +308,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The authors engage no processor: the single recipient is the Anthropic API called with the developer's own credentials, and the developer chooses the account and holds the contract with Anthropic directly.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/records-of-processing-authority-cooperation": {
    "capability": "Records of processing & authority cooperation",
@@ -323,9 +323,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The authors operate no server, receive nothing from users and carry out no processing activity of their own, so there is no controller or processor record to maintain for this product.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/rectification-erasure-restriction-processing": {
    "capability": "Rectification, erasure & restriction processing",
@@ -339,9 +339,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "All outputs are plain markdown and JSON files in the developer's own git-tracked repository, which the developer edits, reverts or deletes directly; the plugin adds no store of its own.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/requester-identity-verification": {
    "capability": "Requester identity verification",
@@ -354,9 +354,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no service to log in to, no account and no rights-request pipeline, so there is no requester whose identity could need proofing before disclosure.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/security-testing-effectiveness-assessment": {
    "capability": "Security testing & effectiveness assessment",
@@ -371,8 +371,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin reads local session transcripts, handles credentials from the environment and makes an outbound API call, so the effectiveness of those controls needs recurring testing.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "gdpr/special-category-children-s-data-protection": {
    "capability": "Special-category & children's data protection",
@@ -386,9 +386,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The plugin holds no health, biometric or other special-category data and is used by software engineers in their own checkout, not offered as an online service to children.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/change-release-management-for-production": {
    "capability": "Change & Release Management for Production",
@@ -403,8 +403,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin is released to developers through GitHub and a marketplace manifest that Claude Code reads, so changes reaching installed repositories need formal review, approval and rollback.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/cryptography-encryption-in-transit-at-rest-key-management": {
    "capability": "Cryptography: Encryption in Transit, At Rest & Key Management",
@@ -419,8 +419,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin makes outbound calls to the Anthropic API carrying repository text and transcript excerpts, and reads ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN from the environment, so transport protection and secret handling apply.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/data-classification-asset-inventory-secure-data-lifecycle": {
    "capability": "Data Classification, Asset Inventory & Secure Data Lifecycle",
@@ -435,8 +435,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin derives markdown and JSON from session transcripts and writes them to tracked repository paths, so handling rules for what may be distilled and committed apply.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/endpoint-off-premises-asset-protection": {
    "capability": "Endpoint & Off-Premises Asset Protection",
@@ -451,8 +451,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin runs entirely on developers' own machines outside any controlled facility, which is exactly the off-premises endpoint case this capability covers.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/environment-separation-test-data-protection": {
    "capability": "Environment Separation & Test Data Protection",
@@ -467,8 +467,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin is developed and tested before being published as a release that developers install into their own repositories, so the promotion path and any real transcript data used in tests need separation and safeguarding.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/ict-continuity-disaster-recovery": {
    "capability": "ICT Continuity & Disaster Recovery",
@@ -483,8 +483,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Source code and releases live on GitHub and the plugin's outputs are committed into developers' repositories, so recoverability of those artifacts remains in scope.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/network-activity-monitoring-anomaly-detection": {
    "capability": "Network Activity Monitoring & Anomaly Detection",
@@ -498,9 +498,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no infrastructure the plugin authors run, no network service listening, and exactly one outbound call fixed by the code to the Anthropic API, so there is no network of ours whose traffic could be monitored for anomalies.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/network-segmentation-multi-tenant-isolation": {
    "capability": "Network Segmentation & Multi-Tenant Isolation",
@@ -514,9 +514,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The plugin is a local process on the developer's own machine with no hosting, no listening network service and explicitly no multi-tenancy, so there are no zones or tenants to segregate.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/outsourced-development-oversight": {
    "capability": "Outsourced Development Oversight",
@@ -531,8 +531,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The product description does not establish that all development is performed in-house, so third-party development oversight cannot be ruled out from the text.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/physical-environmental-facility-security": {
    "capability": "Physical & Environmental Facility Security",
@@ -547,8 +547,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Engineers run the plugin locally on their own workstations, where clear-screen, equipment siting and screen-privacy controls still protect the repository content and transcripts being processed.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/pii-privacy-controls-legal-regulatory-register": {
    "capability": "PII/Privacy Controls & Legal-Regulatory Register",
@@ -563,8 +563,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin distils GDPR/SOC 2/ISO 27001 obligations and is distributed as open source, so the legal-regulatory register and software-licensing compliance apply even though no personal data is collected as a product function.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/rbac-least-privilege-identity-lifecycle": {
    "capability": "RBAC, Least Privilege & Identity Lifecycle",
@@ -578,8 +578,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Although there is no service to log in to, the plugin handles the developer's Anthropic credentials at call time, which the capability's secure credential and secret handling covers.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/secure-development-lifecycle-secure-coding": {
    "capability": "Secure Development Lifecycle & Secure Coding",
@@ -594,8 +594,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The product is Python code installed into developers' repositories and executed by Claude Code hooks, so secure design, coding standards and pre-release security testing apply.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/secure-remote-access-egress-filtering": {
    "capability": "Secure Remote Access & Egress Filtering",
@@ -609,9 +609,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no hosted system to administer remotely and no managed system whose egress we control — the plugin exposes no listening service and its single outbound destination is fixed by the code, not configurable per deployment.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/security-governance-hr-security-operating-procedures": {
    "capability": "Security Governance, HR Security & Operating Procedures",
@@ -626,8 +626,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Software engineers build and release the plugin, so screening, awareness, confidentiality obligations and documented operating procedures for the build and release process apply.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/security-incident-detection-response-forensics": {
    "capability": "Security Incident Detection, Response & Forensics",
@@ -642,8 +642,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "A defect or compromise in a plugin that executes in developers' repositories and forwards their content to an external API needs a reporting channel and a documented response workflow.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/supplier-ict-supply-chain-cloud-security-management": {
    "capability": "Supplier, ICT Supply-Chain & Cloud Security Management",
@@ -658,8 +658,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin depends on Claude Code, the Anthropic API/Agent SDK, git and GitHub, and ships as a marketplace-distributed software component, so supply-chain and supplier governance apply.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "iso27001/vulnerability-remediation-in-the-delivery-pipeline": {
    "capability": "Vulnerability Remediation in the Delivery Pipeline",
@@ -673,8 +673,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Vulnerabilities found in the Python code or its dependencies must be fixed before a release is published to the marketplace and installed into developers' repositories.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/business-continuity-disaster-recovery": {
    "capability": "Business continuity & disaster recovery",
@@ -688,9 +688,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The plugin runs entirely on the developer's own machine with no deployment, hosting, infrastructure, network service or database that we operate and could fail over, back up or restore.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/capacity-planning-elastic-scaling": {
    "capability": "Capacity planning & elastic scaling",
@@ -704,9 +704,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no server, hosting or infrastructure we run whose compute, storage or network capacity could be exhausted; execution is local Python on the developer's own machine.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/change-management-secure-sdlc": {
    "capability": "Change management & secure SDLC",
@@ -721,8 +721,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin is source code released to developers through GitHub and a marketplace manifest, so changes need authorization, testing, review and rollback paths.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/control-environment-governance-ethics-personnel": {
    "capability": "Control environment: governance, ethics & personnel",
@@ -737,8 +737,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin authors are an organization that develops and releases the software and needs defined roles, competence and accountability for its controls.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/control-framework-design-policy-deployment-accountability": {
    "capability": "Control framework design, policy deployment & accountability",
@@ -752,8 +752,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Controls over developing and shipping the plugin must be selected, documented as policy and assigned to accountable owners.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/control-information-communications": {
    "capability": "Control information & communications",
@@ -768,8 +768,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Control objectives and responsibilities must be communicated internally and to the engineers who install the plugin.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/control-monitoring-evaluation-deficiency-remediation": {
    "capability": "Control monitoring, evaluation & deficiency remediation",
@@ -784,8 +784,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Deficiencies in the plugin's controls must be evaluated, tracked and remediated regardless of where the software executes.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/data-classification-confidentiality-protection": {
    "capability": "Data classification & confidentiality protection",
@@ -800,8 +800,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The hooks read the developer's session transcripts and repository text and send prompt content to the Anthropic API, so that confidential material needs classification and protection.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/data-retention-secure-disposal": {
    "capability": "Data retention & secure disposal",
@@ -816,8 +816,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin writes derived markdown and JSON into tracked repository paths such as knowledge-base/, compliance-base/catalog/, CLAUDE.md and docs/, which persist and need defined retention and disposal.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/data-subject-rights-complaint-handling": {
    "capability": "Data-subject rights & complaint handling",
@@ -830,9 +830,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There are no user accounts and no personal data is collected, stored or processed as a product function, so there is no data subject whose information could be accessed, corrected or deleted.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/encryption-cryptographic-key-management": {
    "capability": "Encryption & cryptographic key management",
@@ -846,8 +846,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin reads ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN from the environment and makes an outbound call to the Anthropic API carrying repository text, so transmission and key handling must be protected.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/environmental-safeguards-facility-monitoring": {
    "capability": "Environmental safeguards & facility monitoring",
@@ -861,9 +861,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "There is no hosting facility or data centre in scope; the only execution environment is the developer's own machine, which they own and control.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/external-communication-incident-reporting-channels": {
    "capability": "External communication & incident reporting channels",
@@ -878,8 +878,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Engineers who install the plugin from GitHub need a channel to report vulnerabilities and to be told of changes affecting security.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/identity-access-management": {
    "capability": "Identity & access management",
@@ -892,8 +892,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Although the product has no login, access to the GitHub source and releases and handling of the developer's API credentials still require identity and access controls.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/incident-response-recovery": {
    "capability": "Incident response & recovery",
@@ -907,8 +907,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "A defect or compromise in a plugin that reads session transcripts and writes into developers' repositories must be triaged, contained, communicated and reviewed.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/infrastructure-network-boundary-endpoint-protection": {
    "capability": "Infrastructure, network boundary & endpoint protection",
@@ -923,8 +923,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin is distributed as executable code that runs on developer machines and makes an outbound API call, so malicious-software and endpoint controls remain relevant.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/personal-data-quality-management": {
    "capability": "Personal data quality management",
@@ -938,9 +938,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "No personal data is collected, stored or processed as a product function, so there is no stored personal information whose accuracy could be maintained.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/physical-access-control-secure-media-disposal": {
    "capability": "Physical access control & secure media disposal",
@@ -954,9 +954,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "No facility, data centre, hardware or storage media is operated for this product; everything runs on and is stored on the developer's own machine under their control.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/privacy-breach-detection-notification": {
    "capability": "Privacy breach detection & notification",
@@ -970,9 +970,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "No personal information is collected, stored or transferred by the plugin, so there is no personal information that could be subject to unauthorized use or disclosure.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/privacy-notice-consent-lawful-collection": {
    "capability": "Privacy notice, consent & lawful collection",
@@ -985,9 +985,9 @@
    ],
    "chosen": null,
    "rationale": "",
-   "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicable": false,
+   "applicability_reason": "The plugin collects no personal information at all and has no sign-up or account, so there is no collection event at which notice or consent could be required.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/processing-integrity-validation-pipeline-output-verification": {
    "capability": "Processing integrity: validation, pipeline & output verification",
@@ -1002,8 +1002,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The product's core function is a pipeline that distils session transcripts and catalogs into derived documents and gates PRD/plan writes, so inputs and outputs must be validated and verified.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/risk-assessment-fraud-risk-governance": {
    "capability": "Risk assessment & fraud-risk governance",
@@ -1017,8 +1017,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "Risks to the plugin's objectives, including compromise of code shipped into developers' repositories, must be identified, analysed and responded to.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/system-monitoring-alerting-audit-log-retention": {
    "capability": "System monitoring, alerting & audit log retention",
@@ -1033,8 +1033,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The hooks act on the developer's repository and call an external API, so their activity needs integrity-protected logging to support post-hoc investigation.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/vendor-third-party-risk-management": {
    "capability": "Vendor & third-party risk management",
@@ -1048,8 +1048,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The Anthropic API is a fixed recipient of prompt content and GitHub and Claude Code are relied on for distribution and execution, so third-party risk must be assessed and monitored.",
+   "scoped_from": "dbc748613f86f0e7"
   },
   "soc2/vulnerability-management-remediation": {
    "capability": "Vulnerability management & remediation",
@@ -1064,8 +1064,8 @@
    "chosen": null,
    "rationale": "",
    "applicable": true,
-   "applicability_reason": "",
-   "scoped_from": null
+   "applicability_reason": "The plugin is Python code with dependencies that is installed into developers' repositories, so it must be scanned and remediated for known vulnerabilities.",
+   "scoped_from": "dbc748613f86f0e7"
   }
  }
 }

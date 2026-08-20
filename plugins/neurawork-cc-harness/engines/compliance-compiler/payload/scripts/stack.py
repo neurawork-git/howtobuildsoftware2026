@@ -18,16 +18,24 @@ reported as orphaned before being dropped.
 The three applicability fields are written by the ``stack-compiler`` skill's
 product-scoping pass (a capability that does not apply to the product at hand is
 recorded as such, with a reason — never silently omitted). They are carried over
-here so a re-scaffold cannot erase that scoping work.
+here so a re-scaffold cannot erase that scoping work, and ``--apply-scope`` is the
+one entry point through which that skill writes them: it takes a decisions file
+``{"scoped_from": <hash>, "decisions": {<key>: {"applicable", "applicability_reason"}}}``
+and refuses the whole write unless the decision set is exactly the capability key
+set and every non-applicable decision carries a reason. ``chosen`` and
+``rationale`` are never touched by it.
 
-A plain run computes the gap — mandatory-linked capabilities with no chosen
-component — writes ``reports/stack-gaps-<date>.md`` and prints a one-line summary.
-It is deliberately REPORT-ONLY and always exits 0: an unfilled stack is the normal
-starting state, not a regression. Enforcement belongs to the plan validator.
+A plain run computes the gap — *applicable* mandatory-linked capabilities with no
+chosen component — writes ``reports/stack-gaps-<date>.md`` and prints a one-line
+summary. A capability scoped out of the product is not a gap; it is reported
+separately together with its reason. The run is deliberately REPORT-ONLY and always
+exits 0: an unfilled stack is the normal starting state, not a regression.
+Enforcement belongs to the plan validator.
 
 Usage:
-    uv run python scripts/stack.py --scaffold   # create/refresh catalog/stack.json
-    uv run python scripts/stack.py              # report gaps (report-only, exit 0)
+    uv run python scripts/stack.py --scaffold          # create/refresh catalog/stack.json
+    uv run python scripts/stack.py --apply-scope F.json  # write applicability decisions
+    uv run python scripts/stack.py                     # report gaps (report-only, exit 0)
 """
 
 from __future__ import annotations
@@ -145,8 +153,13 @@ def gaps(
 ) -> dict:
     """Which capabilities still have no chosen component (and related findings).
 
-    ``mandatory_unchosen`` is the headline gap. ``off_catalog`` is informational —
-    a human may deliberately choose something the catalog did not list.
+    ``mandatory_unchosen`` is the headline gap, and ``mandatory_total`` counts only
+    capabilities that are still **applicable** to the product — a capability the
+    product-scoping pass ruled out is a recorded decision, not a pending one, so
+    counting it as a gap would make a fully-decided stack unable to reach 0.
+    ``non_applicable`` reports those separately; ``unexplained_non_applicable`` is
+    the compliance hole — ruled out with no reason. ``off_catalog`` is
+    informational: a human may deliberately choose something the catalog did not list.
     """
     linked = mandatory_linked_keys(catalog, catalog_dir)
     catalog_keys = {
@@ -159,8 +172,18 @@ def gaps(
     mandatory_unchosen: list[str] = []
     optional_unchosen: list[str] = []
     off_catalog: list[dict] = []
+    non_applicable: list[str] = []
+    unexplained_non_applicable: list[str] = []
+    applicable_linked = 0
     for key in sorted(catalog_keys):
         entry = choices.get(key) or {}
+        if not entry.get("applicable", True):
+            non_applicable.append(key)
+            if not str(entry.get("applicability_reason") or "").strip():
+                unexplained_non_applicable.append(key)
+            continue
+        if key in linked:
+            applicable_linked += 1
         chosen = str(entry.get("chosen") or "").strip()
         if not chosen:
             (mandatory_unchosen if key in linked else optional_unchosen).append(key)
@@ -171,14 +194,55 @@ def gaps(
 
     stack_hash = stack.get("capabilities_hash")
     return {
-        "mandatory_total": len(linked),
+        "mandatory_total": applicable_linked,
         "mandatory_linked": sorted(linked),
         "mandatory_unchosen": mandatory_unchosen,
         "optional_unchosen": optional_unchosen,
         "off_catalog": off_catalog,
+        "non_applicable": non_applicable,
+        "unexplained_non_applicable": unexplained_non_applicable,
         "orphaned": sorted(set(choices) - catalog_keys),
         "stale": bool(capabilities_hash and stack_hash and stack_hash != capabilities_hash),
     }
+
+
+def apply_scope(stack: dict, decisions: dict, scoped_from: str) -> dict:
+    """Write one product-scoping pass into stack.json's applicability fields.
+
+    ``decisions`` maps every capability key to ``{"applicable": bool,
+    "applicability_reason": str}``. The whole write is refused — nothing partial —
+    when the decision set is not exactly the capability key set (a missing key is
+    the silent omission this schema exists to prevent; an unknown key is a decision
+    about a capability the catalog does not contain) or when a non-applicable
+    decision carries no reason. ``chosen`` and ``rationale`` are never read or written:
+    the component decision belongs to the human selection pass.
+    """
+    choices = stack.get("choices") or {}
+    keys, given = set(choices), set(decisions)
+    problems: list[str] = []
+    if missing := sorted(keys - given):
+        problems.append(f"no decision for {len(missing)} capability key(s): {', '.join(missing)}")
+    if unknown := sorted(given - keys):
+        problems.append(f"decision for {len(unknown)} unknown key(s): {', '.join(unknown)}")
+    blank = sorted(
+        k for k in keys & given
+        if not (decisions[k] or {}).get("applicable", True)
+        and not str((decisions[k] or {}).get("applicability_reason") or "").strip()
+    )
+    if blank:
+        problems.append(f"not applicable without a reason: {', '.join(blank)}")
+    if problems:
+        raise ValueError("; ".join(problems))
+
+    out: dict[str, dict] = {}
+    for key in sorted(choices):
+        d = decisions[key] or {}
+        entry = dict(choices[key])
+        entry["applicable"] = bool(d.get("applicable", True))
+        entry["applicability_reason"] = str(d.get("applicability_reason") or "").strip()
+        entry["scoped_from"] = scoped_from
+        out[key] = entry
+    return {**stack, "choices": out}
 
 
 def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) -> str:
@@ -186,6 +250,7 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
     choices = stack.get("choices") or {}
     unchosen = set(result["mandatory_unchosen"])
     linked = set(result["mandatory_linked"])
+    non_applicable = set(result.get("non_applicable", []))
     unchosen_by_fw: dict[str, list[str]] = {}
     for key in unchosen:
         unchosen_by_fw.setdefault(key.split("/", 1)[0], []).append(key)
@@ -197,24 +262,39 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
         f"(derived {catalog.get('generated', '?')}) and `catalog/stack.json`.",
         "Report-only: an unchosen capability is a pending decision, not a failure.",
         "",
-        "| Framework | Capabilities | Mandatory-linked | Chosen | Unchosen |",
-        "|-----------|--------------|------------------|--------|----------|",
+        "| Framework | Capabilities | Mandatory-linked | Not applicable | Chosen | Unchosen |",
+        "|-----------|--------------|------------------|----------------|--------|----------|",
     ]
     for fw, f in catalog.get("frameworks", {}).items():
         caps = f.get("capabilities", [])
         keys = [capability_key(fw, c["name"]) for c in caps]
         fw_linked = [k for k in keys if k in linked]
+        scoped_out = [k for k in fw_linked if k in non_applicable]
         gap = [k for k in keys if k in unchosen]
         lines.append(
             f"| {FRAMEWORK_TITLES.get(fw, fw)} | {len(caps)} | {len(fw_linked)} | "
-            f"{len(fw_linked) - len(gap)} | {len(gap)} |"
+            f"{len(scoped_out)} | {len(fw_linked) - len(scoped_out) - len(gap)} | {len(gap)} |"
         )
     lines += [
         "",
-        f"**{len(unchosen)} of {result['mandatory_total']} mandatory-linked capabilities "
-        "have no chosen component.**",
+        f"**{len(unchosen)} of {result['mandatory_total']} applicable mandatory-linked "
+        "capabilities have no chosen component.**",
         "",
     ]
+    if non_applicable:
+        lines += [
+            f"{len(non_applicable)} capability/-ies were scoped out of this product and are "
+            "not counted above — see *Not applicable* below.",
+            "",
+        ]
+    if result.get("unexplained_non_applicable"):
+        lines += [
+            "> **Unexplained omission** — "
+            f"{len(result['unexplained_non_applicable'])} capability/-ies are marked not "
+            "applicable with no recorded reason. An untracked narrowing is indistinguishable "
+            "from an oversight; re-run the product-scoping pass.",
+            "",
+        ]
     if result["stale"]:
         lines += [
             "> **Stale** — stack.json was scaffolded against an older capabilities.json. "
@@ -238,6 +318,18 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
         lines.append("")
 
     lines += ["## Informational", ""]
+    if non_applicable:
+        lines.append(
+            f"**Not applicable ({len(non_applicable)})** — scoped out of this product by the "
+            "`stack-compiler` product-scoping pass. Each is a recorded decision, not a gap:"
+        )
+        lines.append("")
+        for key in sorted(non_applicable):
+            entry = choices.get(key) or {}
+            reason = (str(entry.get("applicability_reason") or "").strip()
+                      or "**no reason recorded**")
+            lines.append(f"- `{key}` — {reason}")
+        lines.append("")
     if result["optional_unchosen"]:
         lines.append(
             f"**Unchosen, optional-only ({len(result['optional_unchosen'])})** — these "
@@ -267,7 +359,8 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
         for key in result["orphaned"]:
             lines.append(f"- `{key}`")
         lines.append("")
-    if not (result["optional_unchosen"] or result["off_catalog"] or result["orphaned"]):
+    if not (non_applicable or result["optional_unchosen"] or result["off_catalog"]
+            or result["orphaned"]):
         lines += ["Nothing to report.", ""]
     return "\n".join(lines)
 
@@ -299,6 +392,8 @@ def main() -> int:
     )
     parser.add_argument("--scaffold", action="store_true",
                         help="Create/refresh catalog/stack.json (keeps existing choices)")
+    parser.add_argument("--apply-scope", type=str, metavar="PATH",
+                        help="Apply a product-scoping decisions file to the applicability fields")
     args = parser.parse_args()
 
     from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
@@ -332,13 +427,46 @@ def main() -> int:
             print(f"  dropped {len(before['orphaned'])} orphaned key(s): "
                   f"{', '.join(before['orphaned'])}")
 
+    if args.apply_scope:
+        scope_path = Path(args.apply_scope)
+        if not scope_path.exists():
+            print(f"No such scope file: {scope_path}")
+            return 1
+        payload = _load_json(scope_path)
+        decisions = payload.get("decisions")
+        scoped_from = str(payload.get("scoped_from") or "").strip()
+        if not isinstance(decisions, dict) or not decisions:
+            print(f"{scope_path}: no 'decisions' object to apply")
+            return 1
+        if not scoped_from:
+            print(f"{scope_path}: refusing to apply a scope with no 'scoped_from' hash")
+            return 1
+        try:
+            stack = apply_scope(stack, decisions, scoped_from)
+        except ValueError as e:
+            print(f"Refusing to apply scope: {e}")
+            return 1
+        _write_json_atomic(STACK_JSON, stack)
+        applicable = sum(1 for e in stack["choices"].values() if e.get("applicable", True))
+        print(f"stack.json scoped from {scoped_from}: {applicable} applicable, "
+              f"{len(stack['choices']) - applicable} not applicable")
+        for key, entry in stack["choices"].items():
+            if not entry.get("applicable", True) and str(entry.get("chosen") or "").strip():
+                print(f"  ! {key}: scoped out but still carries chosen={entry['chosen']}")
+
     result = gaps(catalog, stack, capabilities_hash=cap_hash)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = REPORTS_DIR / f"stack-gaps-{generated}.md"
     report_path.write_text(render_gap_report(catalog, stack, result, generated), encoding="utf-8")
 
     print(f"Stack gaps: {len(result['mandatory_unchosen'])} of {result['mandatory_total']} "
-          "mandatory-linked capabilities have no chosen component")
+          "applicable mandatory-linked capabilities have no chosen component")
+    if result["non_applicable"]:
+        print(f"  ({len(result['non_applicable'])} capability/-ies scoped out of this product)")
+    if result["unexplained_non_applicable"]:
+        print(f"! {len(result['unexplained_non_applicable'])} capability/-ies are not applicable "
+              "with no recorded reason: "
+              f"{', '.join(result['unexplained_non_applicable'])}")
     print(f"report: {report_path}")
     if result["stale"]:
         print("! stack.json was scaffolded against an older capabilities.json — "
