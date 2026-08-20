@@ -63,5 +63,8 @@
         ]
       }
     ]
+  },
+  "env": {
+    "PRP_HOME": ".claude/PRPs"
   }
 }

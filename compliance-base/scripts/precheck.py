@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 import stack
-from config import PLANS_SUBPATH
+from config import PRP_SUBPATH
 from utils import (
     load_capability_catalog,
     load_constraints,
@@ -38,7 +38,14 @@ _CAP_KEY_RE = re.compile(r"[a-z0-9]+/[a-z0-9][a-z0-9-]*")
 
 
 def is_plan_path(path_str: str, repo_root: Path | str) -> bool:
-    """True iff ``path_str`` is a live PRP plan file (not an archived one)."""
+    """True iff ``path_str`` is a live PRP plan file (not an archived one).
+
+    Two layouts count, both under ``.claude/PRPs``: the canonical ``plans/`` directory, and
+    the one prp-core's store resolver produces when ``PRP_HOME`` points at the repo —
+    ``<store>/plans/``, where ``<store>`` is its ``<repo-name>-<hash>`` key. Exactly one
+    store segment is allowed, so this stays a whitelist rather than a search for "plans"
+    anywhere in the path.
+    """
     if not path_str:
         return False
     p = Path(path_str)
@@ -48,11 +55,18 @@ def is_plan_path(path_str: str, repo_root: Path | str) -> bool:
         rel = p.resolve().relative_to(Path(repo_root).resolve())
     except (ValueError, OSError):
         return False
-    plans = tuple(PLANS_SUBPATH.split("/"))
+    prp = tuple(PRP_SUBPATH.split("/"))
     parts = rel.parts
-    if parts[: len(plans)] != plans:
+    if parts[: len(prp)] != prp:
         return False
-    return "completed" not in parts[len(plans):]
+    rest = parts[len(prp):]
+    if rest[:1] == ("plans",):
+        tail = rest[1:]
+    elif rest[1:2] == ("plans",):  # one store segment: <repo-name>-<hash>/plans/...
+        tail = rest[2:]
+    else:
+        return False
+    return "completed" not in tail
 
 
 def declared_capabilities(plan_text: str) -> dict:

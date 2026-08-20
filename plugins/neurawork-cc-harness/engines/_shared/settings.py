@@ -20,6 +20,55 @@ class SettingsError(Exception):
     """Raised when an existing settings.json cannot be parsed (left untouched)."""
 
 
+def _load(settings_path: Path) -> dict:
+    """Parse an existing settings.json, or return {} when there is none."""
+    if not settings_path.exists():
+        return {}
+    try:
+        loaded = json.loads(settings_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise SettingsError(f"{settings_path} is not valid JSON — not touched") from e
+    if not isinstance(loaded, dict):
+        raise SettingsError(f"{settings_path} top level is not an object — not touched")
+    return loaded
+
+
+def set_env_default(
+    repo_root: Path | str, key: str, value: str
+) -> tuple[str, str | None]:
+    """Set ``env[key] = value`` in ``<repo_root>/.claude/settings.json`` unless it is taken.
+
+    Returns ``(status, current_value)`` where status is:
+
+    - ``"wrote"``   — the key was absent and is now set (``current_value`` is ``value``)
+    - ``"already"`` — the key already held exactly ``value``; nothing written
+    - ``"conflict"``— the key holds a different value; nothing written, the caller decides
+      what to say about it. Someone else owns that setting.
+
+    Same contract as merge_hooks: creates the file/dir when absent, writes atomically
+    (tmp + os.replace), never touches unrelated keys, raises SettingsError on invalid JSON.
+    """
+    root = Path(repo_root)
+    settings_path = root / ".claude" / "settings.json"
+    data = _load(settings_path)
+
+    env = data.get("env")
+    if env is not None and not isinstance(env, dict):
+        raise SettingsError(f"{settings_path} has a non-object 'env' — not touched")
+    current = (env or {}).get(key)
+    if current == value:
+        return "already", current
+    if current is not None:
+        return "conflict", current
+
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    data.setdefault("env", {})[key] = value
+    tmp = settings_path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, settings_path)
+    return "wrote", value
+
+
 def merge_hooks(repo_root: Path | str, hooks: list[tuple[str, str, int, str]]) -> bool:
     """Merge ``hooks`` into ``<repo_root>/.claude/settings.json``.
 
@@ -39,18 +88,7 @@ def merge_hooks(repo_root: Path | str, hooks: list[tuple[str, str, int, str]]) -
     settings_path = root / ".claude" / "settings.json"
     settings_path.parent.mkdir(parents=True, exist_ok=True)
 
-    data: dict = {}
-    if settings_path.exists():
-        try:
-            loaded = json.loads(settings_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            raise SettingsError(
-                f"{settings_path} is not valid JSON — not touched"
-            ) from e
-        if not isinstance(loaded, dict):
-            raise SettingsError(f"{settings_path} top level is not an object — not touched")
-        data = loaded
-
+    data = _load(settings_path)
     hooks_obj = data.setdefault("hooks", {})
     changed = False
 

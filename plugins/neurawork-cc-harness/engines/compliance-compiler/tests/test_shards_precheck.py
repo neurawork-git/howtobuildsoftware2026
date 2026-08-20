@@ -133,6 +133,35 @@ class TestIsPlanPath(unittest.TestCase):
             other.parent.mkdir(parents=True)
             other.write_text("x", encoding="utf-8")
             self.assertFalse(precheck.is_plan_path(str(other), root))
+
+    def test_matches_prp_home_store_layout(self) -> None:
+        # PRP_HOME=".claude/PRPs" makes prp-core write to <store>/plans/, one level deeper
+        # than the canonical path — see config.PRP_SUBPATH.
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            store = root / ".claude" / "PRPs" / "myrepo-1a2b3c4d"
+            live = store / "plans" / "x.plan.md"
+            live.parent.mkdir(parents=True)
+            live.write_text("x", encoding="utf-8")
+            self.assertTrue(precheck.is_plan_path(str(live), root))
+
+            done = store / "plans" / "completed" / "x.plan.md"
+            done.parent.mkdir(parents=True)
+            done.write_text("x", encoding="utf-8")
+            self.assertFalse(precheck.is_plan_path(str(done), root))
+
+    def test_rejects_other_store_dirs_and_deeper_nesting(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            prd = root / ".claude" / "PRPs" / "myrepo-1a2b3c4d" / "prds" / "x.plan.md"
+            prd.parent.mkdir(parents=True)
+            prd.write_text("x", encoding="utf-8")
+            self.assertFalse(precheck.is_plan_path(str(prd), root))
+
+            deep = root / ".claude" / "PRPs" / "a" / "b" / "plans" / "x.plan.md"
+            deep.parent.mkdir(parents=True)
+            deep.write_text("x", encoding="utf-8")
+            self.assertFalse(precheck.is_plan_path(str(deep), root))
             self.assertFalse(precheck.is_plan_path(str(root / "a.md"), root))
 
 
