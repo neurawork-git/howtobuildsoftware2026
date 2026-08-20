@@ -18,6 +18,7 @@ SCRIPTS = Path(__file__).resolve().parent.parent / "payload" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import rank
+import rank_lib
 
 
 def _caps() -> list[dict]:
@@ -133,12 +134,14 @@ class TestParseRankShard(unittest.TestCase):
 
 
 class TestIsScoped(unittest.TestCase):
+    """Shared with the selection pass, so it lives in rank_lib, not in rank.py."""
+
     def test_false_until_a_scoping_pass_has_run(self) -> None:
-        self.assertFalse(rank.is_scoped({"choices": {"a": {"scoped_from": None}}}))
-        self.assertFalse(rank.is_scoped({"choices": {}}))
+        self.assertFalse(rank_lib.is_scoped({"choices": {"a": {"scoped_from": None}}}))
+        self.assertFalse(rank_lib.is_scoped({"choices": {}}))
 
     def test_true_once_any_entry_carries_a_scope_hash(self) -> None:
-        self.assertTrue(rank.is_scoped({"choices": {"a": {"scoped_from": "h1"}}}))
+        self.assertTrue(rank_lib.is_scoped({"choices": {"a": {"scoped_from": "h1"}}}))
 
 
 class TestAlreadyRanked(unittest.TestCase):

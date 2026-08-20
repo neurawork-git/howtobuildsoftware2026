@@ -261,17 +261,6 @@ def _load_json(path: Path) -> dict:
     return {}
 
 
-def is_scoped(stack: dict) -> bool:
-    """True when the product-scoping pass has run at least once.
-
-    Ranking an unscoped stack would order every capability in the catalog, including
-    the ones scoping exists to rule out — expensive, and a stack.json full of
-    rankings nobody asked for.
-    """
-    return any((c or {}).get("scoped_from")
-               for c in (stack.get("choices") or {}).values())
-
-
 def already_ranked(stack: dict, product_hash: str) -> bool:
     """True when every APPLICABLE capability already carries this product's ranking."""
     applicable = [c for c in (stack.get("choices") or {}).values()
@@ -331,7 +320,7 @@ def main() -> int:
 
     capabilities = _load_json(capabilities_json)
     stack = _load_json(stack_json)
-    if not is_scoped(stack):
+    if not rank_lib.is_scoped(stack):
         print(f"{stack_json} carries no scoping decisions — run "
               f"`uv run --directory {ROOT_DIR.name} python scripts/scope.py` first. "
               "Ranking an unscoped stack would order every capability in the catalog.")

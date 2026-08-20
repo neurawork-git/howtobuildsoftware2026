@@ -108,10 +108,13 @@ each one it orders that capability's components best-fit-first for this product.
 
 - This engine **never** writes `stack.json` directly. Decisions are applied through
   `<compliance_dir>/scripts/stack.py` — `--apply-scope` for applicability,
-  `--apply-ranking` for the component order — the one schema owner.
-- This engine **never** picks a component and never touches `chosen` or
-  `rationale`. Ranking proposes an order; selection is the human's pass, with its
-  own gate.
+  `--apply-ranking` for the component order, `--apply-selection` for the chosen
+  component — the one schema owner.
+- **No agent ever picks a component.** Ranking proposes an order and stops there.
+  `chosen` and `rationale` are written only by the selection pass
+  (`scripts/selection.py`), which runs no agent at all: it renders the recorded
+  ranking as a sheet, a human writes the choice, and a deterministic gate checks it
+  against the closed pool before the write.
 - This engine **never** edits `capabilities.json`. A component whose license the
   policy forbids is a catalog finding, reported by the ranking gate and fixed in
   `compliance-compiler`.

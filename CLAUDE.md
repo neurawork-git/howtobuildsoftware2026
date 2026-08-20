@@ -54,6 +54,8 @@ uv run --directory compliance-base python scripts/stack.py --scaffold  # refresh
 uv run --directory compliance-base python scripts/validate.py <plan>  # check a PRP plan
 uv run --directory stack-base python scripts/scope.py           # which capabilities apply, and why
 uv run --directory stack-base python scripts/rank.py            # order each one's components
+uv run --directory stack-base python scripts/selection.py       # render the selection sheet
+uv run --directory stack-base python scripts/selection.py --apply <sheet>  # record the choices
 ```
 
 The first two run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
@@ -96,16 +98,26 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   **installed by hand**: its `install.py` / `recon.py` / slash commands land in a
   later phase, so `plugins/…/engines/stack-compiler/payload/` and `stack-base/` are
   kept byte-identical by `tests/test_payload_drift.py`, not by an installer. It owns
-  **no data artifact**. Two passes, both reading the tracked `product.md` and both
-  writing into `compliance-base/catalog/stack.json` through
-  `compliance-base/scripts/stack.py` — the single schema owner: `scripts/scope.py`
-  decides per capability *whether* it applies and why (`--apply-scope`), and
-  `scripts/rank.py` orders each still-applicable capability's catalog components
-  best-fit-first with a reason per position (`--apply-ranking`). The component pool
-  is closed — a ranking must name exactly that capability's `options`, once each —
-  and a deterministic gate (pool match + the catalog's own `license_policy`, honouring
-  `verdict: "keep-exception"`) runs before either write; a failed gate writes nothing.
-  `product.md` is tracked; `.shards/` and `reports/` are gitignored.
+  **no data artifact**. Three passes, all writing into
+  `compliance-base/catalog/stack.json` through `compliance-base/scripts/stack.py` —
+  the single schema owner: `scripts/scope.py` decides per capability *whether* it
+  applies and why (`--apply-scope`), `scripts/rank.py` orders each still-applicable
+  capability's catalog components best-fit-first with a reason per position
+  (`--apply-ranking`), and `scripts/selection.py` renders that ranking as an editable
+  **selection sheet**, reads back the component a human wrote per capability, and
+  records it (`--apply-selection`, which also stamps `chosen_from` so a later catalog
+  change reopens exactly the affected choices). The first two read the tracked
+  `product.md` and run parallel SDK agents; selection runs **no agent** — the
+  proposal already exists — and needs no API key. It is named `selection.py`, not
+  `select.py`, because a module named `select` in `scripts/` shadows the stdlib
+  `select` and breaks the other two at import time. The component pool is closed — a
+  ranking must name exactly that capability's `options`, once each, and a choice must
+  come from them — and a deterministic gate (pool match + the catalog's own
+  `license_policy`, honouring `verdict: "keep-exception"`) runs before every write; a
+  failed gate writes nothing. Scoping and ranking are all-or-nothing; selection is
+  deliberately partial, because an undecided capability stays a counted gap rather
+  than a silent omission. `product.md` is tracked; `.shards/` and `reports/` are
+  gitignored.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Each skill's behaviour is specified by an `AGENTS.md` constitution copied into the
