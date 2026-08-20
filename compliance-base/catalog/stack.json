@@ -32,7 +32,8 @@
      "rationale": "A hosted risk register with a policy lifecycle is the heaviest option for a plugin whose entire governance surface is a handful of markdown and JSON files in a developer's checkout."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/automated-decision-making-profiling-safeguards": {
    "capability": "Automated decision-making & profiling safeguards",
@@ -50,7 +51,8 @@
    "applicability_reason": "The plugin does not identify or profile anyone and produces derived documents about a repository, not automated decisions about people, and there is no end user beyond the engineer who installed it.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/backup-restore-availability-resilience": {
    "capability": "Backup, restore & availability resilience",
@@ -68,7 +70,8 @@
    "applicability_reason": "There is no database, no hosting and no infrastructure the authors run; every output is a tracked file written into the developer's own git repository, whose availability the developer controls.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/breach-detection-register-notification": {
    "capability": "Breach detection, register & notification",
@@ -103,7 +106,8 @@
      "rationale": "Ranked last both because there is no operator-side automation runtime in this product to glue detection to notification, and because its Sustainable Use License is source-available and non-OSI, which the deterministic license gate must adjudicate."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/consent-capture-lifecycle-management": {
    "capability": "Consent capture & lifecycle management",
@@ -120,7 +124,8 @@
    "applicability_reason": "There is no sign-up, no account and no customer-facing UI, so there is no data subject from whom the plugin could ever request or record consent.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/cross-border-transfer-safeguards": {
    "capability": "Cross-border transfer safeguards",
@@ -150,7 +155,8 @@
      "rationale": "Ranked last because the plugin runs entirely on the developer's machine with no hosting substrate to place in the EEA, and its proprietary license is left for the deterministic gate to rule on."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/data-minimisation-accuracy-retention-lifecycle": {
    "capability": "Data minimisation, accuracy & retention lifecycle",
@@ -185,7 +191,8 @@
      "rationale": "Ranked last because the product has no database at all — retention of its outputs is a matter of files and git history, not expiring Postgres partitions."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/data-portability-structured-export": {
    "capability": "Data portability & structured export",
@@ -203,7 +210,8 @@
    "applicability_reason": "No subject provides data to the plugin; everything it produces already sits as structured markdown and JSON inside the developer's own repository on their own disk.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/data-subject-request-intake-access-fulfillment": {
    "capability": "Data-subject request intake & access fulfillment",
@@ -220,7 +228,8 @@
    "applicability_reason": "The authors receive nothing — there is no telemetry, no phone-home and no service holding anyone's data — so no rights request could ever be addressed to this product.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/data-subject-transparency-complaints-remedies": {
    "capability": "Data-subject transparency, complaints & remedies",
@@ -237,7 +246,8 @@
    "applicability_reason": "There is no end user beyond the engineer who installed it and no third party whose data passes through it, so there is no subject-facing intake or complaints flow to provide.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/downstream-recipient-tracking-change-propagation": {
    "capability": "Downstream recipient tracking & change propagation",
@@ -255,7 +265,8 @@
    "applicability_reason": "There is exactly one recipient, fixed by the code rather than configured — the developer's own Anthropic API account — and no data is passed to any other processor, sub-processor or affiliate to propagate changes to.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/dpia-prior-consultation-workflow": {
    "capability": "DPIA & prior consultation workflow",
@@ -272,7 +283,8 @@
    "applicability_reason": "The plugin performs none of the high-risk triggers — no profiling, no systematic monitoring, no special-category data and no personal data as a product function.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/dpo-designation-governance": {
    "capability": "DPO designation & governance",
@@ -289,7 +301,8 @@
    "applicability_reason": "Designation triggers on core-activity monitoring or large-scale special-category processing, and this is local developer tooling with no hosted service, no tenant and no personal data collection.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/encryption-security-of-processing": {
    "capability": "Encryption & security of processing",
@@ -319,7 +332,8 @@
      "rationale": "Ranked last because a service mesh presumes a cluster with east-west traffic, and this product is a set of Python scripts invoked by Claude Code hooks on one machine."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/instruction-bound-access-control-least-privilege": {
    "capability": "Instruction-bound access control & least privilege",
@@ -354,7 +368,8 @@
      "rationale": "Ranked last because an OIDC identity provider answers a question this product explicitly does not ask — there is no service to log in to and no user accounts, sessions or roles exist."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/lawful-basis-purpose-governance": {
    "capability": "Lawful-basis & purpose governance",
@@ -371,7 +386,8 @@
    "applicability_reason": "The plugin does no processing on behalf of a customer or controller and acts only on the developer's own files on their own machine, so there is no processing activity of the authors to bind to a lawful basis.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/objection-opt-out-management": {
    "capability": "Objection & opt-out management",
@@ -388,7 +404,8 @@
    "applicability_reason": "There is no marketing, no profiling and no user-facing surface at all, so there is no processing anyone could object to and no preference state to hold.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/privacy-by-design-default": {
    "capability": "Privacy by design & default",
@@ -423,7 +440,8 @@
      "rationale": "Ranked last because privacy-by-default access enforcement has no runtime to act in: file access is governed by the developer's own filesystem permissions, not by this plugin."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/privacy-notice-transparency-delivery": {
    "capability": "Privacy notice & transparency delivery",
@@ -453,7 +471,8 @@
      "rationale": "Ranked last because its RGAA/WCAG accessibility focus is aimed at end-user-facing sites, and this product states it has no end user beyond the engineer who installed it."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/processor-joint-controller-contracting": {
    "capability": "Processor & joint-controller contracting",
@@ -470,7 +489,8 @@
    "applicability_reason": "The authors engage no processor: the single recipient is the Anthropic API called with the developer's own credentials, and the developer chooses the account and holds the contract with Anthropic directly.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/records-of-processing-authority-cooperation": {
    "capability": "Records of processing & authority cooperation",
@@ -487,7 +507,8 @@
    "applicability_reason": "The authors operate no server, receive nothing from users and carry out no processing activity of their own, so there is no controller or processor record to maintain for this product.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/rectification-erasure-restriction-processing": {
    "capability": "Rectification, erasure & restriction processing",
@@ -505,7 +526,8 @@
    "applicability_reason": "All outputs are plain markdown and JSON files in the developer's own git-tracked repository, which the developer edits, reverts or deletes directly; the plugin adds no store of its own.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/requester-identity-verification": {
    "capability": "Requester identity verification",
@@ -522,7 +544,8 @@
    "applicability_reason": "There is no service to log in to, no account and no rights-request pipeline, so there is no requester whose identity could need proofing before disclosure.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "gdpr/security-testing-effectiveness-assessment": {
    "capability": "Security testing & effectiveness assessment",
@@ -557,7 +580,8 @@
      "rationale": "Ranked last because penetration testing presumes reachable hosts and services, and there is nothing deployed here to attack beyond the developer's own workstation."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "gdpr/special-category-children-s-data-protection": {
    "capability": "Special-category & children's data protection",
@@ -575,7 +599,8 @@
    "applicability_reason": "The plugin holds no health, biometric or other special-category data and is used by software engineers in their own checkout, not offered as an online service to children.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "iso27001/change-release-management-for-production": {
    "capability": "Change & Release Management for Production",
@@ -587,8 +612,8 @@
     "Argo Rollouts",
     "Kyverno + Sigstore Cosign"
    ],
-   "chosen": null,
-   "rationale": "",
+   "chosen": "GitHub (Enterprise) — PRs + required reviewers + Environment protection rules",
+   "rationale": "Releasing means merging to `main` on GitHub behind required reviewers, which is the only release path this product has.",
    "applicable": true,
    "applicability_reason": "The plugin is released to developers through GitHub and a marketplace manifest that Claude Code reads, so changes reaching installed repositories need formal review, approval and rollback.",
    "scoped_from": "dbc748613f86f0e7",
@@ -610,7 +635,8 @@
      "rationale": "Canary and blue-green traffic shifting requires a live service to shift traffic between, and the plugin is a Python process a developer runs locally, so there is nothing to roll out progressively."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": "084c5608e2a9a092"
   },
   "iso27001/cryptography-encryption-in-transit-at-rest-key-management": {
    "capability": "Cryptography: Encryption in Transit, At Rest & Key Management",
@@ -645,7 +671,8 @@
      "rationale": "Mutual TLS between services is meaningless for a single local Python process with no service-to-service traffic and no cluster to inject sidecars into."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/data-classification-asset-inventory-secure-data-lifecycle": {
    "capability": "Data Classification, Asset Inventory & Secure Data Lifecycle",
@@ -680,7 +707,8 @@
      "rationale": "A dataset catalog needs structured datastores to crawl, and this product has no database at all — its outputs are markdown and JSON files tracked in the developer's own git repository."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/endpoint-off-premises-asset-protection": {
    "capability": "Endpoint & Off-Premises Asset Protection",
@@ -715,7 +743,8 @@
      "rationale": "It enforces FileVault and passcode policy only on Apple hardware, so it covers at best a slice of a fleet whose common requirement is Python ≥ 3.12 and a git checkout, not macOS."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/environment-separation-test-data-protection": {
    "capability": "Environment Separation & Test Data Protection",
@@ -750,7 +779,8 @@
      "rationale": "There are no production databases, servers or Kubernetes clusters to broker audited operator access to, so an access proxy has no target in this deployment shape."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/ict-continuity-disaster-recovery": {
    "capability": "ICT Continuity & Disaster Recovery",
@@ -785,7 +815,8 @@
      "rationale": "Continuous block replication and standing failover exist to protect an always-on service, and this product has no service to fail over — a developer simply re-clones the repository."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/network-activity-monitoring-anomaly-detection": {
    "capability": "Network Activity Monitoring & Anomaly Detection",
@@ -803,7 +834,8 @@
    "applicability_reason": "There is no infrastructure the plugin authors run, no network service listening, and exactly one outbound call fixed by the code to the Anthropic API, so there is no network of ours whose traffic could be monitored for anomalies.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "iso27001/network-segmentation-multi-tenant-isolation": {
    "capability": "Network Segmentation & Multi-Tenant Isolation",
@@ -821,7 +853,8 @@
    "applicability_reason": "The plugin is a local process on the developer's own machine with no hosting, no listening network service and explicitly no multi-tenancy, so there are no zones or tenants to segregate.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "iso27001/outsourced-development-oversight": {
    "capability": "Outsourced Development Oversight",
@@ -833,8 +866,8 @@
     "Semgrep",
     "Sigstore / cosign (with SLSA provenance)"
    ],
-   "chosen": null,
-   "rationale": "",
+   "chosen": "GitHub Enterprise (CODEOWNERS + branch protection + required reviews + audit log)",
+   "rationale": "Every contribution from outside this checkout arrives as a GitHub pull request under branch protection and required review, which is where oversight of non-maintainer work actually happens.",
    "applicable": true,
    "applicability_reason": "The product description does not establish that all development is performed in-house, so third-party development oversight cannot be ruled out from the text.",
    "scoped_from": "dbc748613f86f0e7",
@@ -856,7 +889,8 @@
      "rationale": "A full self-hosted GRC and vendor-risk platform is heavy governance for a product with no outsourced development vendor and exactly two external parties, Anthropic and GitHub."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": "892335e4d9b22b63"
   },
   "iso27001/physical-environmental-facility-security": {
    "capability": "Physical & Environmental Facility Security",
@@ -891,7 +925,8 @@
      "rationale": "Documenting rack elevation, power feeds and cable segregation requires racks, and this product runs on no infrastructure we own or operate."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/pii-privacy-controls-legal-regulatory-register": {
    "capability": "PII/Privacy Controls & Legal-Regulatory Register",
@@ -926,7 +961,8 @@
      "rationale": "Consent capture and enforcement needs a customer-facing interface to place it in, and no sign-up, account or user-facing UI exists here by explicit non-goal."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/rbac-least-privilege-identity-lifecycle": {
    "capability": "RBAC, Least Privilege & Identity Lifecycle",
@@ -956,7 +992,8 @@
      "rationale": "An identity-aware proxy needs protected endpoints to sit in front of, and this plugin exposes none — its only network activity is an outbound call to the Anthropic API."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/secure-development-lifecycle-secure-coding": {
    "capability": "Secure Development Lifecycle & Secure Coding",
@@ -991,7 +1028,8 @@
      "rationale": "Only a small non-web subset of its requirements maps to a local CLI plugin with no authentication, session or API surface, and it is placed last because its CC-BY-SA-4.0 share-alike terms are not on the acceptable embeddable list for its in-product classification — flagged here for the license gate rather than dropped."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/secure-remote-access-egress-filtering": {
    "capability": "Secure Remote Access & Egress Filtering",
@@ -1009,7 +1047,8 @@
    "applicability_reason": "There is no hosted system to administer remotely and no managed system whose egress we control — the plugin exposes no listening service and its single outbound destination is fixed by the code, not configurable per deployment.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "iso27001/security-governance-hr-security-operating-procedures": {
    "capability": "Security Governance, HR Security & Operating Procedures",
@@ -1044,7 +1083,8 @@
      "rationale": "A full HRIS is disproportionate for a team with no service to offboard anyone from, where joiner-leaver handling means revoking GitHub access rather than deprovisioning product accounts."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/security-incident-detection-response-forensics": {
    "capability": "Security Incident Detection, Response & Forensics",
@@ -1079,7 +1119,8 @@
      "rationale": "Full case management assumes a standing CERT and an alert volume a local developer tool will not generate, and it is ranked last because TheHive 5 ships under a source-available non-OSI license that the policy does not accept on its own — recorded here for the license gate rather than dropped."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/supplier-ict-supply-chain-cloud-security-management": {
    "capability": "Supplier, ICT Supply-Chain & Cloud Security Management",
@@ -1114,7 +1155,8 @@
      "rationale": "External attack-surface discovery has nothing to enumerate when there is no hosted service, no domain we serve from and no network listener anywhere in the product."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "iso27001/vulnerability-remediation-in-the-delivery-pipeline": {
    "capability": "Vulnerability Remediation in the Delivery Pipeline",
@@ -1144,7 +1186,8 @@
      "rationale": "Running a self-hosted SBOM server is disproportionate operational weight for a repository whose entire artifact is a plugin manifest plus Python scripts, and it duplicates scanning the CI job already performs."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/business-continuity-disaster-recovery": {
    "capability": "Business continuity & disaster recovery",
@@ -1162,7 +1205,8 @@
    "applicability_reason": "The plugin runs entirely on the developer's own machine with no deployment, hosting, infrastructure, network service or database that we operate and could fail over, back up or restore.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/capacity-planning-elastic-scaling": {
    "capability": "Capacity planning & elastic scaling",
@@ -1180,7 +1224,8 @@
    "applicability_reason": "There is no server, hosting or infrastructure we run whose compute, storage or network capacity could be exhausted; execution is local Python on the developer's own machine.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/change-management-secure-sdlc": {
    "capability": "Change management & secure SDLC",
@@ -1192,8 +1237,8 @@
     "OpenTofu (Terraform-compatible IaC)",
     "Argo CD (GitOps)"
    ],
-   "chosen": null,
-   "rationale": "",
+   "chosen": "GitHub (branch protection + CODEOWNERS + required reviews)",
+   "rationale": "The repository already ships every change through a GitHub pull request with review and a merge gate (`/nw-ship-pr`), so this records the change process the product has rather than adding one.",
    "applicable": true,
    "applicability_reason": "The plugin is source code released to developers through GitHub and a marketplace manifest, so changes need authorization, testing, review and rollback paths.",
    "scoped_from": "dbc748613f86f0e7",
@@ -1215,7 +1260,8 @@
      "rationale": "Nothing is deployed anywhere — distribution is a manifest Claude Code reads on the developer's machine — so there is no cluster state for it to reconcile or roll back."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": "5b9e78424426c2b7"
   },
   "soc2/control-environment-governance-ethics-personnel": {
    "capability": "Control environment: governance, ethics & personnel",
@@ -1250,7 +1296,8 @@
      "rationale": "A full HRIS encoding reporting lines and succession data is far past what a locally-installed developer plugin with no operator staff requires."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/control-framework-design-policy-deployment-accountability": {
    "capability": "Control framework design, policy deployment & accountability",
@@ -1280,7 +1327,8 @@
      "rationale": "A hosted GRC portal is heavy for a project whose entire control surface is one repository, and its custom source-available terms are the most restrictive in this pool, so it is ranked last for the licence gate to adjudicate."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/control-information-communications": {
    "capability": "Control information & communications",
@@ -1315,7 +1363,8 @@
      "rationale": "A restricted board-facing document space presumes a board and external users that a locally-installed developer tool with no hosted service does not have."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/control-monitoring-evaluation-deficiency-remediation": {
    "capability": "Control monitoring, evaluation & deficiency remediation",
@@ -1350,7 +1399,8 @@
      "rationale": "The plugin is a short-lived process fired by hooks rather than a long-running service, so there is no continuous signal for dashboards or alerting to sit on."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/data-classification-confidentiality-protection": {
    "capability": "Data classification & confidentiality protection",
@@ -1385,7 +1435,8 @@
      "rationale": "A governance catalogue over data stores and lineage has nothing to index in a product whose only artefacts are files in the developer's own git checkout."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/data-retention-secure-disposal": {
    "capability": "Data retention & secure disposal",
@@ -1420,7 +1471,8 @@
      "rationale": "There is no object storage in this product; outputs are committed files whose deletion is a git operation, not a lifecycle-expiry rule."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/data-subject-rights-complaint-handling": {
    "capability": "Data-subject rights & complaint handling",
@@ -1437,7 +1489,8 @@
    "applicability_reason": "There are no user accounts and no personal data is collected, stored or processed as a product function, so there is no data subject whose information could be accessed, corrected or deleted.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/encryption-cryptographic-key-management": {
    "capability": "Encryption & cryptographic key management",
@@ -1467,7 +1520,8 @@
      "rationale": "There is no listening service and no Kubernetes here; the single outbound call to the Anthropic API gets its transport security from the client library, not from certificates we issue."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/environmental-safeguards-facility-monitoring": {
    "capability": "Environmental safeguards & facility monitoring",
@@ -1485,7 +1539,8 @@
    "applicability_reason": "There is no hosting facility or data centre in scope; the only execution environment is the developer's own machine, which they own and control.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/external-communication-incident-reporting-channels": {
    "capability": "External communication & incident reporting channels",
@@ -1520,7 +1575,8 @@
      "rationale": "A status page communicates availability of a running service, and this plugin has no hosted component that can be up or down."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/identity-access-management": {
    "capability": "Identity & access management",
@@ -1545,7 +1601,8 @@
      "rationale": "Joiner-mover-leaver provisioning needs a user population and downstream directories to sync, and this product explicitly has no accounts, sessions, roles or permissions to provision into."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/incident-response-recovery": {
    "capability": "Incident response & recovery",
@@ -1575,7 +1632,8 @@
      "rationale": "Alert routing needs a monitored system emitting signals, and this product runs as short-lived local processes with nothing paging anyone."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/infrastructure-network-boundary-endpoint-protection": {
    "capability": "Infrastructure, network boundary & endpoint protection",
@@ -1610,7 +1668,8 @@
      "rationale": "A web application firewall protects inbound HTTP traffic, and this product has no network service listening and no perimeter to defend."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/personal-data-quality-management": {
    "capability": "Personal data quality management",
@@ -1628,7 +1687,8 @@
    "applicability_reason": "No personal data is collected, stored or processed as a product function, so there is no stored personal information whose accuracy could be maintained.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/physical-access-control-secure-media-disposal": {
    "capability": "Physical access control & secure media disposal",
@@ -1646,7 +1706,8 @@
    "applicability_reason": "No facility, data centre, hardware or storage media is operated for this product; everything runs on and is stored on the developer's own machine under their control.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/privacy-breach-detection-notification": {
    "capability": "Privacy breach detection & notification",
@@ -1664,7 +1725,8 @@
    "applicability_reason": "No personal information is collected, stored or transferred by the plugin, so there is no personal information that could be subject to unauthorized use or disclosure.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/privacy-notice-consent-lawful-collection": {
    "capability": "Privacy notice, consent & lawful collection",
@@ -1681,7 +1743,8 @@
    "applicability_reason": "The plugin collects no personal information at all and has no sign-up or account, so there is no collection event at which notice or consent could be required.",
    "scoped_from": "dbc748613f86f0e7",
    "ranked": null,
-   "ranked_from": null
+   "ranked_from": null,
+   "chosen_from": null
   },
   "soc2/processing-integrity-validation-pipeline-output-verification": {
    "capability": "Processing integrity: validation, pipeline & output verification",
@@ -1716,7 +1779,8 @@
      "rationale": "There is no streaming intake or authorized external source feeding this plugin; it reads a local transcript file, so schema-validated topics and dead-letter queues have nothing to carry."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/risk-assessment-fraud-risk-governance": {
    "capability": "Risk assessment & fraud-risk governance",
@@ -1746,7 +1810,8 @@
      "rationale": "Management-override and journal-entry analytics require transactional records, and this product processes no financial or user data of any kind."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/system-monitoring-alerting-audit-log-retention": {
    "capability": "System monitoring, alerting & audit log retention",
@@ -1781,7 +1846,8 @@
      "rationale": "It requires cloud infrastructure this product explicitly does not run, and its proprietary licence is the only non-OSS entry in this pool, so it is ranked last for the licence gate to decide."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/vendor-third-party-risk-management": {
    "capability": "Vendor & third-party risk management",
@@ -1811,7 +1877,8 @@
      "rationale": "Continuous external exposure scanning targets vendor internet-facing assets that this project neither operates nor is contractually positioned to probe."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   },
   "soc2/vulnerability-management-remediation": {
    "capability": "Vulnerability management & remediation",
@@ -1846,7 +1913,8 @@
      "rationale": "Cloud posture scanning has no target here because the product runs on developer machines with no infrastructure or cloud account of ours to assess."
     }
    ],
-   "ranked_from": "dbc748613f86f0e7"
+   "ranked_from": "dbc748613f86f0e7",
+   "chosen_from": null
   }
  }
 }
