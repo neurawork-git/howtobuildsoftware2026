@@ -59,6 +59,11 @@
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/compliance-base\" python hooks/co-post-tooluse.py",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/stack-base\" python hooks/st-post-tooluse.py",
+            "timeout": 15
           }
         ]
       }

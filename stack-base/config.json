@@ -3,5 +3,11 @@
   "compliance_dir": "compliance-base",
   "model": "",
   "max_concurrency": 12,
-  "product_file": "product.md"
+  "product_file": "product.md",
+  "prds_subpath": ".claude/PRPs/prds",
+  "plans_subpath": ".claude/PRPs/plans",
+  "validate_mode": {
+    "prd": "warn",
+    "plan": "warn"
+  }
 }

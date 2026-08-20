@@ -96,6 +96,31 @@ each one it orders that capability's components best-fit-first for this product.
 6. **Do not re-litigate applicability.** A capability reaching the ranking pass has
    already been decided as applicable. Rank it; do not argue it away.
 
+## Gate rules
+
+The gate pass runs after a PRD or PRP plan is written, over the components that
+document names. It reads the recorded stack back; it never decides it.
+
+1. **The component pool is closed.** Only components the precheck lists exist for
+   this pass. Never name one the catalog does not carry, and never invent a
+   spelling — a name that is not in the precheck is not a finding.
+2. **A mention is not a proposal.** A comparison, a prior-art note, an example, or
+   a description of what the repository already runs names a component without
+   proposing it. Only a proposal counts, and only proposals reach the verdict.
+3. **Never re-litigate a recorded decision.** Applicability was decided by the
+   scoping pass and the chosen component by a human at selection. Report the
+   contradiction — "this document proposes X where `<key>` records Y" — and stop
+   there; do not argue that Y was the wrong choice.
+4. **Name an ignored capability by its key.** Only keys from the applicable list in
+   the prompt, copied verbatim. A capability the document plainly needs and never
+   addresses is the finding; a capability it had no reason to touch is not.
+5. **Write exactly the two files named in the prompt** — the markdown report and
+   the JSON verdict — and nothing else. (The single-JSON-file rule below governs the
+   scoping and ranking passes.)
+6. **This pass changes nothing.** It never edits `stack.json` or
+   `capabilities.json`, and it never proposes a component itself: it reads a
+   document and reports what the recorded stack says about it.
+
 ## Output rules
 
 - Write **exactly one** JSON file, to exactly the path named in the prompt, with
