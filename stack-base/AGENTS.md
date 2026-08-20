@@ -1,8 +1,8 @@
 # AGENTS.md — Stack Compiler Constitution
 
-The rules every scoping and challenge agent follows. `scripts/scope.py` reads this
-file verbatim into each agent prompt, so this document *is* the specification —
-not a description of one.
+The rules every scoping, challenge and ranking agent follows. `scripts/scope.py`
+and `scripts/rank.py` read this file verbatim into each agent prompt, so this
+document *is* the specification — not a description of one.
 
 ## The model
 
@@ -16,9 +16,14 @@ Three fixed terms:
 - **capability** — a compliance-derived technical building block ("immutable audit
   logging"). Owned by `compliance-compiler`.
 - **component** — a concrete OSS project that can deliver a capability. Owned by
-  `compliance-compiler`. **Not this engine's concern at the scoping stage.**
+  `compliance-compiler`. **Not this engine's concern at the scoping stage**; at the
+  ranking stage it becomes one, but only to order the components the catalog
+  already lists — never to add, remove or invent one.
 - **applicability** — whether *this* product must implement a capability at all.
-  This engine's only output.
+  The scoping pass's output.
+- **ranking** — the order in which an applicable capability's components fit *this*
+  product, with a reason per position. The ranking pass's output. It is an
+  ordering, never a selection: the human fixes `chosen` afterwards.
 
 ## Scoping rules
 
@@ -66,6 +71,31 @@ contradicts.
    engineer fixes either the description or the decision. Prefer refuting a claim
    you cannot verify from the text over letting a false one through.
 
+## Ranking rules
+
+The ranking pass runs after scoping, over the capabilities that survived it. For
+each one it orders that capability's components best-fit-first for this product.
+
+1. **The component pool is closed and complete.** Every component listed under a
+   capability must appear in its ranking, exactly once, spelled exactly as given.
+   Adding one, dropping one, or renaming one fails the run. Narrowing the pool is
+   the catalog's decision and the human's at selection time — never the agent's.
+2. **Rank on fit to *this* product.** Deployment shape, the data actually held, the
+   integrations named, the stated non-goals. General popularity, GitHub stars and
+   "industry standard" are not reasons; they say nothing about this product.
+3. **Every position needs a reason.** One factual sentence naming why that component
+   sits where it does *for this product*. Restating the component's catalog `why`
+   text back is not a reason. A blank rationale fails the run.
+4. **`verdict: "replaced"` means superseded, not rejected.** During the license audit
+   that component took the place of the one in `replaced_from`. It is a live
+   candidate like any other and is ranked on its merits.
+5. **Never silently drop a component that looks license-incompatible.** Licenses are
+   checked deterministically after the run, against the catalog's own
+   `license_policy`. Rank such a component last and say so in its reason; the gate
+   decides whether it is a real violation or a recorded exception.
+6. **Do not re-litigate applicability.** A capability reaching the ranking pass has
+   already been decided as applicable. Rank it; do not argue it away.
+
 ## Output rules
 
 - Write **exactly one** JSON file, to exactly the path named in the prompt, with
@@ -77,7 +107,12 @@ contradicts.
 ## Boundaries
 
 - This engine **never** writes `stack.json` directly. Decisions are applied through
-  `<compliance_dir>/scripts/stack.py --apply-scope`, the one schema owner.
+  `<compliance_dir>/scripts/stack.py` — `--apply-scope` for applicability,
+  `--apply-ranking` for the component order — the one schema owner.
 - This engine **never** picks a component and never touches `chosen` or
-  `rationale`. Ranking and selection are separate passes with their own gates.
+  `rationale`. Ranking proposes an order; selection is the human's pass, with its
+  own gate.
+- This engine **never** edits `capabilities.json`. A component whose license the
+  policy forbids is a catalog finding, reported by the ranking gate and fixed in
+  `compliance-compiler`.
 - Machinery output stays inside the repo, never under `.claude/`.
