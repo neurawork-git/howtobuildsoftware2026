@@ -115,9 +115,11 @@ class TestSelectableUniverse(unittest.TestCase):
         self.assertEqual(sorted(u["order"]), sorted(u["options"]))
         self.assertEqual(u["order"][0], "age")
 
-    def test_carries_an_existing_choice(self) -> None:
-        u = _universe({"chosen": "age"})[0]
+    def test_carries_an_existing_choice_and_its_reason(self) -> None:
+        u = _universe({"chosen": "age", "rationale": "already operated in-house"})[0]
         self.assertEqual(u["chosen"], "age")
+        # Carried so the sheet can show it; the sheet must never re-submit it.
+        self.assertEqual(u["rationale"], "already operated in-house")
 
 
 class TestRenderSheet(unittest.TestCase):
@@ -130,10 +132,15 @@ class TestRenderSheet(unittest.TestCase):
         self.assertIn("\nchoice:\n", md)               # blank: no auto-pick
         self.assertIn("*mandatory-linked*", md)
 
-    def test_a_recorded_choice_is_prefilled_so_a_rerender_resumes(self) -> None:
-        md = selection_lib.render_sheet(_universe({"chosen": "age"}), "2026-02-02")
-        self.assertIn("choice: age", md)
+    def test_a_recorded_choice_is_shown_as_prose_never_prefilled(self) -> None:
+        md = selection_lib.render_sheet(
+            _universe({"chosen": "age", "rationale": "already operated in-house"}),
+            "2026-02-02")
+        self.assertIn("> Recorded: **age** — already operated in-house", md)
         self.assertIn("1 chosen, 0 undecided", md)
+        # Blank, so an untouched block cannot re-submit itself. See the round-trip test.
+        self.assertNotIn("choice: age", md)
+        self.assertIn("\nchoice:\n", md)
 
     def test_an_unranked_capability_is_flagged(self) -> None:
         md = selection_lib.render_sheet(_universe({"ranked": None}), "2026-02-02")
@@ -161,6 +168,18 @@ class TestParseSheet(unittest.TestCase):
     def test_a_blank_choice_is_still_deciding_not_an_error(self) -> None:
         md = selection_lib.render_sheet(_universe(), "2026-02-02")
         self.assertEqual(selection_lib.parse_sheet(md, _universe()), {})
+
+    def test_an_untouched_rerender_of_a_decided_sheet_selects_nothing(self) -> None:
+        """The whole point of the blank line: a later sitting cannot clobber an earlier one.
+
+        A re-submitted choice would carry an empty `reason:`, and `apply_selection`
+        replaces `rationale` and re-stamps `chosen_from` for every key it is given — so
+        an untouched block reaching the payload would silently drop the recorded reason
+        and mark a stale choice current again.
+        """
+        universe = _universe({"chosen": "age", "rationale": "already operated in-house"})
+        md = selection_lib.render_sheet(universe, "2026-02-02")
+        self.assertEqual(selection_lib.parse_sheet(md, universe), {})
 
     def test_a_rank_out_of_range_raises(self) -> None:
         with self.assertRaises(ValueError) as e:

@@ -12,11 +12,20 @@ prompt loop: every entry point in this harness is run non-interactively (often b
 agent, where stdin is not a terminal), and a file is resumable across sittings,
 diffable, and parseable in a test.
 
-Every ``choice:`` line arrives blank. Nothing is chosen without an explicit human
-keystroke — a pre-filled top-ranked default would make an inattentive apply
-indistinguishable from auto-picking, which is exactly what the ranking/selection
-split exists to prevent. A bare rank number is accepted so confirming a shortlist
-stays cheap.
+Every ``choice:`` line arrives blank — **including the ones already decided**, whose
+recorded state is shown as prose instead. Nothing is chosen without an explicit human
+keystroke, and the blank line is what makes that true twice over:
+
+- a pre-filled top-ranked default would make an inattentive apply indistinguishable
+  from auto-picking, which is what the ranking/selection split exists to prevent;
+- pre-filling an *existing* choice would re-submit it on every later sheet, and since
+  a selection replaces both ``rationale`` and ``chosen_from``, an untouched block
+  would silently drop its recorded reason and re-stamp a stale choice as current.
+
+So a blank line means "leave this capability exactly as it is", and only what the
+human writes reaches ``stack.json``. Re-confirming a choice the catalog has since made
+stale is possible — by writing it again, which is the deliberate act it should be. A
+bare rank number is accepted so confirming a shortlist stays cheap.
 """
 
 from __future__ import annotations
@@ -62,6 +71,7 @@ def selectable_universe(stack: dict, capabilities: dict) -> list[dict]:
                 for r in ranked
             },
             "chosen": str(entry.get("chosen") or "").strip(),
+            "rationale": str(entry.get("rationale") or "").strip(),
             "ranked": bool(ranked),
         })
     return out
@@ -86,8 +96,11 @@ def render_sheet(
          f"{len(universe) - chosen} undecided."),
         "",
         "Write the rank number (`1`) or the exact component name after `choice:`.",
-        "Leave it blank to decide later — an undecided capability stays a gap, and this",
-        "sheet can be re-rendered with the choices made so far already filled in.",
+        "Every `choice:` line starts blank, including the ones already decided: a blank",
+        "line means *leave this capability exactly as it is*. Only what you write here is",
+        "applied, so an untouched block can neither lose its reason nor be re-confirmed by",
+        "accident. Writing into a decided block replaces its choice and its reason — that",
+        "is also how you re-confirm a choice the catalog has since made stale.",
         "`reason:` is optional and lands in `stack.json`'s `rationale`.",
         "",
         "Apply with:",
@@ -106,12 +119,15 @@ def render_sheet(
                  "components below are in catalog order, not fit order."),
                 "",
             ]
+        if u["chosen"]:
+            recorded = f"> Recorded: **{u['chosen']}**"
+            lines += [recorded + (f" — {u['rationale']}" if u["rationale"] else ""), ""]
         if u["description"]:
             lines += [u["description"], ""]
         for i, name in enumerate(u["order"], start=1):
             reason = u["rationales"].get(name, "")
             lines.append(f"{i}. **{name}**" + (f" — {reason}" if reason else ""))
-        lines += ["", f"{CHOICE_PREFIX} {u['chosen']}".rstrip(), REASON_PREFIX, ""]
+        lines += ["", CHOICE_PREFIX, REASON_PREFIX, ""]
     return "\n".join(lines)
 
 
@@ -123,8 +139,9 @@ def parse_sheet(text: str, universe: list[dict]) -> dict:
     parsed — a numeric choice resolves against the universe's recorded ``order``, so
     the sheet's rendering and its meaning cannot drift apart.
 
-    A blank ``choice:`` means "still deciding" and is simply absent from the result.
-    Every problem is collected and raised once, so one edit pass fixes them all.
+    A blank ``choice:`` means "leave this capability as it is" — undecided or decided,
+    it is simply absent from the result and therefore never written. Every problem is
+    collected and raised once, so one edit pass fixes them all.
     """
     by_key = {u["key"]: u for u in universe}
     selections: dict[str, dict] = {}

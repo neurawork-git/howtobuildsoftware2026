@@ -267,5 +267,82 @@ class TestSelectionReachesTheSchemaOwner(unittest.TestCase):
             self.assertIn("1 choice(s) recorded", res.stdout)
 
 
+    def test_a_second_sitting_cannot_clobber_the_first(self) -> None:
+        """Re-render after deciding, apply again untouched: nothing may change.
+
+        `apply_selection` replaces `rationale` and re-stamps `chosen_from` for every key
+        it is given, so a sheet that re-submitted already-decided blocks would drop the
+        recorded reason and mark a stale choice current again — silently, in the tracked
+        artifact, during the exact multi-sitting flow this pass exists for.
+        """
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t)
+            root, comp = self._install(tmp)
+            stack_path = comp / "catalog" / "stack.json"
+
+            universe = selection_lib.selectable_universe(_stack(), _capabilities())
+            first = root / "first.md"
+            first.write_text(
+                selection_lib.render_sheet(universe, "2026-02-02").replace(
+                    "choice:\n", "choice: 1\n", 1).replace(
+                    "reason:\n", "reason: no operator to run a server\n", 1),
+                encoding="utf-8")
+            res = subprocess.run(
+                [sys.executable, str(root / "scripts" / "selection.py"), "--apply", str(first)],
+                capture_output=True, text=True, timeout=60, check=False,
+                env=dict(os.environ, STACK_ROOT=str(root)))
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            after_first = json.loads(stack_path.read_text(encoding="utf-8"))
+
+            # Second sitting: re-render against the now-decided stack, change nothing.
+            universe2 = selection_lib.selectable_universe(after_first, _capabilities())
+            second = root / "second.md"
+            second.write_text(selection_lib.render_sheet(universe2, "2026-02-03"),
+                              encoding="utf-8")
+            res2 = subprocess.run(
+                [sys.executable, str(root / "scripts" / "selection.py"), "--apply", str(second)],
+                capture_output=True, text=True, timeout=60, check=False,
+                env=dict(os.environ, STACK_ROOT=str(root)))
+            self.assertEqual(res2.returncode, 0, res2.stdout + res2.stderr)
+            self.assertIn("no filled `choice:` line", res2.stdout)
+
+            enc = json.loads(stack_path.read_text(encoding="utf-8"))["choices"][
+                "gdpr/encryption-at-rest"]
+            before = after_first["choices"]["gdpr/encryption-at-rest"]
+            self.assertEqual(enc["chosen"], before["chosen"])
+            self.assertEqual(enc["rationale"], "no operator to run a server")
+            self.assertEqual(enc["chosen_from"], before["chosen_from"])
+
+    def test_writing_into_a_decided_block_replaces_the_choice(self) -> None:
+        """The other half: re-confirming or changing a decision stays possible."""
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t)
+            root, comp = self._install(tmp)
+            stack_path = comp / "catalog" / "stack.json"
+            decided = _stack()
+            decided["choices"]["gdpr/encryption-at-rest"].update(
+                {"chosen": "age", "rationale": "old reason", "chosen_from": "deadbeefdeadbeef"})
+            stack_path.write_text(json.dumps(decided), encoding="utf-8")
+
+            universe = selection_lib.selectable_universe(decided, _capabilities())
+            sheet = root / "sheet.md"
+            sheet.write_text(
+                selection_lib.render_sheet(universe, "2026-02-02").replace(
+                    "choice:\n", "choice: OpenBao\n", 1).replace(
+                    "reason:\n", "reason: an operator exists now\n", 1),
+                encoding="utf-8")
+            res = subprocess.run(
+                [sys.executable, str(root / "scripts" / "selection.py"), "--apply", str(sheet)],
+                capture_output=True, text=True, timeout=60, check=False,
+                env=dict(os.environ, STACK_ROOT=str(root)))
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+
+            enc = json.loads(stack_path.read_text(encoding="utf-8"))["choices"][
+                "gdpr/encryption-at-rest"]
+            self.assertEqual(enc["chosen"], "OpenBao")
+            self.assertEqual(enc["rationale"], "an operator exists now")
+            self.assertNotEqual(enc["chosen_from"], "deadbeefdeadbeef")  # re-stamped, deliberately
+
+
 if __name__ == "__main__":
     unittest.main()

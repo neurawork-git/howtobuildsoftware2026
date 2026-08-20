@@ -12,9 +12,9 @@ Only a clean gate reaches the write, and the write goes through
 ``<compliance_dir>/scripts/stack.py --apply-selection`` — the one schema owner for
 ``stack.json``. This engine creates no data artifact of its own.
 
-The pass is deliberately resumable: a re-rendered sheet carries the choices already
-recorded, and applying a partly-filled sheet records what it names and leaves the rest
-as gaps the compliance gap report keeps counting.
+The pass is deliberately resumable: a re-rendered sheet shows what is already recorded
+and leaves every ``choice:`` line blank, so applying it records only what the human
+wrote this time and leaves every other capability — decided or not — exactly as it was.
 
 Named ``selection.py`` and not ``select.py``: ``scripts/`` is first on ``sys.path`` for
 every script run out of it, so a module named ``select`` shadows the stdlib ``select``
