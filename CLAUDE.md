@@ -90,8 +90,8 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   approval gate → merge → cleanup), whose review fan-out lives in
   `workflows/nw-ship-pr-review.js`, and `/nw-rules-init` (detect the repo's test runner,
   then write the baseline coding rules — scope, simplicity, evaluation-first — into the
-  root `CLAUDE.md` as one idempotent `<!-- neurawork-cc-harness:rules BEGIN/END -->`
-  block); `tests/` pins their guard invariants, including the block's 1,200-char budget.
+  root `CLAUDE.md` as one idempotent block delimited by `neurawork-cc-harness:rules`
+  BEGIN/END marker comments); `tests/` pins their guard invariants, including the block's 1,200-char budget.
   Marker blocks are **learner-protected**: `claudemd-lerner` snapshots every
   `owner:name` marker span before its SDK run and restores it byte-for-byte afterwards
   (`payload/scripts/markers.py`), so no tool-owned block is silently reworded.

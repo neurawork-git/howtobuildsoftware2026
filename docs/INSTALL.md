@@ -147,11 +147,14 @@ per-cluster coverage (`already covered` / `conflicts` / `absent`), asks, and the
 one marker-delimited block:
 
 ```text
-<!-- neurawork-cc-harness:rules BEGIN … -->
+BEGIN comment: neurawork-cc-harness:rules
 ### Coding Discipline
 - Scope · Simplicity · Evaluation first (carrying the detected test command)
-<!-- neurawork-cc-harness:rules END -->
+END comment: neurawork-cc-harness:rules
 ```
+
+(Rendered with the real HTML-comment syntax in the file — spelled out here so this guide
+does not itself look like a marker block to the guard below.)
 
 The block is idempotent — a re-run offers Replace/Keep, `--force` refreshes silently, and
 a second block is never written. It stays under 1,200 characters, enforced by a test.

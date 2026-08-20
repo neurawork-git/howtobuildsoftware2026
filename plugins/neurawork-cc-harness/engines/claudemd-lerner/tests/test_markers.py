@@ -58,6 +58,49 @@ class SpanDetection(unittest.TestCase):
         )
         self.assertEqual([s[0] for s in markers.find_spans(text)], ["one:x", "two:y"])
 
+    def test_prose_mentioning_a_marker_does_not_swallow_the_real_block(self) -> None:
+        # Documentation writes `<!-- owner:name BEGIN/END -->` inline; that text matches
+        # the BEGIN pattern. Paired naively with the real block's END it would put every
+        # line in between under protection, and the guard would then revert all of it.
+        text = (
+            "# CLAUDE.md\n\nThe rules live in one `<!-- neurawork-cc-harness:rules "
+            "BEGIN/END -->` block.\n\nA long stretch of prose the learner owns.\n\n"
+            + BLOCK
+            + "\n"
+        )
+        spans = markers.find_spans(text)
+        self.assertEqual(len(spans), 1, "the doc mention must not open a span")
+        _, start, end = spans[0]
+        self.assertEqual(text[start:end], BLOCK)
+        self.assertNotIn(
+            "prose the learner owns",
+            text[start:end],
+            "a span reaching back to the doc mention would freeze unrelated prose",
+        )
+        self.assertEqual(
+            markers.unmatched_ids(text),
+            ["neurawork-cc-harness:rules"],
+            "the unpaired mention is still worth reporting, even though a real block "
+            "with the same id exists further down",
+        )
+
+    def test_the_guarded_docs_of_this_repo_carry_no_unpaired_marker(self) -> None:
+        # This repo documents its own marker id, and the learner guards exactly these
+        # files. A BEGIN-shaped mention here would build the trap above in the very repo
+        # that ships the guard.
+        repo_root = Path(__file__).resolve().parents[5]
+        if not (repo_root / "CLAUDE.md").is_file():
+            self.skipTest("not running inside the harness repo")
+        guarded = [repo_root / "CLAUDE.md", *sorted((repo_root / "docs").glob("*.md"))]
+        for path in guarded:
+            with self.subTest(file=path.name):
+                self.assertEqual(
+                    markers.unmatched_ids(path.read_text(encoding="utf-8")),
+                    [],
+                    f"{path} contains an unpaired marker BEGIN — spell marker ids out in "
+                    "prose instead of using the comment syntax",
+                )
+
 
 class GuardBehaviour(unittest.TestCase):
     def setUp(self) -> None:
@@ -94,6 +137,19 @@ class GuardBehaviour(unittest.TestCase):
         messages = markers.restore(snap)
         self.assertEqual(len(messages), 1)
         self.assertEqual(self.path.read_text(encoding="utf-8"), DOC)
+
+    def test_half_deleted_block_is_reported_not_duplicated(self) -> None:
+        # The END comment dropped: the reworded body is still in the file. Re-appending
+        # the snapshot would leave the rule text twice over.
+        snap = self._snapshot()
+        broken = DOC.replace("<!-- neurawork-cc-harness:rules END -->\n", "")
+        self.path.write_text(broken, encoding="utf-8")
+        messages = markers.restore(snap)
+        self.assertEqual(len(messages), 1)
+        self.assertIn("unpaired BEGIN", messages[0])
+        text = self.path.read_text(encoding="utf-8")
+        self.assertEqual(text, broken, "a broken block is reported, never rewritten")
+        self.assertEqual(text.count("### Coding Discipline"), 1, "must not duplicate")
 
     def test_deleted_block_is_re_appended(self) -> None:
         snap = self._snapshot()

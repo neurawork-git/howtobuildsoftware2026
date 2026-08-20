@@ -44,6 +44,11 @@ def find_spans(text: str) -> list[tuple[str, int, int]]:
     protected too — a model that keeps the body but rewrites the BEGIN comment is
     still caught. A BEGIN whose END is missing is NOT a span: guessing its extent
     could swallow real content. Callers see it through :func:`unmatched_ids`.
+
+    A BEGIN is only paired with an END that no LATER same-id BEGIN precedes. Without
+    that check, prose merely *mentioning* a marker (documentation does exactly this)
+    would swallow everything up to the next real block's END, and the guard would then
+    revert every legitimate edit inside that stretch.
     """
     spans: list[tuple[str, int, int]] = []
     for begin in _BEGIN_RE.finditer(text):
@@ -51,15 +56,25 @@ def find_spans(text: str) -> list[tuple[str, int, int]]:
         end = _end_re(marker_id).search(text, begin.end())
         if end is None:
             continue
+        next_begin = next(
+            (m for m in _BEGIN_RE.finditer(text, begin.end()) if m.group("id") == marker_id),
+            None,
+        )
+        if next_begin is not None and next_begin.start() < end.start():
+            continue  # this BEGIN is orphaned — the later one owns that END
         spans.append((marker_id, begin.start(), end.end()))
     return spans
 
 
 def unmatched_ids(text: str) -> list[str]:
-    """Marker ids opened with BEGIN but never closed with a matching END."""
-    matched = {marker_id for marker_id, _, _ in find_spans(text)}
-    seen = [m.group("id") for m in _BEGIN_RE.finditer(text)]
-    return sorted({m for m in seen if m not in matched})
+    """Marker ids whose BEGIN never got paired with an END.
+
+    Compared by POSITION, not by id: a documentation line that mentions a marker is an
+    unmatched BEGIN even when a real block with the same id exists further down, and
+    that is precisely the case worth reporting.
+    """
+    matched = {start for _, start, _ in find_spans(text)}
+    return sorted({m.group("id") for m in _BEGIN_RE.finditer(text) if m.start() not in matched})
 
 
 def _read(path: Path) -> str | None:
@@ -120,6 +135,16 @@ def restore(snap: dict[Path, dict[str, str]]) -> list[str]:
                     "restored the first block and left the extras; remove them by hand"
                 )
             if not occurrences:
+                if marker_id in unmatched_ids(text):
+                    # An unpaired BEGIN with this id is still in the file — usually the
+                    # block with its END comment dropped. Re-appending would duplicate
+                    # the body that is still sitting there, so report instead: a loud
+                    # message a human repairs beats a silent second copy.
+                    messages.append(
+                        f"{path}: marker block '{marker_id}' is broken — an unpaired BEGIN "
+                        "remains; not re-appending (that would duplicate it). Repair by hand"
+                    )
+                    continue
                 sep = "" if text.endswith("\n\n") else ("\n" if text.endswith("\n") else "\n\n")
                 text = text + sep + span_text + "\n"
                 messages.append(
