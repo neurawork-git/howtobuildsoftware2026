@@ -14,7 +14,10 @@
     "SimpleRisk Core"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/automated-decision-making-profiling-safeguards": {
    "capability": "Automated decision-making & profiling safeguards",
@@ -27,7 +30,10 @@
     "SHAP"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/backup-restore-availability-resilience": {
    "capability": "Backup, restore & availability resilience",
@@ -40,7 +46,10 @@
     "SeaweedFS"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/breach-detection-register-notification": {
    "capability": "Breach detection, register & notification",
@@ -53,7 +62,10 @@
     "n8n"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/consent-capture-lifecycle-management": {
    "capability": "Consent capture & lifecycle management",
@@ -65,7 +77,10 @@
     "PostgreSQL"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/cross-border-transfer-safeguards": {
    "capability": "Cross-border transfer safeguards",
@@ -77,7 +92,10 @@
     "OpenBao"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/data-minimisation-accuracy-retention-lifecycle": {
    "capability": "Data minimisation, accuracy & retention lifecycle",
@@ -90,7 +108,10 @@
     "ARX Data Anonymization Tool"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/data-portability-structured-export": {
    "capability": "Data portability & structured export",
@@ -103,7 +124,10 @@
     "Ethyca Fides"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/data-subject-request-intake-access-fulfillment": {
    "capability": "Data-subject request intake & access fulfillment",
@@ -115,7 +139,10 @@
     "Microsoft Presidio"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/data-subject-transparency-complaints-remedies": {
    "capability": "Data-subject transparency, complaints & remedies",
@@ -127,7 +154,10 @@
     "Zammad"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/downstream-recipient-tracking-change-propagation": {
    "capability": "Downstream recipient tracking & change propagation",
@@ -140,7 +170,10 @@
     "Apache Camel"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/dpia-prior-consultation-workflow": {
    "capability": "DPIA & prior consultation workflow",
@@ -152,7 +185,10 @@
     "SimpleRisk"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/dpo-designation-governance": {
    "capability": "DPO designation & governance",
@@ -164,7 +200,10 @@
     "CNIL Open Source PIA (LINCnil/pia)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/encryption-security-of-processing": {
    "capability": "Encryption & security of processing",
@@ -176,7 +215,10 @@
     "Linkerd"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/instruction-bound-access-control-least-privilege": {
    "capability": "Instruction-bound access control & least privilege",
@@ -189,7 +231,10 @@
     "Cedar (cedar-agent, self-hosted)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/lawful-basis-purpose-governance": {
    "capability": "Lawful-basis & purpose governance",
@@ -201,7 +246,10 @@
     "Open Policy Agent (OPA)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/objection-opt-out-management": {
    "capability": "Objection & opt-out management",
@@ -213,7 +261,10 @@
     "Global Privacy Control (GPC)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/privacy-by-design-default": {
    "capability": "Privacy by design & default",
@@ -226,7 +277,10 @@
     "ARX Data Anonymization Tool"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/privacy-notice-transparency-delivery": {
    "capability": "Privacy notice & transparency delivery",
@@ -238,7 +292,10 @@
     "Orejime"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/processor-joint-controller-contracting": {
    "capability": "Processor & joint-controller contracting",
@@ -250,7 +307,10 @@
     "pyHanko"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/records-of-processing-authority-cooperation": {
    "capability": "Records of processing & authority cooperation",
@@ -262,7 +322,10 @@
     "Prighter"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/rectification-erasure-restriction-processing": {
    "capability": "Rectification, erasure & restriction processing",
@@ -275,7 +338,10 @@
     "OpenFGA"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/requester-identity-verification": {
    "capability": "Requester identity verification",
@@ -287,7 +353,10 @@
     "CompreFace"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/security-testing-effectiveness-assessment": {
    "capability": "Security testing & effectiveness assessment",
@@ -300,7 +369,10 @@
     "Prowler"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "gdpr/special-category-children-s-data-protection": {
    "capability": "Special-category & children's data protection",
@@ -313,7 +385,10 @@
     "Microsoft Presidio"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/change-release-management-for-production": {
    "capability": "Change & Release Management for Production",
@@ -326,7 +401,10 @@
     "Kyverno + Sigstore Cosign"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/cryptography-encryption-in-transit-at-rest-key-management": {
    "capability": "Cryptography: Encryption in Transit, At Rest & Key Management",
@@ -339,7 +417,10 @@
     "Istio (or Linkerd) service mesh"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/data-classification-asset-inventory-secure-data-lifecycle": {
    "capability": "Data Classification, Asset Inventory & Secure Data Lifecycle",
@@ -352,7 +433,10 @@
     "nwipe"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/endpoint-off-premises-asset-protection": {
    "capability": "Endpoint & Off-Premises Asset Protection",
@@ -365,7 +449,10 @@
     "Snipe-IT"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/environment-separation-test-data-protection": {
    "capability": "Environment Separation & Test Data Protection",
@@ -378,7 +465,10 @@
     "Teleport"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/ict-continuity-disaster-recovery": {
    "capability": "ICT Continuity & Disaster Recovery",
@@ -391,7 +481,10 @@
     "pgBackRest"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/network-activity-monitoring-anomaly-detection": {
    "capability": "Network Activity Monitoring & Anomaly Detection",
@@ -404,7 +497,10 @@
     "OpenSearch"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/network-segmentation-multi-tenant-isolation": {
    "capability": "Network Segmentation & Multi-Tenant Isolation",
@@ -417,7 +513,10 @@
     "Headscale"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/outsourced-development-oversight": {
    "capability": "Outsourced Development Oversight",
@@ -430,7 +529,10 @@
     "Sigstore / cosign (with SLSA provenance)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/physical-environmental-facility-security": {
    "capability": "Physical & Environmental Facility Security",
@@ -443,7 +545,10 @@
     "Verkada (or Envoy visitor management + Kisi access control)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/pii-privacy-controls-legal-regulatory-register": {
    "capability": "PII/Privacy Controls & Legal-Regulatory Register",
@@ -456,7 +561,10 @@
     "OSS Review Toolkit (ORT)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/rbac-least-privilege-identity-lifecycle": {
    "capability": "RBAC, Least Privilege & Identity Lifecycle",
@@ -468,7 +576,10 @@
     "Pomerium"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/secure-development-lifecycle-secure-coding": {
    "capability": "Secure Development Lifecycle & Secure Coding",
@@ -481,7 +592,10 @@
     "Trivy"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/secure-remote-access-egress-filtering": {
    "capability": "Secure Remote Access & Egress Filtering",
@@ -494,7 +608,10 @@
     "Pomerium"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/security-governance-hr-security-operating-procedures": {
    "capability": "Security Governance, HR Security & Operating Procedures",
@@ -507,7 +624,10 @@
     "BookStack"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/security-incident-detection-response-forensics": {
    "capability": "Security Incident Detection, Response & Forensics",
@@ -520,7 +640,10 @@
     "Velociraptor"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/supplier-ict-supply-chain-cloud-security-management": {
    "capability": "Supplier, ICT Supply-Chain & Cloud Security Management",
@@ -533,7 +656,10 @@
     "OWASP Amass"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "iso27001/vulnerability-remediation-in-the-delivery-pipeline": {
    "capability": "Vulnerability Remediation in the Delivery Pipeline",
@@ -545,7 +671,10 @@
     "OWASP Dependency-Track"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/business-continuity-disaster-recovery": {
    "capability": "Business continuity & disaster recovery",
@@ -558,7 +687,10 @@
     "Terraform"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/capacity-planning-elastic-scaling": {
    "capability": "Capacity planning & elastic scaling",
@@ -571,7 +703,10 @@
     "Grafana"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/change-management-secure-sdlc": {
    "capability": "Change management & secure SDLC",
@@ -584,7 +719,10 @@
     "Argo CD (GitOps)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/control-environment-governance-ethics-personnel": {
    "capability": "Control environment: governance, ethics & personnel",
@@ -597,7 +735,10 @@
     "Keycloak"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/control-framework-design-policy-deployment-accountability": {
    "capability": "Control framework design, policy deployment & accountability",
@@ -609,7 +750,10 @@
     "NIST OSCAL + IBM trestle"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/control-information-communications": {
    "capability": "Control information & communications",
@@ -622,7 +766,10 @@
     "Nextcloud"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/control-monitoring-evaluation-deficiency-remediation": {
    "capability": "Control monitoring, evaluation & deficiency remediation",
@@ -635,7 +782,10 @@
     "Redmine"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/data-classification-confidentiality-protection": {
    "capability": "Data classification & confidentiality protection",
@@ -648,7 +798,10 @@
     "Open Policy Agent (OPA) with OpenFGA"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/data-retention-secure-disposal": {
    "capability": "Data retention & secure disposal",
@@ -661,7 +814,10 @@
     "ShredOS / nwipe"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/data-subject-rights-complaint-handling": {
    "capability": "Data-subject rights & complaint handling",
@@ -673,7 +829,10 @@
     "Chatwoot"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/encryption-cryptographic-key-management": {
    "capability": "Encryption & cryptographic key management",
@@ -685,7 +844,10 @@
     "Google Tink"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/environmental-safeguards-facility-monitoring": {
    "capability": "Environmental safeguards & facility monitoring",
@@ -698,7 +860,10 @@
     "openDCIM"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/external-communication-incident-reporting-channels": {
    "capability": "External communication & incident reporting channels",
@@ -711,7 +876,10 @@
     "Zammad"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/identity-access-management": {
    "capability": "Identity & access management",
@@ -722,7 +890,10 @@
     "Apache Syncope"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/incident-response-recovery": {
    "capability": "Incident response & recovery",
@@ -734,7 +905,10 @@
     "Cachet"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/infrastructure-network-boundary-endpoint-protection": {
    "capability": "Infrastructure, network boundary & endpoint protection",
@@ -747,7 +921,10 @@
     "Falco"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/personal-data-quality-management": {
    "capability": "Personal data quality management",
@@ -760,7 +937,10 @@
     "Elementary Data"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/physical-access-control-secure-media-disposal": {
    "capability": "Physical access control & secure media disposal",
@@ -773,7 +953,10 @@
     "comply/OpenComply"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/privacy-breach-detection-notification": {
    "capability": "Privacy breach detection & notification",
@@ -786,7 +969,10 @@
     "OpenMetadata"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/privacy-notice-consent-lawful-collection": {
    "capability": "Privacy notice, consent & lawful collection",
@@ -798,7 +984,10 @@
     "Jitsu"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/processing-integrity-validation-pipeline-output-verification": {
    "capability": "Processing integrity: validation, pipeline & output verification",
@@ -811,7 +1000,10 @@
     "SeaweedFS (S3 Object Lock / WORM)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/risk-assessment-fraud-risk-governance": {
    "capability": "Risk assessment & fraud-risk governance",
@@ -823,7 +1015,10 @@
     "Apache Superset"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/system-monitoring-alerting-audit-log-retention": {
    "capability": "System monitoring, alerting & audit log retention",
@@ -836,7 +1031,10 @@
     "AWS S3 with Object Lock (WORM)"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/vendor-third-party-risk-management": {
    "capability": "Vendor & third-party risk management",
@@ -848,7 +1046,10 @@
     "OWASP Nuclei"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   },
   "soc2/vulnerability-management-remediation": {
    "capability": "Vulnerability management & remediation",
@@ -861,7 +1062,10 @@
     "OSV-Scanner"
    ],
    "chosen": null,
-   "rationale": ""
+   "rationale": "",
+   "applicable": true,
+   "applicability_reason": "",
+   "scoped_from": null
   }
  }
 }

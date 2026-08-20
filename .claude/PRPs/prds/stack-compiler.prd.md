@@ -133,10 +133,12 @@ exactly which choices became stale.
 
 ## Open Questions
 
-- [ ] **Schema extension coordination** — `applicable` / `applicability_reason` /
-      `scoped_from` are additive fields on a schema being written *right now* by the
-      cap-PRD Phase 2 plan. Land them in that plan's schema up front, or add them in a
-      follow-up migration?
+- [x] **Schema extension coordination** — resolved 2026-08-13, right after cap-PRD
+      Phase 2 merged (PR #22). `stack.json` now carries `applicable: true` /
+      `applicability_reason: ""` / `scoped_from: null` per capability, and
+      `stack.py:scaffold()` carries all three over by key. Without that carry-over a
+      later `--scaffold` run would have silently erased every scoping decision, since
+      scaffold rebuilds each entry from the catalog and copies only listed fields.
 - [ ] **Product-domain components (v2?)** — should the catalog eventually carry
       product-capability components (vector DB, API gateway, frontend) so the gate covers
       the whole stack, or does `stack.json` stay compliance-scoped forever?
@@ -250,7 +252,7 @@ split with additive hook merging, and the in-repo write guard.
 | Risk | Likelihood | Mitigation |
 |------|------------|------------|
 | **Applicability filter silently drops mandatory constraints** | **H** | Accept only "covered by a choice" or "justified non-applicable"; unexplained omission fails the run. Highest-priority test case. |
-| Schema conflict with the in-flight cap-PRD Phase 2 plan | **H** | Land the three additive fields in that plan's schema now, or accept a migration step; tracked as open question 1 |
+| ~~Schema conflict with the in-flight cap-PRD Phase 2 plan~~ | resolved | Closed 2026-08-13: the three fields and their scaffold carry-over shipped right after PR #22 |
 | LLM re-runs churn `stack.json` | M | Human-confirmed selection is the only writer of `chosen`; engine output is a proposal |
 | Two PostToolUse validators × Write+Edit = agent storm | M | Debounce hash + inline precheck before any spawn; measured by the gate-noise metric |
 | Catalog changes invalidate the whole stack | M | Per-capability hash comparison, not whole-file |
@@ -272,7 +274,7 @@ split with additive hook merging, and the in-repo write guard.
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
 | 0 | PRD reconciliation | Harness PRD: Phase 5 superseded by this PRD, Phase 6 → complete, skill registry, vocabulary, new Phase 7 (co- hook on PRD writes). Cap-PRD: cross-link, answer open question 3 | in-progress | - | - | - |
-| 1 | Scope engine | Idea + requirements → applicable frameworks + per-capability applicability with reasons; mandatory-safety gate; additive schema fields | pending | - | 0, cap-PRD 2 | - |
+| 1 | Scope engine | Idea + requirements → applicable frameworks + per-capability applicability with reasons; mandatory-safety gate. Schema fields shipped 2026-08-13; `gaps()` still counts non-applicable capabilities as gaps and must learn to skip them here | pending | - | 0, cap-PRD 2 | - |
 | 2 | Map & rank | Rank closed-pool components per applicable capability against requirements + license/role policy | pending | - | 1 | - |
 | 3 | Selection | Interactive confirmation writing `chosen` via `stack.py`; staleness check on catalog hash | pending | with 4 | 2 | - |
 | 4 | `st-` gate | `st-post-tooluse` on PRD + plan writes: allowlist / applicable-capability / license checks, precheck + debounced LLM report, warn\|block | pending | with 3 | 2 | - |
