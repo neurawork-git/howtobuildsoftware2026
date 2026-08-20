@@ -109,6 +109,59 @@ class TestValidateCLI(unittest.TestCase):
             self.assertFalse((root / "reports").exists(), "preflight wrote a report")
 
 
+class TestRepoRootSplit(unittest.TestCase):
+    """The catalog comes from the document's working tree, not from the install's.
+
+    Inside a worktree the hook redirects ``STACK_ROOT`` to the main checkout so reports
+    and the ledger survive `git worktree remove` — but the decisions a document is
+    judged against are the ones its own branch records. Without the split, every
+    scoping, ranking or selection branch would be checked against main's `stack.json`.
+    """
+
+    def _install(self, tmp: Path) -> Path:
+        root = tmp / "main" / "stack-base"
+        (root / "scripts").mkdir(parents=True)
+        for script in (PAYLOAD / "scripts").glob("*.py"):
+            shutil.copy2(script, root / "scripts" / script.name)
+        shutil.copytree(ENGINES / "_shared", root / "_shared",
+                        ignore=shutil.ignore_patterns("tests", "__pycache__"))
+        return root
+
+    def test_the_documents_tree_supplies_the_catalog(self) -> None:
+        """Both trees are broken, but differently — the message names the one consulted.
+
+        Deliberately proven on two failing preflights rather than on one passing run:
+        a run that clears preflight calls the SDK agent, and no test in this suite may
+        do that.
+        """
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t)
+            root = self._install(tmp)                    # install under tmp/main
+            # tmp/main has no compliance install at all; tmp/wt has one, missing stack.json.
+            catalog = tmp / "wt" / "compliance-base" / "catalog"
+            catalog.mkdir(parents=True)
+            (catalog / "capabilities.json").write_text(json.dumps(CAPABILITIES),
+                                                       encoding="utf-8")
+            doc = tmp / "wt" / ".claude/PRPs/prds/product.prd.md"
+            doc.parent.mkdir(parents=True)
+            doc.write_text("We will use OpenBao.\n", encoding="utf-8")
+            env = dict(os.environ, STACK_ROOT=str(root))
+
+            without = subprocess.run(
+                [sys.executable, str(root / "scripts" / "validate.py"), str(doc)],
+                capture_output=True, text=True, env=env, timeout=60, check=False)
+            self.assertEqual(without.returncode, 1)
+            self.assertIn("No compliance install", without.stdout)
+
+            with_root = subprocess.run(
+                [sys.executable, str(root / "scripts" / "validate.py"), str(doc),
+                 "--repo-root", str(tmp / "wt")],
+                capture_output=True, text=True, env=env, timeout=60, check=False)
+            self.assertEqual(with_root.returncode, 1)
+            self.assertIn("--scaffold", with_root.stdout)
+            self.assertNotIn("No compliance install", with_root.stdout)
+
+
 class TestVerdictFile(unittest.TestCase):
     """A verdict this script cannot use is reported, never assumed to pass."""
 

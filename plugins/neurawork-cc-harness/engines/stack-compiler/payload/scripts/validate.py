@@ -20,12 +20,20 @@ Exit: 0 when no proposed component contradicts a recorded choice or the license
 policy (or the verdict is unusable / there is nothing to enforce — both reported out
 loud); 1 when the gate fails.
 
+``--repo-root`` names the working tree the document belongs to, which the catalog is
+then read from. The hook passes it because the two can differ: inside a worktree the
+reports and the ledger belong next to the main checkout (they must survive
+``git worktree remove``), while the decisions the document is judged against are the
+ones its own branch records.
+
 Usage:
     uv run python scripts/validate.py .claude/PRPs/prds/<name>.prd.md
+    uv run python scripts/validate.py <document> --repo-root <working-tree>
 """
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import json
 import sys
@@ -41,7 +49,6 @@ from config import (
     GATE_STATE_FILE,
     REPORTS_DIR,
     ROOT_DIR,
-    compliance_root,
     load_cfg,
     now_iso,
 )
@@ -193,13 +200,25 @@ def _load_verdict(path: Path) -> dict | None:
 
 
 def main() -> int:
-    if len(sys.argv) < 2:
-        print("Usage: validate.py <path-to-document.prd.md|.plan.md>")
+    parser = argparse.ArgumentParser(
+        description="Check a PRD or PRP plan against the recorded component stack"
+    )
+    parser.add_argument("document", nargs="?",
+                        help="the .prd.md or .plan.md file to check")
+    parser.add_argument("--repo-root", type=str, default="", metavar="PATH",
+                        help="working tree the document belongs to; its catalog is the "
+                             "one checked against (default: the install's own repo)")
+    args = parser.parse_args()
+    if not args.document:
+        print("Usage: validate.py <path-to-document.prd.md|.plan.md> [--repo-root PATH]")
         return 2
 
     cfg = load_cfg()
-    repo_root = ROOT_DIR.parent
-    doc_path = Path(sys.argv[1])
+    # Where the decisions are read from — the document's own working tree. Outputs
+    # (REPORTS_DIR, the ledger) stay under ROOT_DIR, which a hook redirects to the main
+    # checkout so they survive `git worktree remove`.
+    repo_root = Path(args.repo_root).resolve() if args.repo_root else ROOT_DIR.parent
+    doc_path = Path(args.document)
     if not doc_path.is_absolute():
         doc_path = (repo_root / doc_path).resolve()
     if not doc_path.exists():
@@ -207,7 +226,7 @@ def main() -> int:
         return 1
     kind = gate_lib.document_kind(str(doc_path), repo_root, cfg) or "plan"
 
-    comp = compliance_root(cfg)
+    comp = repo_root / str(cfg.get("compliance_dir") or "compliance-base")
     capabilities_json = comp / "catalog" / "capabilities.json"
     stack_json = comp / "catalog" / "stack.json"
     if not comp.is_dir():
@@ -237,8 +256,10 @@ def main() -> int:
     verdict_path = REPORTS_DIR / f"{doc_path.stem}.stack.json"
     from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
     try:
-        assert_in_repo_not_dotclaude(report_path, repo_root)
-        assert_in_repo_not_dotclaude(verdict_path, repo_root)
+        # Guarded against the INSTALL's repo, not the document's: the reports live under
+        # ROOT_DIR, which is the main checkout when a worktree hook redirected us here.
+        assert_in_repo_not_dotclaude(report_path, ROOT_DIR.parent)
+        assert_in_repo_not_dotclaude(verdict_path, ROOT_DIR.parent)
     except WriteGuardError as e:
         print(f"Refusing to write report: {e}")
         return 1

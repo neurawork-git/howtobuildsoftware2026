@@ -99,8 +99,14 @@ def main() -> None:
     if not doc_path.exists():
         return
 
+    # Inputs come from the working tree the document lives in; outputs go next to the
+    # main checkout. The split matters on exactly the branches this gate is for: a
+    # branch that edits stack.json must be judged against its own decisions, not
+    # against the ones main happens to carry — otherwise every scoping, ranking or
+    # selection branch is classified against a foreign state and, with `chosen_total`
+    # read as 0, never earns a validator run at all.
     root = effective_root()
-    catalog_dir = root.parent / str(cfg.get("compliance_dir") or "compliance-base") / "catalog"
+    catalog_dir = repo_root / str(cfg.get("compliance_dir") or "compliance-base") / "catalog"
     try:
         text = doc_path.read_text(encoding="utf-8")
     except OSError:
@@ -124,7 +130,7 @@ def main() -> None:
         except OSError:
             return
         cmd = ["uv", "run", "--directory", str(root), "python",
-               "scripts/validate.py", str(doc_path)]
+               "scripts/validate.py", str(doc_path), "--repo-root", str(repo_root)]
         env = {**child_env(), "STACK_ROOT": str(root)}
         try:
             subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
