@@ -50,6 +50,8 @@ uv run --directory knowledge-base python scripts/compile.py     # distil daily/ 
 uv run --directory claudemd-lerner python scripts/update.py     # apply daily/ → CLAUDE.md + docs/
 uv run --directory compliance-base python scripts/extract.py    # ~30 agents → catalog/*.json
 uv run --directory compliance-base python scripts/validate.py <plan>  # check a PRP plan
+uv run --directory stack-base python scripts/scope.py           # which capabilities apply, and why
+uv run --directory stack-base python scripts/rank.py            # order each one's components
 ```
 
 The first two run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
@@ -88,10 +90,15 @@ its catalog is built at install time and rebuilt on demand via `co-extract`. A
   **installed by hand**: its `install.py` / `recon.py` / slash commands land in a
   later phase, so `plugins/…/engines/stack-compiler/payload/` and `stack-base/` are
   kept byte-identical by `tests/test_payload_drift.py`, not by an installer. It owns
-  **no data artifact**: `scripts/scope.py` reads the tracked `product.md`, decides
-  per capability whether it applies to this product and why, and writes those
-  decisions into `compliance-base/catalog/stack.json` through
-  `compliance-base/scripts/stack.py --apply-scope` — the single schema owner.
+  **no data artifact**. Two passes, both reading the tracked `product.md` and both
+  writing into `compliance-base/catalog/stack.json` through
+  `compliance-base/scripts/stack.py` — the single schema owner: `scripts/scope.py`
+  decides per capability *whether* it applies and why (`--apply-scope`), and
+  `scripts/rank.py` orders each still-applicable capability's catalog components
+  best-fit-first with a reason per position (`--apply-ranking`). The component pool
+  is closed — a ranking must name exactly that capability's `options`, once each —
+  and a deterministic gate (pool match + the catalog's own `license_policy`, honouring
+  `verdict: "keep-exception"`) runs before either write; a failed gate writes nothing.
   `product.md` is tracked; `.shards/` and `reports/` are gitignored.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).

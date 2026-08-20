@@ -113,6 +113,8 @@ class TestScaffold(unittest.TestCase):
             self.assertTrue(enc["applicable"])          # unscoped default: everything applies
             self.assertEqual(enc["applicability_reason"], "")
             self.assertIsNone(enc["scoped_from"])
+            self.assertIsNone(enc["ranked"])            # None, not []: never ranked ≠ ranked empty
+            self.assertIsNone(enc["ranked_from"])
             self.assertFalse(out["choices"]["gdpr/consent-capture"]["mandatory_linked"])
 
     def test_preserves_human_fields_and_refreshes_machine_fields(self) -> None:
@@ -151,6 +153,22 @@ class TestScaffold(unittest.TestCase):
             self.assertFalse(enc["applicable"])
             self.assertEqual(enc["applicability_reason"], "product stores no data at rest")
             self.assertEqual(enc["scoped_from"], "scope-7f3a")
+
+    def test_preserves_component_ranking(self) -> None:
+        """A re-scaffold must not erase the stack-compiler's ranking pass either."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            existing = {"choices": {"gdpr/encryption-at-rest": {
+                "options": ["Vault"],           # stale — must be recomputed
+                "ranked": [{"component": "age", "rationale": "single binary, no server"},
+                           {"component": "OpenBao", "rationale": "needs an operator"}],
+                "ranked_from": "prod-4c11",
+            }}}
+            out = stack.scaffold(_capabilities(), existing, catalog_dir=catalog)
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            self.assertEqual([r["component"] for r in enc["ranked"]], ["age", "OpenBao"])
+            self.assertEqual(enc["ranked_from"], "prod-4c11")
+            self.assertEqual(enc["options"], ["OpenBao", "age"])   # machine field still refreshed
 
     def test_adds_new_capability_unchosen(self) -> None:
         with tempfile.TemporaryDirectory() as t:
@@ -364,6 +382,171 @@ class TestApplyScope(unittest.TestCase):
             with self.assertRaises(ValueError):
                 stack.apply_scope(s, decisions, "prod-1")
             self.assertIsNone(s["choices"]["gdpr/encryption-at-rest"]["scoped_from"])
+
+
+class TestApplyRanking(unittest.TestCase):
+    """The single write path the stack-compiler skill uses for component orderings."""
+
+    def _scoped(self, catalog: Path, consent_applicable: bool = True) -> dict:
+        """A scaffolded stack, scoped so `consent-capture` can be ruled out."""
+        s = stack.scaffold(_capabilities(), None, catalog_dir=catalog)
+        decisions = {k: {"applicable": True, "applicability_reason": ""} for k in s["choices"]}
+        if not consent_applicable:
+            decisions["gdpr/consent-capture"] = {
+                "applicable": False, "applicability_reason": "no consent is ever collected"}
+        return stack.apply_scope(s, decisions, "prod-1")
+
+    def _full(self) -> dict:
+        return {
+            "gdpr/encryption-at-rest": [
+                {"component": "age", "rationale": "single binary, matches the deployment"},
+                {"component": "OpenBao", "rationale": "needs an operator we do not have"},
+            ],
+            "gdpr/consent-capture": [
+                {"component": "Klaro!", "rationale": "the only option, and self-hostable"},
+            ],
+        }
+
+    def test_writes_the_ordering_and_the_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            out = stack.apply_ranking(self._scoped(catalog), self._full(), "prod-4c11")
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            self.assertEqual([r["component"] for r in enc["ranked"]], ["age", "OpenBao"])
+            self.assertEqual(enc["ranked"][0]["rationale"],
+                             "single binary, matches the deployment")
+            self.assertEqual(enc["ranked_from"], "prod-4c11")
+
+    def test_never_touches_the_selection_or_the_pool(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scoped(catalog)
+            s["choices"]["gdpr/encryption-at-rest"].update(
+                chosen="OpenBao", rationale="already self-hosted")
+            out = stack.apply_ranking(s, self._full(), "prod-1")
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            self.assertEqual(enc["chosen"], "OpenBao")
+            self.assertEqual(enc["rationale"], "already self-hosted")
+            self.assertEqual(enc["options"], ["OpenBao", "age"])
+            self.assertTrue(enc["applicable"])
+            self.assertEqual(enc["scoped_from"], "prod-1")
+
+    def test_non_applicable_capability_is_left_unranked(self) -> None:
+        """Explicitly null, never a missing key — every entry carries every field."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scoped(catalog, consent_applicable=False)
+            rankings = {k: v for k, v in self._full().items() if k != "gdpr/consent-capture"}
+            out = stack.apply_ranking(s, rankings, "prod-1")
+            con = out["choices"]["gdpr/consent-capture"]
+            self.assertIn("ranked", con)
+            self.assertIn("ranked_from", con)
+            self.assertIsNone(con["ranked"])
+            self.assertIsNone(con["ranked_from"])
+
+    def test_a_ranking_recorded_before_a_capability_was_scoped_out_survives(self) -> None:
+        """Scoping something out records a decision; it must not destroy earlier work."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scoped(catalog, consent_applicable=False)
+            s["choices"]["gdpr/consent-capture"].update(
+                ranked=[{"component": "Klaro!", "rationale": "ranked while still applicable"}],
+                ranked_from="prod-0")
+            rankings = {k: v for k, v in self._full().items() if k != "gdpr/consent-capture"}
+            out = stack.apply_ranking(s, rankings, "prod-1")
+            con = out["choices"]["gdpr/consent-capture"]
+            self.assertEqual(con["ranked"][0]["component"], "Klaro!")
+            self.assertEqual(con["ranked_from"], "prod-0")
+
+    def test_ranking_a_scoped_out_capability_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scoped(catalog, consent_applicable=False)
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(s, self._full(), "prod-1")
+            self.assertIn("non-applicable", str(cm.exception))
+            self.assertIn("gdpr/consent-capture", str(cm.exception))
+
+    def test_missing_applicable_capability_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            rankings = {k: v for k, v in self._full().items() if k != "gdpr/consent-capture"}
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(self._scoped(catalog), rankings, "prod-1")
+            self.assertIn("no ranking", str(cm.exception))
+            self.assertIn("gdpr/consent-capture", str(cm.exception))
+
+    def test_unknown_key_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            rankings = self._full()
+            rankings["gdpr/invented-capability"] = [{"component": "X", "rationale": "y"}]
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(self._scoped(catalog), rankings, "prod-1")
+            self.assertIn("gdpr/invented-capability", str(cm.exception))
+
+    def test_an_unranked_option_refuses(self) -> None:
+        """Dropping a component silently is the omission this gate exists to prevent."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            rankings = self._full()
+            rankings["gdpr/encryption-at-rest"] = [
+                {"component": "age", "rationale": "single binary"}]
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(self._scoped(catalog), rankings, "prod-1")
+            self.assertIn("options left unranked", str(cm.exception))
+            self.assertIn("OpenBao", str(cm.exception))
+
+    def test_an_invented_component_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            rankings = self._full()
+            rankings["gdpr/encryption-at-rest"].append(
+                {"component": "SOPS", "rationale": "not in the catalog"})
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(self._scoped(catalog), rankings, "prod-1")
+            self.assertIn("not in options", str(cm.exception))
+            self.assertIn("SOPS", str(cm.exception))
+
+    def test_a_duplicated_component_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            rankings = self._full()
+            rankings["gdpr/encryption-at-rest"] = [
+                {"component": "age", "rationale": "first"},
+                {"component": "age", "rationale": "again"},
+            ]
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(self._scoped(catalog), rankings, "prod-1")
+            self.assertIn("ranked twice", str(cm.exception))
+
+    def test_a_blank_rationale_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            rankings = self._full()
+            rankings["gdpr/encryption-at-rest"][1]["rationale"] = "   "
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(self._scoped(catalog), rankings, "prod-1")
+            self.assertIn("no rationale", str(cm.exception))
+            self.assertIn("OpenBao", str(cm.exception))
+
+    def test_an_empty_ranking_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            rankings = self._full()
+            rankings["gdpr/encryption-at-rest"] = []
+            with self.assertRaises(ValueError) as cm:
+                stack.apply_ranking(self._scoped(catalog), rankings, "prod-1")
+            self.assertIn("non-empty list", str(cm.exception))
+
+    def test_a_refused_write_leaves_the_input_untouched(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scoped(catalog)
+            rankings = {"gdpr/encryption-at-rest": self._full()["gdpr/encryption-at-rest"]}
+            with self.assertRaises(ValueError):
+                stack.apply_ranking(s, rankings, "prod-1")
+            self.assertIsNone(s["choices"]["gdpr/encryption-at-rest"]["ranked"])
 
 
 class TestRenderGapReport(unittest.TestCase):

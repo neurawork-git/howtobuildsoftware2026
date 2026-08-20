@@ -11,19 +11,31 @@ kept, so the same capability name may legitimately appear under two frameworks.
 ``--scaffold`` (re)generates ``stack.json``: machine-owned fields (``capability``,
 ``framework``, ``mandatory_linked``, ``options``) are recomputed every run, while
 the decision-owned ``chosen``, ``rationale``, ``applicable``,
-``applicability_reason`` and ``scoped_from`` are carried over by key. New
-capabilities appear with ``chosen: null``; keys the catalog no longer knows are
-reported as orphaned before being dropped.
+``applicability_reason``, ``scoped_from``, ``ranked`` and ``ranked_from`` are
+carried over by key. New capabilities appear with ``chosen: null``; keys the
+catalog no longer knows are reported as orphaned before being dropped.
 
-The three applicability fields are written by the ``stack-compiler`` skill's
-product-scoping pass (a capability that does not apply to the product at hand is
-recorded as such, with a reason — never silently omitted). They are carried over
-here so a re-scaffold cannot erase that scoping work, and ``--apply-scope`` is the
-one entry point through which that skill writes them: it takes a decisions file
+The applicability and ranking fields are written by the ``stack-compiler`` skill,
+which owns no data artifact of its own; both are carried over here so a
+re-scaffold cannot erase that work, and each has one entry point:
+
+``--apply-scope`` takes the product-scoping pass's decisions file
 ``{"scoped_from": <hash>, "decisions": {<key>: {"applicable", "applicability_reason"}}}``
 and refuses the whole write unless the decision set is exactly the capability key
-set and every non-applicable decision carries a reason. ``chosen`` and
-``rationale`` are never touched by it.
+set and every non-applicable decision carries a reason. A capability that does not
+apply to the product at hand is recorded as such, with a reason — never silently
+omitted.
+
+``--apply-ranking`` takes the component-ranking pass's file
+``{"ranked_from": <hash>, "rankings": {<key>: [{"component", "rationale"}, ...]}}``
+and refuses the whole write unless every **applicable** capability is ranked and
+each ranking names exactly that entry's ``options``, once each, with a rationale.
+The ranking is an ordering of the catalog's own recommendations, not a selection
+from them, so ``options`` stays the closed pool and ``ranked`` its best-fit-first
+order.
+
+``chosen`` and ``rationale`` are never touched by either: the component decision
+belongs to the human selection pass.
 
 A plain run computes the gap — *applicable* mandatory-linked capabilities with no
 chosen component — writes ``reports/stack-gaps-<date>.md`` and prints a one-line
@@ -35,6 +47,7 @@ Enforcement belongs to the plan validator.
 Usage:
     uv run python scripts/stack.py --scaffold          # create/refresh catalog/stack.json
     uv run python scripts/stack.py --apply-scope F.json  # write applicability decisions
+    uv run python scripts/stack.py --apply-ranking F.json  # write component orderings
     uv run python scripts/stack.py                     # report gaps (report-only, exit 0)
 """
 
@@ -135,6 +148,8 @@ def scaffold(
                 "applicable": prev.get("applicable", True),
                 "applicability_reason": prev.get("applicability_reason", ""),
                 "scoped_from": prev.get("scoped_from"),
+                "ranked": prev.get("ranked"),
+                "ranked_from": prev.get("ranked_from"),
             }
     return {
         "generated": generated or today_iso(),
@@ -241,6 +256,78 @@ def apply_scope(stack: dict, decisions: dict, scoped_from: str) -> dict:
         entry["applicable"] = bool(d.get("applicable", True))
         entry["applicability_reason"] = str(d.get("applicability_reason") or "").strip()
         entry["scoped_from"] = scoped_from
+        out[key] = entry
+    return {**stack, "choices": out}
+
+
+def apply_ranking(stack: dict, rankings: dict, ranked_from: str) -> dict:
+    """Write one component-ranking pass into stack.json's ``ranked`` fields.
+
+    ``rankings`` maps every **applicable** capability key to a list of
+    ``{"component": str, "rationale": str}`` in best-fit-first order. The whole
+    write is refused — nothing partial — when a ranking is missing for an
+    applicable capability (the silent omission this schema exists to prevent),
+    when one is given for an unknown or non-applicable key, when the ranked
+    component names are not exactly the entry's ``options`` as a set (which
+    catches dropped, invented and duplicated components in one check), or when a
+    rationale is blank. ``chosen``, ``rationale``, ``options`` and the three
+    applicability fields are never read or written: the component decision belongs
+    to the human selection pass, and ``options`` is recomputed from the catalog.
+    """
+    choices = stack.get("choices") or {}
+    applicable = {k for k, e in choices.items() if (e or {}).get("applicable", True)}
+    given = set(rankings)
+    problems: list[str] = []
+
+    if unknown := sorted(given - set(choices)):
+        problems.append(f"ranking for {len(unknown)} unknown key(s): {', '.join(unknown)}")
+    if scoped_out := sorted((given & set(choices)) - applicable):
+        problems.append(f"ranking for {len(scoped_out)} non-applicable key(s): "
+                        f"{', '.join(scoped_out)}")
+    if missing := sorted(applicable - given):
+        problems.append(f"no ranking for {len(missing)} applicable key(s): {', '.join(missing)}")
+
+    for key in sorted(applicable & given):
+        ranked = rankings[key]
+        if not isinstance(ranked, list) or not ranked:
+            problems.append(f"{key}: ranking is not a non-empty list")
+            continue
+        names = [str((r or {}).get("component") or "").strip() for r in ranked]
+        if blank := [i for i, n in enumerate(names) if not n]:
+            problems.append(f"{key}: {len(blank)} entry/-ies name no component")
+            continue
+        if len(set(names)) != len(names):
+            dupes = sorted({n for n in names if names.count(n) > 1})
+            problems.append(f"{key}: component(s) ranked twice: {', '.join(dupes)}")
+        options = list(choices[key].get("options") or [])
+        if extra := sorted(set(names) - set(options)):
+            problems.append(f"{key}: not in options: {', '.join(extra)}")
+        if dropped := sorted(set(options) - set(names)):
+            problems.append(f"{key}: options left unranked: {', '.join(dropped)}")
+        if no_reason := [n for n, r in zip(names, ranked)
+                         if not str((r or {}).get("rationale") or "").strip()]:
+            problems.append(f"{key}: ranked with no rationale: {', '.join(no_reason)}")
+
+    if problems:
+        raise ValueError("; ".join(problems))
+
+    out: dict[str, dict] = {}
+    for key in sorted(choices):
+        entry = dict(choices[key])
+        if key in rankings:
+            entry["ranked"] = [
+                {"component": str(r["component"]).strip(),
+                 "rationale": str(r["rationale"]).strip()}
+                for r in rankings[key]
+            ]
+            entry["ranked_from"] = ranked_from
+        else:
+            # Every entry carries every field, as it does for the applicability fields:
+            # a scoped-out capability reads `ranked: null`, never a missing key that a
+            # consumer would have to guard. setdefault, so a ranking recorded before the
+            # capability was scoped out survives rather than being silently discarded.
+            entry.setdefault("ranked", None)
+            entry.setdefault("ranked_from", None)
         out[key] = entry
     return {**stack, "choices": out}
 
@@ -394,6 +481,8 @@ def main() -> int:
                         help="Create/refresh catalog/stack.json (keeps existing choices)")
     parser.add_argument("--apply-scope", type=str, metavar="PATH",
                         help="Apply a product-scoping decisions file to the applicability fields")
+    parser.add_argument("--apply-ranking", type=str, metavar="PATH",
+                        help="Apply a component-ranking file to the applicable capabilities")
     args = parser.parse_args()
 
     from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
@@ -453,6 +542,30 @@ def main() -> int:
         for key, entry in stack["choices"].items():
             if not entry.get("applicable", True) and str(entry.get("chosen") or "").strip():
                 print(f"  ! {key}: scoped out but still carries chosen={entry['chosen']}")
+
+    if args.apply_ranking:
+        rank_path = Path(args.apply_ranking)
+        if not rank_path.exists():
+            print(f"No such ranking file: {rank_path}")
+            return 1
+        payload = _load_json(rank_path)
+        rankings = payload.get("rankings")
+        ranked_from = str(payload.get("ranked_from") or "").strip()
+        if not isinstance(rankings, dict) or not rankings:
+            print(f"{rank_path}: no 'rankings' object to apply")
+            return 1
+        if not ranked_from:
+            print(f"{rank_path}: refusing to apply a ranking with no 'ranked_from' hash")
+            return 1
+        try:
+            stack = apply_ranking(stack, rankings, ranked_from)
+        except ValueError as e:
+            print(f"Refusing to apply ranking: {e}")
+            return 1
+        _write_json_atomic(STACK_JSON, stack)
+        components = sum(len(e.get("ranked") or []) for e in stack["choices"].values())
+        print(f"stack.json ranked from {ranked_from}: {len(rankings)} applicable "
+              f"capability/-ies, {components} component(s) ordered")
 
     result = gaps(catalog, stack, capabilities_hash=cap_hash)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
