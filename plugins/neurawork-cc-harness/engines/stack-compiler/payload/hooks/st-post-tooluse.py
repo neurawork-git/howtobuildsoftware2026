@@ -36,10 +36,14 @@ from _shared.hookio import child_env, read_hook_input, recursion_guard
 
 recursion_guard()
 
-import gate_lib
-import scope_lib
+# Resolved through the two sys.path entries above, not as a package: Claude Code invokes
+# a hook by path, so `scripts/` is only on the path at runtime. Type checkers cannot
+# follow that, hence the three targeted ignores — a genuinely missing import elsewhere
+# in this file still fails.
+import gate_lib  # type: ignore[reportMissingImports]
+import scope_lib  # type: ignore[reportMissingImports]
 from _shared.gitctx import in_worktree, main_checkout_root
-from config import gate_mode, load_cfg, now_iso
+from config import gate_mode, load_cfg, now_iso  # type: ignore[reportMissingImports]
 
 WRITE_TOOLS = {"Write", "Edit", "MultiEdit"}
 
