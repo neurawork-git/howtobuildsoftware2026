@@ -8,13 +8,22 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 ## Layout
 
 - `.claude-plugin/plugin.json` — plugin manifest (`name`, description, author, MIT).
-- `skills/<skill>/SKILL.md` — the three install skills (`knowledge-compiler`,
+- `skills/<skill>/SKILL.md` — the three **install skills** (`knowledge-compiler`,
   `claudemd-lerner`, `compliance-compiler`). Each runs a three-phase flow: **Recon**
-  (read-only) → **Ask** (AskUserQuestion) → **Execute** (run `install.py`).
+  (read-only) → **Ask** (AskUserQuestion) → **Execute** (run `install.py`). Plus the
+  **workflow skill** `nw-worktree` (create + enter a Hand worktree), which installs
+  nothing — see the gotcha below.
 - `commands/` — slash commands `kc-compile.md`, `cl-update.md` (manual compile /
-  update; bypass the SessionStart 6-hour gate) and `co-extract.md`,
+  update; bypass the SessionStart 6-hour gate), `co-extract.md`,
   `co-capabilities.md`, `co-validate.md` (rebuild the constraint catalog / derive the
-  capability layer + stack scaffold / validate a PRP plan).
+  capability layer + stack scaffold / validate a PRP plan), and `nw-ship-pr.md`
+  (the PR lifecycle; a workflow surface, not an install).
+- `workflows/` — `nw-ship-pr-review.js`, the review fan-out `/nw-ship-pr` triggers. The
+  runtime auto-discovers `workflows/*.js` and namespaces them by plugin name, so it
+  resolves as `neurawork-cc-harness:nw-ship-pr-review`; the manifest needs no entry.
+- `tests/` — structural tests over the prompt-only assets (frontmatter agreement, the
+  workflow name resolution, and the worktree guard invariants). Run from the plugin root:
+  `python3 -m unittest discover -s tests`.
 - `engines/<engine>/` — one per skill, plus shared code:
   - `install.py` — copies `payload/` + `_shared/` into the target repo, scaffolds
     data dirs, merges hooks into `.claude/settings.json`.
@@ -37,6 +46,13 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   `uv run` time, not as importable packages.
 - **`_shared/` is the single source of truth.** Edit it here; `install.py` copies it
   into every target. Don't fork per-engine copies.
+- **A workflow skill has no engine — that is intended, not an omission.** `nw-worktree`
+  and `nw-ship-pr` copy nothing into a target repo, so they have no `install.py`, no
+  `recon.py`, no `payload/`, no `VERSION`, and no entry in `hooks/version-check.py`'s
+  `ENGINES` map (which keys off installed hook commands — a component that installs no
+  hook can never appear there). Don't "fix" the missing engine. Their only per-repo state
+  is a lazily written `.claude/*.local.md` config, shared by path and key with a
+  `coding-suite` install so the two never keep two drifting profiles.
 - **Install modes:** `install.py` detects **ADOPT** (existing install — refresh code,
   never clobber data) vs **FRESH**. Hook merges are idempotent and use distinct
   filenames + events per skill (`cl-`-prefixed for the learner; `co-`-prefixed on the

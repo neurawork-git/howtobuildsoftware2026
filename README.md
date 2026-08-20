@@ -47,8 +47,10 @@ seed and wires its own hooks — independent, install one or all three):
 
 ### Slash commands
 
-Once installed, each skill exposes on-demand commands (they otherwise run on their
-own hooks — a 6-hour `SessionStart` gate for the first two, `PostToolUse` for compliance):
+The first five commands belong to the install skills: they act on what an install put into
+the repo, and otherwise run on their own hooks (a 6-hour `SessionStart` gate for the first
+two, `PostToolUse` for compliance). The last two are **workflow surfaces** — prompt-only
+procedures that install nothing and work in any git repo, with or without an install.
 
 | Command | What it does |
 |---------|--------------|
@@ -57,6 +59,8 @@ own hooks — a 6-hour `SessionStart` gate for the first two, `PostToolUse` for 
 | `/neurawork-cc-harness:co-extract` | (Re)build the compliance constraint catalog now (~30 parallel agents). |
 | `/neurawork-cc-harness:co-capabilities` | Derive the capability layer from the constraints and refresh the stack scaffold. |
 | `/neurawork-cc-harness:co-validate <plan>` | Validate a PRP plan against the catalog (deep gap report). |
+| `/nw-worktree <slug>` | Create a sibling (Hand) git worktree on a new branch and switch the session into it. |
+| `/nw-ship-pr [pr]` | PR lifecycle in a fixed order: commit → push → PR → parallel review → validation gate → explanation → **approval gate** → follow-up capture → merge → branch/worktree cleanup. |
 
 The `co-extract` / `co-capabilities` / `co-validate` (and the compile/update) LLM paths need
 `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`; install, scaffolding, and the

@@ -33,6 +33,13 @@ python3 -m unittest discover -s claudemd-lerner/tests
 python3 -m unittest discover -s compliance-compiler/tests
 ```
 
+A fifth suite covers the prompt-only assets (skills, commands, workflows) and runs from the
+**plugin root**, not from `engines/` — from `plugins/neurawork-cc-harness/`:
+
+```bash
+python3 -m unittest discover -s tests
+```
+
 The tests use a real git temp repo and subprocess; they make no network/LLM calls.
 
 **Lint:** `ruff` is configured (`line-length = 100`) in each `pyproject.toml`:
@@ -75,7 +82,11 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   the install skills (`skills/*/SKILL.md`), slash commands (`commands/`), and
   the Python install engines (`engines/`). Each engine has `install.py`, `recon.py`,
   a `payload/` (the code copied into a target repo), and `tests/`. `engines/_shared/`
-  holds stdlib-only helpers reused by all engines.
+  holds stdlib-only helpers reused by all engines. Alongside them live two **workflow
+  surfaces** that install nothing and have no engine: `/nw-worktree` (create + enter a
+  Hand worktree) and `/nw-ship-pr` (commit → push → PR → review → validation gate →
+  approval gate → merge → cleanup), whose review fan-out lives in
+  `workflows/nw-ship-pr-review.js`; `tests/` pins their guard invariants.
 - **`.claude-plugin/marketplace.json`** — repo-root marketplace manifest
   (`neurawork-harness`) that distributes the plugin via a `git-subdir` source.
 - **`knowledge-base/`** — a live self-host install of `knowledge-compiler` (see
