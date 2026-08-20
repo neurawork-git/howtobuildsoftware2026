@@ -11,3 +11,10 @@ dependencies = [
 
 [tool.ruff]
 line-length = 100
+
+[tool.pyright]
+# hooks/ and scripts/ import each other's modules by name after putting the install dir
+# and its scripts/ on sys.path at runtime (see hooks/co-post-tooluse.py). Tell pyright the
+# same, so `import config` / `import precheck` resolve statically instead of reporting
+# reportMissingImports on every hook and script.
+extraPaths = ["scripts"]
