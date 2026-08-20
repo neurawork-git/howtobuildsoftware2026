@@ -10,7 +10,7 @@ infrastructure, the install flow, and how this repo self-hosts all three skills.
 |-------|------------------|----------|--------------|
 | `knowledge-compiler` | session transcripts → `<dir>/daily/` logs | `<dir>/knowledge/` wiki (`index.md`, `concepts/`, `connections/`) | `knowledge-base/AGENTS.md` |
 | `claudemd-lerner` | session transcripts → `<dir>/daily/` logs | repo-root `CLAUDE.md` hierarchy + `docs/` (edited in place) | `claudemd-lerner/AGENTS.md` |
-| `compliance-compiler` | GDPR/SOC2/ISO27001 standards (~30 parallel agents) | `<dir>/catalog/` constraint JSON + `index.md` + `capabilities.{json,md}` | `compliance-base/AGENTS.md` |
+| `compliance-compiler` | GDPR/SOC2/ISO27001 standards (~30 parallel agents) | `<dir>/catalog/` constraint JSON + `index.md` + `capabilities.{json,md}` + `stack.json` | `compliance-base/AGENTS.md` |
 
 The first two follow the same **LLM-as-compiler** model: sessions emit append-only
 `daily/` logs (the "source code"); an LLM (the "compiler" / "learner") reads the logs
@@ -26,7 +26,8 @@ different source (the standards themselves), and adds a validation half: a
 ```
 .claude-plugin/plugin.json     plugin manifest (name, semver version, …)
 skills/<skill>/SKILL.md        install skills (recon → ask → execute)
-commands/                      kc-compile.md, cl-update.md, co-extract.md, co-validate.md
+commands/                      kc-compile.md, cl-update.md, co-extract.md,
+                               co-capabilities.md, co-validate.md
 hooks/                         hooks.json + version-check.py (the only code that runs
                                FROM the plugin, with CLAUDE_PLUGIN_ROOT — the staleness nudge)
 engines/
@@ -102,13 +103,20 @@ by SHA-256 of each daily log and stamp a `last-{compile,update}.json` so the gat
 knows when they last ran. Synthesis needs `ANTHROPIC_API_KEY` /
 `CLAUDE_CODE_OAUTH_TOKEN`; capture and scaffolding do not.
 
-`compliance-compiler` runs on a different clock. Its catalog is built once at install
-(and rebuilt on demand via `/neurawork-cc-harness:co-extract` — ~30 parallel SDK
-agents behind `asyncio.gather` + a semaphore, the harness's only parallel compile
-path). At runtime it wires a **single** `co-`-prefixed **`PostToolUse`** hook (no
-`SessionStart`/`SessionEnd`) that validates each PRP plan write: a fast inline
+`compliance-compiler` runs on a different clock. Its catalog ships prebuilt with the
+plugin and is copied in at install, then rebuilt on demand: `co-extract` re-derives the
+**constraints** from the standards and `co-capabilities` re-derives the **capability
+layer** on top of them — both ~30 parallel SDK agents behind `asyncio.gather` + a
+semaphore, the harness's only parallel compile path. `co-capabilities` also refreshes
+`catalog/stack.json` (`scripts/stack.py --scaffold`), the tracked record of the
+component chosen per capability, and writes a gap report naming the ones still
+undecided. At runtime the engine wires a **single** `co-`-prefixed **`PostToolUse`**
+hook (no `SessionStart`/`SessionEnd`) that validates each PRP plan write: a fast inline
 structural precheck plus a detached deep LLM report under `compliance-base/reports/`.
-Manual check: `/neurawork-cc-harness:co-validate <plan>`.
+The precheck covers both tiers — mandatory constraint references and the plan's
+`**Capabilities**:` declaration — and, when the capability layer is missing entirely,
+names the command that builds it. Manual check:
+`/neurawork-cc-harness:co-validate <plan>`.
 
 Separately, the **plugin itself** registers one `SessionStart` hook (`hooks/hooks.json`
 → `hooks/version-check.py`) — the only harness code that runs *from* the plugin with
@@ -129,7 +137,8 @@ This repo installs **all three** skills into itself:
 - `claudemd-lerner/` — `claudemd-lerner` machinery; its outputs are this repo's
   root `CLAUDE.md` hierarchy and `docs/` (including this file).
 - `compliance-base/` — `compliance-compiler` machinery + the tracked `catalog/`
-  (constraint JSON + `index.md` + `capabilities.{json,md}`); `catalog/.shards/` and
+  (constraint JSON + `index.md` + `capabilities.{json,md}` + `stack.json`);
+  `catalog/.shards/` and
   `reports/` are gitignored.
 
 All three hook sets live side by side in `.claude/settings.json` — the learner's are

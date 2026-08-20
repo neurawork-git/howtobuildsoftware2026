@@ -307,5 +307,59 @@ class TestCapabilityVerdict(unittest.TestCase):
         self.assertEqual(v["undeclared_mandatory"], [])
 
 
+def _installed_hook_path() -> Path | None:
+    """The self-hosted ``compliance-base/hooks/co-post-tooluse.py``, or None.
+
+    The hook is imported from the INSTALL, never from ``payload/``: it resolves
+    ``_shared`` next to its own hooks/ dir, which only exists in an installed repo.
+    A pure plugin checkout has no install — the test skips there, same as
+    ``test_catalog_seed.py``.
+    """
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "compliance-base" / "hooks" / "co-post-tooluse.py"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+class TestCapabilityAdvisory(unittest.TestCase):
+    """The hook's one-sentence advisory about the capability layer."""
+
+    def _summary(self, cp: dict) -> str:
+        import importlib.util
+        import os
+
+        hook_path = _installed_hook_path()
+        if hook_path is None:
+            self.skipTest("no compliance-base install next to this engine")
+        # recursion_guard() sys.exit(0)s on this var — it is set when the hook runs
+        # under a compiler-spawned session, not when a test imports it.
+        self.assertIsNone(os.environ.get("CLAUDE_INVOKED_BY"),
+                          "CLAUDE_INVOKED_BY set — the hook would exit on import")
+        spec = importlib.util.spec_from_file_location("co_post_tooluse_under_test", hook_path)
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module._capability_summary(cp)
+
+    def test_unbuilt_capability_layer_names_the_command(self) -> None:
+        text = self._summary({"catalog_built": False})
+        self.assertIn("co-capabilities", text)
+
+    def test_built_layer_advises_on_the_declaration_instead(self) -> None:
+        text = self._summary({
+            "catalog_built": True,
+            "declaration_present": False,
+            "unknown_keys": [],
+            "declared_none": False,
+            "none_reason": "",
+            "declared": [],
+            "declared_unchosen": [],
+            "declared_not_applicable": [],
+        })
+        self.assertNotIn("co-capabilities", text)
+        self.assertIn("**Capabilities**:", text)
+
+
 if __name__ == "__main__":
     unittest.main()

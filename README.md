@@ -54,10 +54,11 @@ own hooks — a 6-hour `SessionStart` gate for the first two, `PostToolUse` for 
 |---------|--------------|
 | `/neurawork-cc-harness:kc-compile` | Compile the knowledge base now — distil daily logs into `knowledge/` articles. |
 | `/neurawork-cc-harness:cl-update` | Update `CLAUDE.md` + `docs/` now from captured session logs. |
-| `/neurawork-cc-harness:co-extract` | (Re)build the compliance catalog now (~30 parallel agents). |
+| `/neurawork-cc-harness:co-extract` | (Re)build the compliance constraint catalog now (~30 parallel agents). |
+| `/neurawork-cc-harness:co-capabilities` | Derive the capability layer from the constraints and refresh the stack scaffold. |
 | `/neurawork-cc-harness:co-validate <plan>` | Validate a PRP plan against the catalog (deep gap report). |
 
-The `co-extract` / `co-validate` (and the compile/update) LLM paths need
+The `co-extract` / `co-capabilities` / `co-validate` (and the compile/update) LLM paths need
 `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`; install, scaffolding, and the
 inline plan precheck run without it.
 

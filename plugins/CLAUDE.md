@@ -12,8 +12,9 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   `claudemd-lerner`, `compliance-compiler`). Each runs a three-phase flow: **Recon**
   (read-only) → **Ask** (AskUserQuestion) → **Execute** (run `install.py`).
 - `commands/` — slash commands `kc-compile.md`, `cl-update.md` (manual compile /
-  update; bypass the SessionStart 6-hour gate) and `co-extract.md`, `co-validate.md`
-  (rebuild the compliance catalog / validate a PRP plan).
+  update; bypass the SessionStart 6-hour gate) and `co-extract.md`,
+  `co-capabilities.md`, `co-validate.md` (rebuild the constraint catalog / derive the
+  capability layer + stack scaffold / validate a PRP plan).
 - `engines/<engine>/` — one per skill, plus shared code:
   - `install.py` — copies `payload/` + `_shared/` into the target repo, scaffolds
     data dirs, merges hooks into `.claude/settings.json`.

@@ -80,7 +80,7 @@ Auditors (they consume evidence, not this design artifact) and teams on already-
 | Must | `capabilities.json` + `capabilities.md` outputs | The consumable per-framework catalog (already produced v1) |
 | Should | Capability→stack mapping file + gap report | Lets the human fix component choices and see uncovered capabilities |
 | Should | `validate.py` capability-coverage check | Enforces capability completeness on plan writes |
-| Could | `/co-capabilities` slash command + SessionStart bootstrap | Parity with `co-extract`/`co-validate` ergonomics |
+| Could | `/co-capabilities` slash command (bootstrap comes from the shipped catalog seed, not a SessionStart hook) | Parity with `co-extract`/`co-validate` ergonomics |
 | Could | Periodic web-research refresh of 2026 component currency | Keeps stack recs from going stale |
 | Won't | Cross-framework unified capabilities | User chose per-framework |
 | Won't | Building the actual components / runtime monitoring | Downstream, out of scope |
@@ -131,7 +131,7 @@ The **catalog already shipped this session** (`catalog/capabilities.json`, `capa
 | 1 | Extraction engine | Wrap the workflow as reproducible `capabilities.py` with coverage-verify gate | complete | - | 0 | [engine plan](../plans/completed/compliance-capabilities-engine.plan.md) | - | - |
 | 2 | Stack mapping | Capability→chosen-component file + uncovered-capability gap report. **Owns the `stack.json` schema** — the product-scoping, ranking and selection layer that fills it lives in [`stack-compiler.prd.md`](stack-compiler.prd.md) and writes through this script | complete | with 3 | 1 | [stack mapping plan](../plans/completed/compliance-capabilities-stack-mapping.plan.md) | - | - |
 | 3 | Capability validator | Extend `validate.py`: documents declare capabilities, gate on mandatory coverage. Stays here (capability level); the component-allowlist gate is `stack-compiler` Phase 4 | complete | with 2 | 1 | [validator plan](/home/felix/projects/howtobuildsoftware2026/.claude/PRPs/plans/completed/compliance-capability-validator.plan.md) | [report](/home/felix/.prp/howtobuildsoftware2026-35325a96/reports/compliance-capability-validator-report.md) | [#24](https://github.com/neurawork-git/howtobuildsoftware2026/pull/24) |
-| 4 | Wire & document | `/co-capabilities` command, SessionStart bootstrap, docs/CLAUDE.md | pending | - | 2, 3 | - | - | - |
+| 4 | Wire & document | `/co-capabilities` command, hook nudge when the layer is absent, docs/CLAUDE.md (SessionStart bootstrap superseded by the shipped catalog seed) | in-progress | - | 2, 3 | [wire & document plan](/home/felix/projects/howtobuildsoftware2026/.claude/PRPs/plans/compliance-capabilities-wire-document.plan.md) | [report](/home/felix/.prp/howtobuildsoftware2026-35325a96/reports/compliance-capabilities-wire-document-report.md) | [#26](https://github.com/neurawork-git/howtobuildsoftware2026/pull/26) |
 
 ### Phase Details
 
@@ -157,8 +157,9 @@ The **catalog already shipped this session** (`catalog/capabilities.json`, `capa
 
 **Phase 4: Wire & document**
 - **Goal**: Parity with the shipped engines' ergonomics.
-- **Scope**: `/neurawork-cc-harness:co-capabilities` command, SessionStart bootstrap (build capabilities if missing), update `compliance-base/CLAUDE.md` + `docs/`.
-- **Success signal**: fresh session bootstraps the capability catalog; command runs the engine on demand.
+- **Scope**: `/neurawork-cc-harness:co-capabilities` command (deriving capabilities and refreshing the stack scaffold), an advisory nudge in the existing `co-` `PostToolUse` hook when the capability layer is absent, a new `compliance-base/CLAUDE.md`, and the doc surfaces that already list `co-extract`.
+- **~~SessionStart bootstrap~~ — superseded 2026-08-20 (user decision).** The engine has no `SessionStart` hook by design and `install.py` (`REMOVED_TARGET_FILES` / `_prune_removed`) deletes any `co-session-start.py` plus its `.claude/settings.json` entry on every install. Bootstrapping is already carried by the shipped prebuilt catalog: `payload/catalog-seed/` holds `capabilities.{json,md}`, `install.py:_seed_catalog()` copies it into a fresh install, and `tests/test_catalog_seed.py` guards it against drift. The hook nudge replaces the bootstrap's remaining job — telling a repo without the layer how to build it.
+- **Success signal**: a fresh install has the capability catalog from the shipped seed with no LLM run; `/neurawork-cc-harness:co-capabilities` re-derives it on demand; a repo without the layer is told so on its next plan write.
 
 ### Parallelism Notes
 

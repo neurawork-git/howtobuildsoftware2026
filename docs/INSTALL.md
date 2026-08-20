@@ -112,14 +112,21 @@ so it coexists with `knowledge-compiler` in the same repo — both hook sets lan
 
 It installs into its own dir (default `compliance-base`) and wires a **single**
 `co-`-prefixed `PostToolUse` hook — no `SessionStart`/`SessionEnd` — so it coexists
-with the other two. On install it builds the constraint **catalog**
-(`catalog/{gdpr,soc2,iso27001}.json` + `index.md` + `capabilities.{json,md}`) by
-fanning out ~30 parallel SDK agents. From then on:
+with the other two. A fresh install lands a **prebuilt catalog** — the plugin ships
+`catalog/{gdpr,soc2,iso27001}.json` + `index.md` + the derived `capabilities.{json,md}`
+and copies them in, so the repo has a working catalog with no LLM run and no API key.
+Choosing to extract instead fans out ~30 parallel SDK agents. From then on:
 
 - Every PRP plan write (`.claude/PRPs/plans/*.plan.md`) is validated automatically:
   a fast inline structural precheck plus a detached deep LLM report under
   `compliance-base/reports/`.
-- Rebuild the catalog on demand: `/neurawork-cc-harness:co-extract`.
+- Rebuild the constraint catalog on demand: `/neurawork-cc-harness:co-extract`.
+- Re-derive the **capability layer** and refresh the stack scaffold:
+  `/neurawork-cc-harness:co-capabilities`. It clusters the constraints into concrete
+  building blocks (`catalog/capabilities.{json,md}`), fails if a mandatory constraint
+  ends up covered by none, and updates `catalog/stack.json` — the tracked record of
+  which component you actually chose per capability — plus a gap report under
+  `compliance-base/reports/` naming the capabilities still undecided.
 - Validate a plan manually: `/neurawork-cc-harness:co-validate <path-to-plan>`.
 
 The catalog stores only official control/article identifiers, short titles, and
