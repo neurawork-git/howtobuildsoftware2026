@@ -19,6 +19,9 @@ spawns automatically on plan writes, on demand here).
    ```
 
    `$ARGUMENTS` is the plan path, e.g. `.claude/PRPs/plans/my-feature.plan.md`.
-3. Report the written report path and summarize which applicable mandatory
-   constraints are addressed vs unaddressed. The report lives in
-   `<catalog-dir>/reports/<plan-stem>.md`.
+3. Report the written report path and summarize both tiers: which applicable mandatory
+   **constraints** are addressed vs unaddressed, and which **capabilities** the plan's
+   own content makes applicable but does not declare (the agent's verdict lands in
+   `<catalog-dir>/reports/<plan-stem>.capabilities.json`). The report lives in
+   `<catalog-dir>/reports/<plan-stem>.md`. If the capability gate reports the layer is
+   not built, point the user at `/neurawork-cc-harness:co-capabilities`.

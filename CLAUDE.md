@@ -49,6 +49,8 @@ uvx ruff check
 uv run --directory knowledge-base python scripts/compile.py     # distil daily/ → knowledge/
 uv run --directory claudemd-lerner python scripts/update.py     # apply daily/ → CLAUDE.md + docs/
 uv run --directory compliance-base python scripts/extract.py    # ~30 agents → catalog/*.json
+uv run --directory compliance-base python scripts/capabilities.py    # constraints → catalog/capabilities.{json,md}
+uv run --directory compliance-base python scripts/stack.py --scaffold  # refresh catalog/stack.json + gap report
 uv run --directory compliance-base python scripts/validate.py <plan>  # check a PRP plan
 ```
 
@@ -56,11 +58,13 @@ The first two run automatically via the `SessionStart` / `PreCompact` / `Session
 hooks in `.claude/settings.json` (a 6-hour `SessionStart` gate triggers compile/update).
 `compliance-compiler` adds only a `PostToolUse` hook that validates each PRP plan
 write (nothing at `SessionStart` — that budget is left for the knowledge concepts);
-its catalog is built at install time and rebuilt on demand via `co-extract`. A
+its catalog ships prebuilt with the install and is rebuilt on demand via `co-extract`
+(constraints) and `co-capabilities` (the derived capability layer + stack scaffold). A
 `validate_frameworks` config key scopes which frameworks plans are checked against
 (default: all extracted). Slash commands:
 `/neurawork-cc-harness:kc-compile`, `/neurawork-cc-harness:cl-update`,
-`/neurawork-cc-harness:co-extract`, and `/neurawork-cc-harness:co-validate`.
+`/neurawork-cc-harness:co-extract`, `/neurawork-cc-harness:co-capabilities`, and
+`/neurawork-cc-harness:co-validate`.
 
 ## High-level architecture
 
@@ -78,9 +82,11 @@ its catalog is built at install time and rebuilt on demand via `co-extract`. A
 - **`claudemd-lerner/`** — a live self-host install of `claudemd-lerner` (see
   `claudemd-lerner/CLAUDE.md`). Holds only machinery; its outputs are the repo-root
   `CLAUDE.md` hierarchy and `docs/`.
-- **`compliance-base/`** — a live self-host install of `compliance-compiler`. Holds
-  the engine machinery plus the tracked `catalog/` (GDPR/SOC2/ISO27001 constraint
-  JSON + `index.md`); `catalog/.shards/` and `reports/` are gitignored. The engine
+- **`compliance-base/`** — a live self-host install of `compliance-compiler` (see
+  `compliance-base/CLAUDE.md`). Holds the engine machinery plus the tracked `catalog/`
+  (GDPR/SOC2/ISO27001 constraint JSON + `index.md`, the derived
+  `capabilities.{json,md}`, and the chosen-component `stack.json`);
+  `catalog/.shards/` and `reports/` are gitignored. The engine
   uses a `co-`-prefixed `PostToolUse` hook (no `SessionStart`) so it coexists with
   the other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
   (`asyncio.gather` + a semaphore) — the harness's only parallel compile path.

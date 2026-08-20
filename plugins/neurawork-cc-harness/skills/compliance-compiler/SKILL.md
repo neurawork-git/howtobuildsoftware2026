@@ -5,15 +5,22 @@ description: Install a per-repo compliance catalog + PRP-plan validator into the
 
 # Compliance Compiler — Install Skill
 
-Installs the compliance-compiler engine into the current repo. Two halves:
+Installs the compliance-compiler engine into the current repo. Three parts:
 
 1. **Extraction** — `scripts/extract.py` fans out ~30 parallel Claude Agent SDK
    agents (one per framework shard) that distil GDPR/DSGVO, SOC 2, and ISO 27001
    into `<catalog_dir>/catalog/{gdpr,soc2,iso27001}.json` — atomic constraints with
    an `applies_when` predicate and a `check`.
-2. **Validation** — a `PostToolUse` hook checks each PRP plan file
+2. **Capability layer** — `scripts/capabilities.py` clusters those constraints into
+   per-framework **capabilities** (concrete building blocks, each carrying the
+   constraint ids it satisfies and 2-5 recommended stack components) in
+   `<catalog_dir>/catalog/capabilities.{json,md}`, failing when a mandatory constraint
+   is covered by none. `scripts/stack.py` keeps `catalog/stack.json` — which component
+   was actually chosen per capability — plus a gap report of the undecided ones.
+3. **Validation** — a `PostToolUse` hook checks each PRP plan file
    (`.claude/PRPs/plans/*.plan.md`) as it is written: a fast structural precheck
-   inline, plus a detached deep LLM report in `<catalog_dir>/reports/`.
+   inline, plus a detached deep LLM report in `<catalog_dir>/reports/`. Both the
+   mandatory constraints and the plan's declared capabilities are checked.
 
 The catalog always lives inside the repo, never under `.claude/`.
 
@@ -65,4 +72,6 @@ uv sync --directory <NAME>
 Then tell the user to commit `<NAME>/` and `.claude/settings.json`. After install:
 - Every PRP plan write is checked automatically.
 - Manual extract: `/neurawork-cc-harness:co-extract`.
+- Re-derive the capability layer + stack scaffold:
+  `/neurawork-cc-harness:co-capabilities`.
 - Manual validate: `/neurawork-cc-harness:co-validate <plan>`.

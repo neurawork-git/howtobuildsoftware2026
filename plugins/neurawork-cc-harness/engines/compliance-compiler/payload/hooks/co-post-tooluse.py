@@ -50,11 +50,13 @@ def _plan_path_from(data: dict) -> str:
 
 
 def _capability_summary(cp: dict) -> str:
-    """One advisory sentence about the plan's capability declaration, or "" when the
-    capability layer is not built. Never blocks — applicability is decided by the
-    detached validator, not here."""
+    """One advisory sentence about the plan's capability declaration — or, when the
+    capability layer is not built, about how to build it. Never blocks — applicability
+    is decided by the detached validator, not here."""
     if not cp["catalog_built"]:
-        return ""
+        return (" Capability layer not built — run "
+                "`/neurawork-cc-harness:co-capabilities` to derive it; until then plans "
+                "are checked against constraints only.")
     if not cp["declaration_present"]:
         return (" No '**Capabilities**:' declaration found — add one to the '## Compliance' "
                 "section listing the capability keys this plan delivers (e.g. "
