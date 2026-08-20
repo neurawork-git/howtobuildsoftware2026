@@ -84,11 +84,17 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   the install skills (`skills/*/SKILL.md`), slash commands (`commands/`), and
   the Python install engines (`engines/`). Each engine has `install.py`, `recon.py`,
   a `payload/` (the code copied into a target repo), and `tests/`. `engines/_shared/`
-  holds stdlib-only helpers reused by all engines. Alongside them live two **workflow
+  holds stdlib-only helpers reused by all engines. Alongside them live three **workflow
   surfaces** that install nothing and have no engine: `/nw-worktree` (create + enter a
-  Hand worktree) and `/nw-ship-pr` (commit → push → PR → review → validation gate →
+  Hand worktree), `/nw-ship-pr` (commit → push → PR → review → validation gate →
   approval gate → merge → cleanup), whose review fan-out lives in
-  `workflows/nw-ship-pr-review.js`; `tests/` pins their guard invariants.
+  `workflows/nw-ship-pr-review.js`, and `/nw-rules-init` (detect the repo's test runner,
+  then write the baseline coding rules — scope, simplicity, evaluation-first — into the
+  root `CLAUDE.md` as one idempotent `<!-- neurawork-cc-harness:rules BEGIN/END -->`
+  block); `tests/` pins their guard invariants, including the block's 1,200-char budget.
+  Marker blocks are **learner-protected**: `claudemd-lerner` snapshots every
+  `owner:name` marker span before its SDK run and restores it byte-for-byte afterwards
+  (`payload/scripts/markers.py`), so no tool-owned block is silently reworded.
 - **`.claude-plugin/marketplace.json`** — repo-root marketplace manifest
   (`neurawork-harness`) that distributes the plugin via a `git-subdir` source.
 - **`knowledge-base/`** — a live self-host install of `knowledge-compiler` (see

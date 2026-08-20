@@ -11,8 +11,9 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 - `skills/<skill>/SKILL.md` — the three **install skills** (`knowledge-compiler`,
   `claudemd-lerner`, `compliance-compiler`). Each runs a three-phase flow: **Recon**
   (read-only) → **Ask** (AskUserQuestion) → **Execute** (run `install.py`). Plus the
-  **workflow skill** `nw-worktree` (create + enter a Hand worktree), which installs
-  nothing — see the gotcha below.
+  **workflow skills** `nw-worktree` (create + enter a Hand worktree) and
+  `nw-rules-init` (write the marker-delimited baseline coding rules into the target's
+  root `CLAUDE.md`), which install nothing — see the gotcha below.
 - `commands/` — slash commands `kc-compile.md`, `cl-update.md` (manual compile /
   update; bypass the SessionStart 6-hour gate), `co-extract.md`,
   `co-capabilities.md`, `co-validate.md` (rebuild the constraint catalog / derive the

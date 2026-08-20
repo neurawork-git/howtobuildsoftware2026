@@ -21,9 +21,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # <ldir> for _shared
 
-from config import AGENTS_FILE, CLAUDEMD_FILE, LAST_UPDATE_FILE, ROOT_DIR, docs_dir, load_cfg
 from _shared.gitctx import repo_root
-from _shared.repo_guard import assert_in_repo_not_dotclaude, WriteGuardError
+from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
+from config import AGENTS_FILE, CLAUDEMD_FILE, LAST_UPDATE_FILE, ROOT_DIR, docs_dir, load_cfg
+from markers import restore, snapshot
 
 PROMPT_FILE = Path(__file__).resolve().parent / "seed_prompt.txt"
 
@@ -71,6 +72,21 @@ def _repo_context(root: Path, excluded: list[str]) -> str:
     return "\n\n---\n\n".join(parts)
 
 
+def _guarded_paths(root: Path, excluded: list[str]) -> list[Path]:
+    """Files the seed may edit: every visible CLAUDE.md plus the docs tree."""
+    excl = set(excluded)
+    paths = [
+        p for p in root.rglob("CLAUDE.md")
+        if not any(part in excl or part.startswith(".")
+                   for part in p.relative_to(root).parts[:-1])
+    ]
+    docs = docs_dir()
+    if docs.is_dir():
+        paths += [p for p in docs.rglob("*.md")
+                  if not any(part in excl for part in p.relative_to(root).parts)]
+    return paths
+
+
 async def run_seed() -> float:
     from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
 
@@ -107,22 +123,28 @@ async def run_seed() -> float:
 
 {_repo_context(Path(root), excluded)}"""
 
+    guarded = snapshot(_guarded_paths(Path(root), excluded))
+
     cost = 0.0
-    async for message in query(
-        prompt=prompt,
-        options=ClaudeAgentOptions(
-            cwd=str(root),
-            system_prompt={"type": "preset", "preset": "claude_code"},
-            allowed_tools=["Read", "Write", "Edit", "Glob", "Grep"],
-            permission_mode="acceptEdits",
-            max_turns=40,
-            setting_sources=[],
-            strict_mcp_config=True,
-            model=(cfg.get("model") or None),
-        ),
-    ):
-        if isinstance(message, ResultMessage):
-            cost = message.total_cost_usd or 0.0
+    try:
+        async for message in query(
+            prompt=prompt,
+            options=ClaudeAgentOptions(
+                cwd=str(root),
+                system_prompt={"type": "preset", "preset": "claude_code"},
+                allowed_tools=["Read", "Write", "Edit", "Glob", "Grep"],
+                permission_mode="acceptEdits",
+                max_turns=40,
+                setting_sources=[],
+                strict_mcp_config=True,
+                model=(cfg.get("model") or None),
+            ),
+        ):
+            if isinstance(message, ResultMessage):
+                cost = message.total_cost_usd or 0.0
+    finally:
+        for message in restore(guarded):
+            print(f"  Marker guard: {message}")
     return cost
 
 
