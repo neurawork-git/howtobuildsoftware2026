@@ -10,7 +10,7 @@ kept, so the same capability name may legitimately appear under two frameworks.
 
 ``--scaffold`` (re)generates ``stack.json``: machine-owned fields (``capability``,
 ``framework``, ``mandatory_linked``, ``options``) are recomputed every run, while
-the decision-owned ``chosen``, ``rationale``, ``applicable``,
+the decision-owned ``chosen``, ``rationale``, ``chosen_from``, ``applicable``,
 ``applicability_reason``, ``scoped_from``, ``ranked`` and ``ranked_from`` are
 carried over by key. New capabilities appear with ``chosen: null``; keys the
 catalog no longer knows are reported as orphaned before being dropped.
@@ -35,25 +35,39 @@ from them, so ``options`` stays the closed pool and ``ranked`` its best-fit-firs
 order.
 
 ``chosen`` and ``rationale`` are never touched by either: the component decision
-belongs to the human selection pass.
+belongs to the human selection pass, which has its own entry point.
+
+``--apply-selection`` takes that pass's file
+``{"selections": {<key>: {"chosen", "rationale"}}}`` and records, per key, the
+component a human picked. It refuses the write unless every named key is known,
+still applicable, and names a component from that entry's own ``options``. Unlike
+the two passes above it is deliberately **partial**: selection is incremental human
+work spread over sittings, and a key it does not mention keeps its previous state
+and is counted by the gap report on the next run — an omission here is visible, not
+silent. Each written choice also records ``chosen_from``, the hash of the catalog
+capability it was decided against, so a later catalog change reopens exactly the
+choices it invalidated.
 
 A plain run computes the gap — *applicable* mandatory-linked capabilities with no
 chosen component — writes ``reports/stack-gaps-<date>.md`` and prints a one-line
 summary. A capability scoped out of the product is not a gap; it is reported
-separately together with its reason. The run is deliberately REPORT-ONLY and always
-exits 0: an unfilled stack is the normal starting state, not a regression.
+separately together with its reason, and a choice whose capability changed in the
+catalog since it was made is reported as stale. The run is deliberately REPORT-ONLY
+and always exits 0: an unfilled stack is the normal starting state, not a regression.
 Enforcement belongs to the plan validator.
 
 Usage:
     uv run python scripts/stack.py --scaffold          # create/refresh catalog/stack.json
     uv run python scripts/stack.py --apply-scope F.json  # write applicability decisions
     uv run python scripts/stack.py --apply-ranking F.json  # write component orderings
+    uv run python scripts/stack.py --apply-selection F.json  # write the chosen components
     uv run python scripts/stack.py                     # report gaps (report-only, exit 0)
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -115,6 +129,45 @@ def component_options(cap: dict) -> list[str]:
     return out
 
 
+def capability_hash(cap: dict) -> str:
+    """Hash of the parts of one catalog capability a component choice depends on.
+
+    Covers the closed pool and each component's ``license``, ``role`` and ``verdict``,
+    plus what the capability has to achieve (``name``, ``description``, ``satisfies``).
+    Free prose — ``why``, ``stack_notes``, ``category`` — is deliberately excluded: a
+    wording fix must not reopen every settled choice, while a changed pool, license,
+    role or obligation must reopen the choices that rest on it.
+
+    Width matches ``utils.file_hash`` so every hash in the catalog reads alike.
+    """
+    payload = {
+        "name": cap.get("name", ""),
+        "description": cap.get("description", ""),
+        "satisfies": sorted(cap.get("satisfies", [])),
+        "stack": [
+            {
+                "name": c.get("name", ""),
+                "license": c.get("license", ""),
+                "role": c.get("role", ""),
+                "verdict": c.get("verdict", ""),
+            }
+            for c in cap.get("stack", [])
+            if isinstance(c, dict)
+        ],
+    }
+    blob = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
+
+
+def catalog_capabilities(catalog: dict) -> dict[str, dict]:
+    """``<framework>/<slug>`` → the catalog capability it names."""
+    return {
+        capability_key(fw, cap["name"]): cap
+        for fw, f in catalog.get("frameworks", {}).items()
+        for cap in f.get("capabilities", [])
+    }
+
+
 def scaffold(
     catalog: dict,
     existing: dict | None = None,
@@ -125,8 +178,8 @@ def scaffold(
     """Build catalog/stack.json from the capability catalog.
 
     Machine-owned fields are recomputed from ``catalog``; the decision-owned
-    ``chosen``/``rationale`` and the ``stack-compiler``-owned applicability fields
-    are carried over from ``existing`` by key. Keys are emitted sorted so a
+    ``chosen``/``rationale``/``chosen_from`` and the ``stack-compiler``-owned
+    applicability and ranking fields are carried over from ``existing`` by key. Keys are emitted sorted so a
     re-scaffold produces a stable, reviewable diff.
     """
     prev_choices = (existing or {}).get("choices") or {}
@@ -145,6 +198,7 @@ def scaffold(
                 "options": component_options(cap),
                 "chosen": prev.get("chosen"),
                 "rationale": prev.get("rationale", ""),
+                "chosen_from": prev.get("chosen_from"),
                 "applicable": prev.get("applicable", True),
                 "applicability_reason": prev.get("applicability_reason", ""),
                 "scoped_from": prev.get("scoped_from"),
@@ -175,13 +229,17 @@ def gaps(
     ``non_applicable`` reports those separately; ``unexplained_non_applicable`` is
     the compliance hole — ruled out with no reason. ``off_catalog`` is
     informational: a human may deliberately choose something the catalog did not list.
+
+    ``stale_choices`` names the choices the catalog moved out from under — the ones
+    whose capability no longer hashes to the ``chosen_from`` recorded when they were
+    made, so re-selection stays per capability instead of per file. A choice carrying
+    no ``chosen_from`` (hand-recorded straight into ``stack.json``) is never reported:
+    there is nothing to compare it against, and guessing would either cry wolf on
+    every run or hide a real drift.
     """
     linked = mandatory_linked_keys(catalog, catalog_dir)
-    catalog_keys = {
-        capability_key(fw, cap["name"])
-        for fw, f in catalog.get("frameworks", {}).items()
-        for cap in f.get("capabilities", [])
-    }
+    described = catalog_capabilities(catalog)
+    catalog_keys = set(described)
     choices = stack.get("choices") or {}
 
     mandatory_unchosen: list[str] = []
@@ -189,6 +247,7 @@ def gaps(
     off_catalog: list[dict] = []
     non_applicable: list[str] = []
     unexplained_non_applicable: list[str] = []
+    stale_choices: list[dict] = []
     applicable_linked = 0
     for key in sorted(catalog_keys):
         entry = choices.get(key) or {}
@@ -206,6 +265,11 @@ def gaps(
         options = entry.get("options") or []
         if chosen not in options:
             off_catalog.append({"key": key, "chosen": chosen, "options": list(options)})
+        chosen_from = str(entry.get("chosen_from") or "").strip()
+        current = capability_hash(described[key])
+        if chosen_from and chosen_from != current:
+            stale_choices.append({"key": key, "chosen": chosen,
+                                  "chosen_from": chosen_from, "current": current})
 
     stack_hash = stack.get("capabilities_hash")
     return {
@@ -216,6 +280,7 @@ def gaps(
         "off_catalog": off_catalog,
         "non_applicable": non_applicable,
         "unexplained_non_applicable": unexplained_non_applicable,
+        "stale_choices": stale_choices,
         "orphaned": sorted(set(choices) - catalog_keys),
         "stale": bool(capabilities_hash and stack_hash and stack_hash != capabilities_hash),
     }
@@ -332,6 +397,67 @@ def apply_ranking(stack: dict, rankings: dict, ranked_from: str) -> dict:
     return {**stack, "choices": out}
 
 
+def apply_selection(stack: dict, selections: dict, catalog: dict) -> dict:
+    """Write one human selection pass into stack.json's ``chosen`` fields.
+
+    ``selections`` maps a capability key to ``{"chosen": str, "rationale": str}``.
+    A named key must be known, still **applicable**, and name a component from that
+    entry's own ``options`` — the pool is closed, and a component that is not in it
+    was never proposed to the human who picked it. Every problem is collected and the
+    whole write refused, as in ``apply_scope`` and ``apply_ranking``.
+
+    Unlike those two this pass is **partial on purpose**: it demands no complete key
+    set, because deciding 40-odd components is incremental human work and a key it
+    does not mention keeps whatever it had. That is not the silent omission the other
+    two guard against — an undecided capability stays ``chosen: null`` and is counted
+    by ``gaps()`` on every run, so what is missing stays visible.
+
+    Each written choice records ``chosen_from``, the ``capability_hash`` of the
+    catalog capability it was decided against; ``gaps()`` compares it later to name
+    exactly the choices a catalog change invalidated. ``options``, ``ranked`` and the
+    three applicability fields are never read or written here.
+    """
+    choices = stack.get("choices") or {}
+    described = catalog_capabilities(catalog)
+    problems: list[str] = []
+
+    if unknown := sorted(set(selections) - set(choices)):
+        problems.append(f"selection for {len(unknown)} unknown key(s): {', '.join(unknown)}")
+
+    for key in sorted(set(selections) & set(choices)):
+        entry = choices[key]
+        chosen = str((selections[key] or {}).get("chosen") or "").strip()
+        if not entry.get("applicable", True):
+            problems.append(f"{key}: scoped out of this product, so it has nothing to choose")
+            continue
+        if not chosen:
+            problems.append(f"{key}: selection names no component")
+            continue
+        options = list(entry.get("options") or [])
+        if chosen not in options:
+            problems.append(f"{key}: {chosen} is not in options ({', '.join(options) or 'none'})")
+        if key not in described:
+            problems.append(f"{key}: the catalog no longer describes this capability")
+
+    if problems:
+        raise ValueError("; ".join(problems))
+
+    out: dict[str, dict] = {}
+    for key in sorted(choices):
+        entry = dict(choices[key])
+        if key in selections:
+            sel = selections[key] or {}
+            entry["chosen"] = str(sel.get("chosen") or "").strip()
+            entry["rationale"] = str(sel.get("rationale") or "").strip()
+            entry["chosen_from"] = capability_hash(described[key])
+        else:
+            # Every entry carries every field, as it does for the ranking fields: an
+            # undecided capability reads `chosen_from: null` rather than a missing key.
+            entry.setdefault("chosen_from", None)
+        out[key] = entry
+    return {**stack, "choices": out}
+
+
 def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) -> str:
     """Render reports/stack-gaps-<date>.md from a ``gaps()`` result."""
     choices = stack.get("choices") or {}
@@ -437,6 +563,18 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
             opts = "; ".join(item["options"]) or "—"
             lines.append(f"- `{item['key']}` → **{item['chosen']}** (recommended: {opts})")
         lines.append("")
+    if result.get("stale_choices"):
+        lines.append(
+            f"**Stale choices ({len(result['stale_choices'])})** — the capability changed in "
+            "the catalog after the component was chosen (pool, license, role, verdict, "
+            "description or satisfied constraints). Re-run the selection pass for these keys "
+            "only:"
+        )
+        lines.append("")
+        for item in result["stale_choices"]:
+            lines.append(f"- `{item['key']}` → **{item['chosen']}** "
+                         f"(chosen against `{item['chosen_from']}`, now `{item['current']}`)")
+        lines.append("")
     if result["orphaned"]:
         lines.append(
             f"**Orphaned keys ({len(result['orphaned'])})** — recorded in stack.json but no "
@@ -447,7 +585,7 @@ def render_gap_report(catalog: dict, stack: dict, result: dict, generated: str) 
             lines.append(f"- `{key}`")
         lines.append("")
     if not (non_applicable or result["optional_unchosen"] or result["off_catalog"]
-            or result["orphaned"]):
+            or result.get("stale_choices") or result["orphaned"]):
         lines += ["Nothing to report.", ""]
     return "\n".join(lines)
 
@@ -483,6 +621,8 @@ def main() -> int:
                         help="Apply a product-scoping decisions file to the applicability fields")
     parser.add_argument("--apply-ranking", type=str, metavar="PATH",
                         help="Apply a component-ranking file to the applicable capabilities")
+    parser.add_argument("--apply-selection", type=str, metavar="PATH",
+                        help="Apply a selection file, recording the chosen component per key")
     args = parser.parse_args()
 
     from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
@@ -567,6 +707,27 @@ def main() -> int:
         print(f"stack.json ranked from {ranked_from}: {len(rankings)} applicable "
               f"capability/-ies, {components} component(s) ordered")
 
+    if args.apply_selection:
+        sel_path = Path(args.apply_selection)
+        if not sel_path.exists():
+            print(f"No such selection file: {sel_path}")
+            return 1
+        payload = _load_json(sel_path)
+        selections = payload.get("selections")
+        if not isinstance(selections, dict) or not selections:
+            print(f"{sel_path}: no 'selections' object to apply")
+            return 1
+        try:
+            stack = apply_selection(stack, selections, catalog)
+        except ValueError as e:
+            print(f"Refusing to apply selection: {e}")
+            return 1
+        _write_json_atomic(STACK_JSON, stack)
+        undecided = sum(1 for e in stack["choices"].values()
+                        if e.get("applicable", True) and not str(e.get("chosen") or "").strip())
+        print(f"stack.json: {len(selections)} choice(s) recorded, "
+              f"{undecided} applicable capability/-ies still undecided")
+
     result = gaps(catalog, stack, capabilities_hash=cap_hash)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = REPORTS_DIR / f"stack-gaps-{generated}.md"
@@ -580,6 +741,10 @@ def main() -> int:
         print(f"! {len(result['unexplained_non_applicable'])} capability/-ies are not applicable "
               "with no recorded reason: "
               f"{', '.join(result['unexplained_non_applicable'])}")
+    if result["stale_choices"]:
+        print(f"! {len(result['stale_choices'])} chosen component(s) were decided against an "
+              "older version of their capability: "
+              f"{', '.join(i['key'] for i in result['stale_choices'])}")
     print(f"report: {report_path}")
     if result["stale"]:
         print("! stack.json was scaffolded against an older capabilities.json — "

@@ -42,6 +42,7 @@ uv sync --directory compliance-base                                   # resolve 
 uv run --directory compliance-base python scripts/extract.py          # ~30 agents → constraints
 uv run --directory compliance-base python scripts/capabilities.py     # constraints → capabilities
 uv run --directory compliance-base python scripts/stack.py --scaffold # refresh stack.json + gaps
+uv run --directory compliance-base python scripts/stack.py            # gap + staleness report
 uv run --directory compliance-base python scripts/validate.py <plan>  # deep check of one plan
 ```
 
@@ -67,11 +68,18 @@ neither. Slash-command equivalents: `/neurawork-cc-harness:co-extract`,
   from the shipped seed, not from a bootstrap run, and `install.py` actively prunes any
   leftover `co-session-start.py`. Do not add one.
 - **`stack.json` ownership is split.** Its schema, `--scaffold` and the gap report live
-  here; the product-scoping pass that decides *whether a capability applies to this
-  product* lives in `stack-base/` (`scripts/scope.py`) and writes through
-  `scripts/stack.py --apply-scope`. A re-scaffold carries `chosen`, `rationale`,
-  `applicable`, `applicability_reason` and `scoped_from` over by key — never re-derive
-  them here.
+  here; the three passes that fill it live in `stack-base/` and write through this
+  script's three apply modes — `scripts/scope.py → --apply-scope` (does a capability
+  apply to this product, and why), `scripts/rank.py → --apply-ranking` (the
+  best-fit-first order of its `options`), `scripts/selection.py → --apply-selection`
+  (the component a human chose). A re-scaffold carries all eight decision-owned fields
+  — `chosen`, `rationale`, `chosen_from`, `applicable`, `applicability_reason`,
+  `scoped_from`, `ranked`, `ranked_from` — over by key; never re-derive them here.
+  `--apply-selection` also stamps `chosen_from`, the hash of the catalog capability the
+  choice was made against, so `gaps()` can name the choices a catalog change
+  invalidated instead of invalidating the whole file. Scope and ranking demand the
+  complete key set; selection is deliberately partial — an undecided capability stays a
+  counted gap.
 - **The gap report is report-only and exits 0.** An unfilled stack is the normal
   starting state, not a regression. Enforcement is the plan validator's job.
 - **Copyright**: the catalog stores official control/article identifiers, short titles,

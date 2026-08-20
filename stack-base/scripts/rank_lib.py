@@ -56,6 +56,18 @@ def license_check(component: dict, policy: dict) -> str:
     return "violation"
 
 
+def is_scoped(stack: dict) -> bool:
+    """True when the product-scoping pass has run at least once.
+
+    Every pass downstream of scoping needs this answer — ranking an unscoped stack
+    would order every capability in the catalog, and offering an unscoped stack for
+    selection would ask the human to choose components for capabilities scoping
+    exists to rule out. One definition, shared, so the two cannot drift.
+    """
+    return any((c or {}).get("scoped_from")
+               for c in (stack.get("choices") or {}).values())
+
+
 def rankable_universe(stack: dict, capabilities: dict) -> list[dict]:
     """Every capability this product still has to rank, in ``stack.json`` key order.
 

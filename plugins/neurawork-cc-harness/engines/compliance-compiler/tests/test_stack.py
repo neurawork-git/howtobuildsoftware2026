@@ -115,6 +115,7 @@ class TestScaffold(unittest.TestCase):
             self.assertIsNone(enc["scoped_from"])
             self.assertIsNone(enc["ranked"])            # None, not []: never ranked ≠ ranked empty
             self.assertIsNone(enc["ranked_from"])
+            self.assertIsNone(enc["chosen_from"])
             self.assertFalse(out["choices"]["gdpr/consent-capture"]["mandatory_linked"])
 
     def test_preserves_human_fields_and_refreshes_machine_fields(self) -> None:
@@ -169,6 +170,18 @@ class TestScaffold(unittest.TestCase):
             self.assertEqual([r["component"] for r in enc["ranked"]], ["age", "OpenBao"])
             self.assertEqual(enc["ranked_from"], "prod-4c11")
             self.assertEqual(enc["options"], ["OpenBao", "age"])   # machine field still refreshed
+
+    def test_preserves_the_catalog_reference_of_a_choice(self) -> None:
+        """Losing chosen_from here would silently disable staleness detection."""
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            existing = {"choices": {"gdpr/encryption-at-rest": {
+                "chosen": "OpenBao",
+                "chosen_from": "1e23e943fe51caae",
+            }}}
+            out = stack.scaffold(_capabilities(), existing, catalog_dir=catalog)
+            self.assertEqual(out["choices"]["gdpr/encryption-at-rest"]["chosen_from"],
+                             "1e23e943fe51caae")
 
     def test_adds_new_capability_unchosen(self) -> None:
         with tempfile.TemporaryDirectory() as t:
@@ -549,6 +562,208 @@ class TestApplyRanking(unittest.TestCase):
             self.assertIsNone(s["choices"]["gdpr/encryption-at-rest"]["ranked"])
 
 
+class TestCapabilityHash(unittest.TestCase):
+    """What must reopen a settled choice, and what must not."""
+
+    def _cap(self, **over) -> dict:
+        cap = {
+            "name": "Encryption at rest",
+            "description": "Encrypt stored personal data.",
+            "satisfies": ["GDPR-ART5-01"],
+            "stack": [{"name": "OpenBao", "license": "MPL-2.0", "role": "in-product",
+                       "verdict": "keep", "why": "self-hostable secret store"}],
+        }
+        cap.update(over)
+        return cap
+
+    def test_stable_across_calls(self) -> None:
+        self.assertEqual(stack.capability_hash(self._cap()), stack.capability_hash(self._cap()))
+
+    def test_changes_when_a_component_license_changes(self) -> None:
+        other = self._cap(stack=[{"name": "OpenBao", "license": "BUSL-1.1",
+                                  "role": "in-product", "verdict": "keep", "why": "same prose"}])
+        self.assertNotEqual(stack.capability_hash(self._cap()), stack.capability_hash(other))
+
+    def test_ignores_free_prose(self) -> None:
+        # A wording fix must not reopen every settled choice.
+        reworded = self._cap(stack=[{"name": "OpenBao", "license": "MPL-2.0",
+                                     "role": "in-product", "verdict": "keep",
+                                     "why": "COMPLETELY REWRITTEN justification"}])
+        self.assertEqual(stack.capability_hash(self._cap()), stack.capability_hash(reworded))
+
+    def test_changes_when_the_pool_changes(self) -> None:
+        widened = self._cap(stack=[*self._cap()["stack"], {"name": "age", "license": "BSD-3-Clause"}])
+        self.assertNotEqual(stack.capability_hash(self._cap()), stack.capability_hash(widened))
+
+    def test_changes_when_the_obligation_changes(self) -> None:
+        other = self._cap(satisfies=["GDPR-ART5-01", "GDPR-ART5-02"])
+        self.assertNotEqual(stack.capability_hash(self._cap()), stack.capability_hash(other))
+
+
+class TestApplySelection(unittest.TestCase):
+    """The single write path for the component decision itself."""
+
+    def _scoped(self, catalog: Path, consent_applicable: bool = True) -> dict:
+        s = stack.scaffold(_capabilities(), None, catalog_dir=catalog)
+        decisions = {k: {"applicable": True, "applicability_reason": ""} for k in s["choices"]}
+        if not consent_applicable:
+            decisions["gdpr/consent-capture"] = {
+                "applicable": False, "applicability_reason": "no consent is ever collected"}
+        return stack.apply_scope(s, decisions, "prod-1")
+
+    def test_writes_the_choice_the_reason_and_the_catalog_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            cat = _capabilities()
+            catalog = _constraints(Path(t))
+            out = stack.apply_selection(
+                self._scoped(catalog),
+                {"gdpr/encryption-at-rest": {"chosen": "age", "rationale": "single binary"}},
+                cat,
+            )
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            self.assertEqual(enc["chosen"], "age")
+            self.assertEqual(enc["rationale"], "single binary")
+            self.assertEqual(
+                enc["chosen_from"],
+                stack.capability_hash(cat["frameworks"]["gdpr"]["capabilities"][0]),
+            )
+
+    def test_is_partial_and_leaves_undecided_capabilities_alone(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            out = stack.apply_selection(
+                self._scoped(catalog),
+                {"gdpr/encryption-at-rest": {"chosen": "OpenBao", "rationale": ""}},
+                _capabilities(),
+            )
+            consent = out["choices"]["gdpr/consent-capture"]
+            self.assertIsNone(consent["chosen"])       # untouched, still a visible gap
+            self.assertIsNone(consent["chosen_from"])  # every entry carries every field
+
+    def test_never_touches_the_pool_the_ranking_or_the_scoping(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            scoped = stack.apply_ranking(
+                self._scoped(catalog),
+                {"gdpr/encryption-at-rest": [{"component": "age", "rationale": "fits"},
+                                             {"component": "OpenBao", "rationale": "heavy"}],
+                 "gdpr/consent-capture": [{"component": "Klaro!", "rationale": "only option"}]},
+                "prod-9",
+            )
+            out = stack.apply_selection(
+                scoped, {"gdpr/encryption-at-rest": {"chosen": "age"}}, _capabilities())
+            enc = out["choices"]["gdpr/encryption-at-rest"]
+            self.assertEqual(enc["options"], ["OpenBao", "age"])
+            self.assertEqual([r["component"] for r in enc["ranked"]], ["age", "OpenBao"])
+            self.assertEqual(enc["ranked_from"], "prod-9")
+            self.assertEqual(enc["scoped_from"], "prod-1")
+            self.assertTrue(enc["applicable"])
+
+    def test_a_component_outside_the_pool_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            with self.assertRaises(ValueError) as e:
+                stack.apply_selection(self._scoped(catalog),
+                                      {"gdpr/encryption-at-rest": {"chosen": "HashiCorp Vault"}},
+                                      _capabilities())
+            self.assertIn("not in options", str(e.exception))
+
+    def test_choosing_for_a_scoped_out_capability_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            with self.assertRaises(ValueError) as e:
+                stack.apply_selection(self._scoped(catalog, consent_applicable=False),
+                                      {"gdpr/consent-capture": {"chosen": "Klaro!"}},
+                                      _capabilities())
+            self.assertIn("scoped out", str(e.exception))
+
+    def test_unknown_key_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            with self.assertRaises(ValueError) as e:
+                stack.apply_selection(self._scoped(catalog),
+                                      {"gdpr/nope": {"chosen": "age"}}, _capabilities())
+            self.assertIn("unknown key", str(e.exception))
+
+    def test_blank_choice_refuses(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            with self.assertRaises(ValueError) as e:
+                stack.apply_selection(self._scoped(catalog),
+                                      {"gdpr/encryption-at-rest": {"chosen": "  "}},
+                                      _capabilities())
+            self.assertIn("names no component", str(e.exception))
+
+    def test_every_problem_is_reported_at_once(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            with self.assertRaises(ValueError) as e:
+                stack.apply_selection(
+                    self._scoped(catalog),
+                    {"gdpr/nope": {"chosen": "age"},
+                     "gdpr/encryption-at-rest": {"chosen": "HashiCorp Vault"},
+                     "gdpr/consent-capture": {"chosen": ""}},
+                    _capabilities(),
+                )
+            msg = str(e.exception)
+            self.assertIn("unknown key", msg)
+            self.assertIn("not in options", msg)
+            self.assertIn("names no component", msg)
+
+    def test_a_refused_write_leaves_the_input_untouched(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            s = self._scoped(catalog)
+            with self.assertRaises(ValueError):
+                stack.apply_selection(s, {"gdpr/encryption-at-rest": {"chosen": "Vault"}},
+                                      _capabilities())
+            self.assertIsNone(s["choices"]["gdpr/encryption-at-rest"]["chosen"])
+
+
+class TestStaleChoices(unittest.TestCase):
+    """A catalog change must reopen the choices it invalidated — and only those."""
+
+    def _chosen_both(self, catalog: Path, cat: dict) -> dict:
+        s = stack.scaffold(cat, None, catalog_dir=catalog)
+        return stack.apply_selection(
+            s,
+            {"gdpr/encryption-at-rest": {"chosen": "OpenBao"},
+             "gdpr/consent-capture": {"chosen": "Klaro!"}},
+            cat,
+        )
+
+    def test_only_the_changed_capability_goes_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            cat = _capabilities()
+            s = self._chosen_both(catalog, cat)
+            self.assertEqual(stack.gaps(cat, s, catalog_dir=catalog)["stale_choices"], [])
+
+            cat["frameworks"]["gdpr"]["capabilities"][0]["stack"][0]["license"] = "BUSL-1.1"
+            res = stack.gaps(cat, s, catalog_dir=catalog)
+            self.assertEqual([i["key"] for i in res["stale_choices"]],
+                             ["gdpr/encryption-at-rest"])
+            self.assertEqual(res["stale_choices"][0]["chosen"], "OpenBao")
+
+    def test_prose_only_catalog_edit_leaves_every_choice_current(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            cat = _capabilities()
+            s = self._chosen_both(catalog, cat)
+            cat["frameworks"]["gdpr"]["capabilities"][0]["stack_notes"] = "reworded"
+            self.assertEqual(stack.gaps(cat, s, catalog_dir=catalog)["stale_choices"], [])
+
+    def test_a_choice_with_no_catalog_reference_is_never_stale(self) -> None:
+        # Hand-recorded straight into stack.json: nothing to compare against, so silence.
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            cat = _capabilities()
+            s = stack.scaffold(cat, None, catalog_dir=catalog)
+            s["choices"]["gdpr/encryption-at-rest"]["chosen"] = "OpenBao"
+            cat["frameworks"]["gdpr"]["capabilities"][0]["description"] = "changed"
+            self.assertEqual(stack.gaps(cat, s, catalog_dir=catalog)["stale_choices"], [])
+
+
 class TestRenderGapReport(unittest.TestCase):
     def test_lists_unchosen_mandatory_capability(self) -> None:
         with tempfile.TemporaryDirectory() as t:
@@ -612,6 +827,23 @@ class TestRenderGapReport(unittest.TestCase):
             md = stack.render_gap_report(cat, s, res, "2026-02-02")
             self.assertIn("Unexplained omission", md)
             self.assertIn("**no reason recorded**", md)
+
+    def test_stale_choice_block_names_the_component_and_both_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _constraints(Path(t))
+            cat = _capabilities()
+            s = stack.apply_selection(
+                stack.scaffold(cat, None, catalog_dir=catalog),
+                {"gdpr/encryption-at-rest": {"chosen": "OpenBao"}},
+                cat,
+            )
+            cat["frameworks"]["gdpr"]["capabilities"][0]["stack"][0]["role"] = "internal-infra"
+            res = stack.gaps(cat, s, catalog_dir=catalog)
+            md = stack.render_gap_report(cat, s, res, "2026-02-02")
+            self.assertIn("**Stale choices (1)**", md)
+            self.assertIn("`gdpr/encryption-at-rest` \u2192 **OpenBao**", md)
+            self.assertIn(res["stale_choices"][0]["current"], md)
+
 
 
 if __name__ == "__main__":
