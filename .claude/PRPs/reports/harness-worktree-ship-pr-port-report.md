@@ -48,6 +48,7 @@ and no `.gitignore` edit — lines 75-78 already cover both paths.
 | `node --check plugins/neurawork-cc-harness/workflows/nw-ship-pr-review.js` | `passed` | no output, exit 0 |
 | Manifests parse (`json.loads` on both) | `passed` | manifests ok |
 | Negative check (uncommitted, reverted): appended the forbidden merge flag to `nw-ship-pr.md` | `failed as designed` | `AssertionError: '--delete-branch' unexpectedly found`; file restored, suite green again |
+| Negative check (uncommitted, reverted): removed the probe from phase 8.4 only | `failed as designed` | `FAIL … (phase='### 8.4')`; the global-count version of this test stayed green here, which is why it is now section-scoped |
 | `grep -c "nw-ship-pr\|nw-worktree"` over the four doc files | `passed` | README 2, CLAUDE.md 3, plugins/CLAUDE.md 6, docs/ARCHITECTURE.md 5 |
 
 The runtime gates in the plan's Validation table (`/nw-worktree port-smoke`, a live `/nw-ship-pr`
@@ -74,12 +75,28 @@ a working lifecycle.
 - **Plan Task 3's "middle option" was dropped as planned** — no legacy un-namespaced global copy
   of this workflow exists, so Phase 4 lists exactly two resolution paths.
 
+### Review findings from PR #29 (both corrected)
+
+- **Blocking — the validation gate ran in the wrong checkout.** Phase 4.5 anchored its commands
+  to `$MAIN_ROOT`, carried over from the pyright source. But the documented flow ships from a
+  worktree while the main checkout holds `<base>`, so the gate would have run the repo's tests
+  against base: `GREEN` for a PR that breaks the suite, and a command the PR itself introduces
+  (a new test directory) would find nothing there at all. The gate now anchors to `<wt-root>`
+  like Phase 6.5's backlog commit, with the reasoning inline and a per-command escape hatch for
+  a command that genuinely needs the main checkout's environment. Phase 6.5's own justification
+  no longer claims the cwd sits at `$MAIN_ROOT` after 4.5.
+- **Nice-to-have — the guard test did not bite.** It counted the `is_main_checkout` probe over
+  the whole command file and required `>= 2`, but the file contains it four times (ground rules,
+  8.0, 8.3, 8.4); deleting *both* cleanup guards left the count at 2 and the test green. It is
+  now section-scoped: `### 8.3` and `### 8.4` are each asserted separately, as a subTest per
+  phase. Verified by deleting the 8.4 probe alone — the global version passed, the new one fails.
+
 ## Completion Gate
 
 - **Plan tasks complete:** `Yes` (Tasks 1-6)
 - **Acceptance criteria satisfied:** `Yes` for the statically verifiable ones — AC2/AC3 (approval
   gate is the only merge path; no implicit-checkout flag; both 8.3 and 8.4 inline their own
-  `is_main_checkout` probe), AC4 (Phase 8.0 makes no subprocess call and cites the three hook
+  `is_main_checkout` probe, now pinned section-by-section rather than by a global count), AC4 (Phase 8.0 makes no subprocess call and cites the three hook
   files; no capture hook was modified), AC5 (SKIP-on-empty, named skip on missing binary, RED as
   a gate warning), AC6 (namespaced name + `${CLAUDE_PLUGIN_ROOT}` fallback both resolve to the
   shipped file, which returns the four-key shape), AC7 (existing profile and both `.gitignore`

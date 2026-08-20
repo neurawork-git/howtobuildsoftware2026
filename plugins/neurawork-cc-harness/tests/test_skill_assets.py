@@ -132,14 +132,25 @@ class GuardInvariantTests(unittest.TestCase):
         )
 
     def test_both_worktree_cleanup_phases_carry_their_own_probe(self) -> None:
+        # Section-scoped, NOT a count over the whole file: the probe also appears in the
+        # ground rules and in phase 8.0, so a global `>= 2` stays green even when BOTH
+        # cleanup guards are deleted — the exact silent loss this test exists to catch.
         text = SHIP_PR.read_text(encoding="utf-8")
-        self.assertGreaterEqual(
-            text.count(PROBE),
-            2,
-            "phases 8.3 and 8.4 must each inline the is_main_checkout probe: ground-rule "
-            "prose is not sourced into a Bash subshell, and an unguarded checkout in a "
-            "worktree detaches HEAD so the following `git branch -d` eats the branch",
-        )
+        sections = {}
+        for heading, following in (("### 8.3", "### 8.4"), ("### 8.4", "## Phase 9")):
+            _, _, rest = text.partition(heading)
+            self.assertTrue(rest, f"{heading} is missing from the command file")
+            sections[heading], _, _ = rest.partition(following)
+        for heading, body in sections.items():
+            with self.subTest(phase=heading):
+                self.assertIn(
+                    PROBE,
+                    body,
+                    f"phase {heading[4:]} must inline the is_main_checkout probe itself: "
+                    "ground-rule prose is not sourced into a Bash subshell, and an "
+                    "unguarded checkout in a worktree detaches HEAD so the following "
+                    "`git branch -d` eats the branch",
+                )
 
     def test_worktree_skill_only_mentions_branch_switching_to_forbid_it(self) -> None:
         offenders = [

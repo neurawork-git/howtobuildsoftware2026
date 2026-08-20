@@ -285,21 +285,28 @@ not on the turn that starts the background review (that one ends immediately). L
 synchronous, independent of the review workflow.
 
 Input is `validate_commands` from Phase 0.2. **Absent or empty → gate `SKIP`, no block.**
-Otherwise run each command from the main checkout, **each in its own Bash call**, and record its
-exit status:
+Otherwise run each command **in the shipped checkout** — `<wt-root>` from Phase 0.1, inserted
+literally — **each in its own Bash call**, and record its exit status:
 
 ```bash
-MAIN_ROOT=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
+cd <wt-root> && <command 1>; echo "exit=$?"
 ```
 ```bash
-cd "$MAIN_ROOT" && <command 1>; echo "exit=$?"
-```
-```bash
-cd "$MAIN_ROOT" && <command 2>; echo "exit=$?"
+cd <wt-root> && <command 2>; echo "exit=$?"
 ```
 
-Insert the commands literally, one call each — a loop over a computed list hits the same call-form
-refusal as the marker write in Phase 4.
+Insert the commands and the path literally, one call each — a loop over a computed list hits the
+same call-form refusal as the marker write in Phase 4.
+
+**`<wt-root>`, never `$MAIN_ROOT`** — this is the whole point of the gate. The documented flow is
+`/nw-worktree` → work in the sibling worktree → `/nw-ship-pr` from there, and the main checkout
+holds `<base>`, not the PR branch (8.1 and 8.4 rely on exactly that). A gate anchored to the main
+checkout would run the repo's tests against **base** and never see the shipped commits: `GREEN`
+for a PR that breaks the suite, `RED` for a base failure the PR actually fixes — and a command the
+PR itself introduces (a new test directory, say) would find nothing there at all. In the main
+checkout `<wt-root>` is the main root, so the same line is correct in both cases. If one command
+genuinely needs the main checkout's environment, anchor **that** command to `$MAIN_ROOT` and say
+why in the config comment — never move the whole gate off the branch.
 
 **Interpretation (robust, never a false block):**
 - **Empty list / no config** → **SKIP**, no block, no question.
@@ -374,11 +381,11 @@ Sink per config (`$SINK` from Phase 0.2):
   Then commit + push so the entry travels with the PR. **Every command MUST be anchored to
   `<wt-root>`** (the shipped checkout from Phase 0.1, inserted literally — call-form rule from
   Phase 4). Two reasons, both binding: `$BACKLOG` comes from the config call in Phase 0.2 and is
-  **call-local** there — the variable is empty here; and the Bash cwd sits at `$MAIN_ROOT` after
-  Phase 4.5 (`cd "$MAIN_ROOT"`, without a return). Unanchored, the commit would therefore run in
-  the MAIN checkout on `<base>`, and `git push` would push it **straight to `origin/<base>`** —
-  past the PR review, and the entry would again not reach the PR. First the branch assertion,
-  then the three commands:
+  **call-local** there — the variable is empty here; and no earlier phase leaves the Bash cwd on
+  the shipped branch, since the cwd resets between calls and any phase may have `cd`-ed elsewhere.
+  Unanchored, the commit would therefore risk running in the MAIN checkout on `<base>`, and
+  `git push` would push it **straight to `origin/<base>`** — past the PR review, and the entry
+  would again not reach the PR. First the branch assertion, then the three commands:
   ```bash
   git -C <wt-root> rev-parse --abbrev-ref HEAD    # MUST be <branch> — otherwise STOP, do not commit
   ```
