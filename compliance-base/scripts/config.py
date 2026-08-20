@@ -35,6 +35,12 @@ LAST_EXTRACT_FILE = SCRIPTS_DIR / "last-extract.json"
 # ROOT_DIR.parent for a top-level catalog dir).
 PLANS_SUBPATH = ".claude/PRPs/plans"
 
+# prp-core resolves its artifact store as ``"${PRP_HOME:-$HOME/.prp}/<repo-name>-<hash>"``,
+# so with PRP_HOME=".claude/PRPs" (what install.py sets) plans land one level deeper:
+# ``.claude/PRPs/<repo-name>-<hash>/plans/``. Both layouts are checked — see
+# precheck.is_plan_path.
+PRP_SUBPATH = ".claude/PRPs"
+
 # Display names for the supported frameworks.
 FRAMEWORK_TITLES = {
     "gdpr": "GDPR / DSGVO — Regulation (EU) 2016/679",

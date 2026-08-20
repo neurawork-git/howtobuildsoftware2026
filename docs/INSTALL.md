@@ -115,11 +115,16 @@ It installs into its own dir (default `compliance-base`) and wires a **single**
 with the other two. A fresh install lands a **prebuilt catalog** — the plugin ships
 `catalog/{gdpr,soc2,iso27001}.json` + `index.md` + the derived `capabilities.{json,md}`
 and copies them in, so the repo has a working catalog with no LLM run and no API key.
-Choosing to extract instead fans out ~30 parallel SDK agents. From then on:
+The install then derives `catalog/stack.json` from those capabilities (deterministic,
+no API key) and sets `env.PRP_HOME` to `.claude/PRPs` in `.claude/settings.json`, so
+PRP artifacts land inside the repo where the validator can see them — an existing
+`PRP_HOME` is never overwritten. Choosing to extract instead fans out ~30 parallel SDK
+agents. From then on:
 
-- Every PRP plan write (`.claude/PRPs/plans/*.plan.md`) is validated automatically:
-  a fast inline structural precheck plus a detached deep LLM report under
-  `compliance-base/reports/`.
+- Every PRP plan write is validated automatically: a fast inline structural precheck
+  plus a detached deep LLM report under `compliance-base/reports/`. Both plan
+  locations count — `.claude/PRPs/plans/*.plan.md` and the `PRP_HOME` store layout
+  `.claude/PRPs/<repo>-<hash>/plans/*.plan.md`; archived plans under `completed/` do not.
 - Rebuild the constraint catalog on demand: `/neurawork-cc-harness:co-extract`.
 - Re-derive the **capability layer** and refresh the stack scaffold:
   `/neurawork-cc-harness:co-capabilities`. It clusters the constraints into concrete

@@ -124,11 +124,15 @@ knows when they last ran. Synthesis needs `ANTHROPIC_API_KEY` /
 plugin and is copied in at install, then rebuilt on demand: `co-extract` re-derives the
 **constraints** from the standards and `co-capabilities` re-derives the **capability
 layer** on top of them — both ~30 parallel SDK agents behind `asyncio.gather` + a
-semaphore, the harness's only parallel compile path. `co-capabilities` also refreshes
-`catalog/stack.json` (`scripts/stack.py --scaffold`), the tracked record of the
-component chosen per capability, and writes a gap report naming the ones still
-undecided. At runtime the engine wires a **single** `co-`-prefixed **`PostToolUse`**
-hook (no `SessionStart`/`SessionEnd`) that validates each PRP plan write: a fast inline
+semaphore, the harness's only parallel compile path. `catalog/stack.json` — the tracked
+record of the component chosen per capability — is scaffolded at install time from the
+seeded capabilities (`scripts/stack.py --scaffold`, deterministic, no API key) and
+refreshed by `co-capabilities` afterwards; both write a gap report naming the ones still
+undecided. The install also points `PRP_HOME` at `.claude/PRPs`, without which prp-core
+writes its plans outside the repo and the hook below never sees them. At runtime the
+engine wires a **single** `co-`-prefixed **`PostToolUse`** hook (no
+`SessionStart`/`SessionEnd`) that validates each PRP plan write — in the canonical
+`.claude/PRPs/plans/` or in the `PRP_HOME` store one level deeper: a fast inline
 structural precheck plus a detached deep LLM report under `compliance-base/reports/`.
 The precheck covers both tiers — mandatory constraint references and the plan's
 `**Capabilities**:` declaration — and, when the capability layer is missing entirely,

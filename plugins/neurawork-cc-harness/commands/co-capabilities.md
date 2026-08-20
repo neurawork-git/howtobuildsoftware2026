@@ -9,7 +9,8 @@ Turn the extracted **constraints** into per-framework **capabilities** (concrete
 technical building blocks, each carrying the constraint ids it satisfies and 2-5
 recommended stack components), then refresh the stack scaffold so `catalog/stack.json`
 knows about every capability. The capability catalog otherwise ships prebuilt with the
-install; this command re-derives it after the constraint catalog changed.
+install, and the install scaffolds `stack.json` from it; this command re-derives both
+after the constraint catalog changed.
 
 1. Locate the catalog dir: the top-level directory containing `scripts/capabilities.py`
    and `hooks/co-post-tooluse.py` (commonly `compliance-base`). If none exists, tell the

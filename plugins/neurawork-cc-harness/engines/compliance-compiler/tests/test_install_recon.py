@@ -55,6 +55,10 @@ class TestInstall(unittest.TestCase):
             self.assertTrue((cb / "catalog" / ".shards").is_dir())
             self.assertTrue((cb / "reports").is_dir())
             self.assertTrue((cb / "_shared" / "hookio.py").exists())
+            self.assertTrue((cb / "_shared" / "tests" / "test_settings.py").exists())
+            # plugin-scope tests assert facts an installed copy does not have
+            self.assertFalse((cb / "_shared" / "tests" / "test_manifest.py").exists())
+            self.assertFalse((cb / "_shared" / "tests" / "test_version_check.py").exists())
             self.assertTrue((cb / "scripts" / "extract.py").exists())
             self.assertTrue((cb / "scripts" / "validate.py").exists())
             self.assertTrue((cb / "scripts" / "precheck.py").exists())
@@ -112,11 +116,78 @@ class TestInstall(unittest.TestCase):
             # keep the repo's own gdpr.json, drop the derived capabilities files
             (catalog / "capabilities.json").unlink()
             (catalog / "capabilities.md").unlink()
+            (catalog / "stack.json").unlink()
             self.assertTrue((catalog / "gdpr.json").exists())
             self.assertEqual(self._install(repo).returncode, 0)
             # a present constraint json ⇒ seed skipped entirely, capabilities.json stays gone
             self.assertFalse((catalog / "capabilities.json").exists())
             self.assertFalse((catalog / "capabilities.md").exists())
+            # ... and with no capability layer there is nothing to scaffold a stack from
+            self.assertFalse((catalog / "stack.json").exists())
+
+    def test_fresh_install_scaffolds_stack(self) -> None:
+        # Deterministic, no API key: the seeded capability layer is enough to derive
+        # catalog/stack.json, so a fresh install is decision-ready without an LLM run.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            catalog = repo / CDIR / "catalog"
+            stack = json.loads((catalog / "stack.json").read_text(encoding="utf-8"))
+            caps = json.loads((catalog / "capabilities.json").read_text(encoding="utf-8"))
+            expected = sum(len(f.get("capabilities", []))
+                           for f in caps["frameworks"].values())
+            self.assertEqual(len(stack["choices"]), expected)
+            self.assertTrue(all(e["chosen"] is None for e in stack["choices"].values()))
+            # tracked artifact, not local machinery
+            self.assertNotIn("stack.json", (repo / CDIR / ".gitignore").read_text())
+
+    def test_adopt_never_clobbers_stack_choices(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            stack_path = repo / CDIR / "catalog" / "stack.json"
+            stack = json.loads(stack_path.read_text(encoding="utf-8"))
+            key = min(stack["choices"])
+            stack["choices"][key]["chosen"] = "Sentinel Component"
+            stack["choices"][key]["applicable"] = False
+            stack_path.write_text(json.dumps(stack, indent=2) + "\n", encoding="utf-8")
+            before = stack_path.read_bytes()
+
+            self.assertEqual(self._install(repo).returncode, 0)
+            self.assertEqual(stack_path.read_bytes(), before)
+
+    def test_fresh_install_points_prp_home_at_the_repo(self) -> None:
+        # Without this, prp-core writes plans to ~/.prp and the validator hook — whose path
+        # filter is repo-relative — never sees a single one.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            settings = json.loads((repo / ".claude" / "settings.json").read_text())
+            self.assertEqual(settings["env"]["PRP_HOME"], ".claude/PRPs")
+            self.assertIn("PostToolUse", settings["hooks"])  # both writers coexist
+
+    def test_adopt_leaves_a_differing_prp_home_alone(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            settings_path = repo / ".claude" / "settings.json"
+            settings = json.loads(settings_path.read_text())
+            settings["env"]["PRP_HOME"] = "/somewhere/else"
+            settings_path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+            res = self._install(repo)
+            self.assertEqual(res.returncode, 0)
+            settings = json.loads(settings_path.read_text())
+            self.assertEqual(settings["env"]["PRP_HOME"], "/somewhere/else")
+            self.assertIn("/somewhere/else", res.stdout)
 
     def test_adopt_prunes_stale_sessionstart(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
