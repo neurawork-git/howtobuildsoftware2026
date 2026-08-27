@@ -27,7 +27,7 @@ Build **`neurawork-cc-harness`**, a Claude Code plugin bundling **independently 
 |-------|-------------|-------------|------------|--------|
 | `knowledge-compiler` | `knowledge-base/` | *(none)* | this PRD, Phase 2 | shipped |
 | `claudemd-lerner` | `claudemd-lerner/` | `cl-` | this PRD, Phase 3 | shipped |
-| `compliance-compiler` | `compliance-base/` | `co-` | this PRD Phase 6 + [`compliance-capabilities.prd.md`](completed/compliance-capabilities.prd.md) | shipped |
+| `compliance-compiler` | `compliance-base/` | `co-` | this PRD Phase 6 + [`compliance-capabilities.prd.md`](compliance-capabilities.prd.md) | shipped |
 | `stack-compiler` | `stack-base/` | `st-` | [`stack-compiler.prd.md`](stack-compiler.prd.md) | shipped |
 
 ### Vocabulary
@@ -163,12 +163,13 @@ Shortest path to value (per skill):
 
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
-| 1 | Plugin scaffold & shared infra | `neurawork-cc-harness` plugin skeleton (plugin.json, dirs), shared session-capture + hook patterns, namespacing, in-repo write-guard | complete | - | - | [scaffold plan](../plans/completed/neurawork-cc-harness-scaffold.plan.md) |
-| 2 | knowledge-compiler skill | Clean reimpl of compile/flush/query/lint + install command + recon + seed + triggers | complete | with 3 | 1 | [kc plan](../plans/completed/neurawork-cc-harness-knowledge-compiler.plan.md) |
-| 3 | claudemd-lerner skill | Session→CLAUDE.md hierarchy + docs maintenance (no wiki) + install command + recon + seed + triggers | complete | with 2 | 1 | [cl plan](../plans/completed/neurawork-cc-harness-claudemd-lerner.plan.md) |
-| 4 | Exemplary docs & self-host | Apply both skills to THIS repo as the worked example; write install/upgrade guide; choose license | complete | - | 2, 3 | [docs/self-host plan](../plans/completed/neurawork-cc-harness-exemplary-docs-selfhost.plan.md) |
+| 1 | Plugin scaffold & shared infra | `neurawork-cc-harness` plugin skeleton (plugin.json, dirs), shared session-capture + hook patterns, namespacing, in-repo write-guard | complete | - | - | [scaffold plan](../../plans/completed/neurawork-cc-harness-scaffold.plan.md) |
+| 2 | knowledge-compiler skill | Clean reimpl of compile/flush/query/lint + install command + recon + seed + triggers | complete | with 3 | 1 | [kc plan](../../plans/completed/neurawork-cc-harness-knowledge-compiler.plan.md) |
+| 3 | claudemd-lerner skill | Session→CLAUDE.md hierarchy + docs maintenance (no wiki) + install command + recon + seed + triggers | complete | with 2 | 1 | [cl plan](../../plans/completed/neurawork-cc-harness-claudemd-lerner.plan.md) |
+| 4 | Exemplary docs & self-host | Apply both skills to THIS repo as the worked example; write install/upgrade guide; choose license | complete | - | 2, 3 | [docs/self-host plan](../../plans/completed/neurawork-cc-harness-exemplary-docs-selfhost.plan.md) |
 | 5 | ~~TechStack Validator~~ | Superseded 2026-08-13 — moved to [`stack-compiler.prd.md`](stack-compiler.prd.md) as a fourth skill | superseded | - | 4 | - |
-| 6 | Compliance Validator | Checks plans/PRDs vs. chosen constraints — shipped as the `compliance-compiler` skill + `compliance-base/` self-host | complete | - | 4 | [workflow engine](../plans/completed/compliance-workflow-engine.plan.md), [capabilities engine](../plans/completed/compliance-capabilities-engine.plan.md), [prebuilt catalog](../plans/completed/compliance-prebuilt-catalog-incremental.plan.md), [hook + validate config](../plans/completed/compliance-hook-removal-validate-config.plan.md) |
+| 6 | Compliance Validator | Checks plans/PRDs vs. chosen constraints — shipped as the `compliance-compiler` skill + `compliance-base/` self-host | complete | - | 4 | [workflow engine](../../plans/completed/compliance-workflow-engine.plan.md), [capabilities engine](../../plans/completed/compliance-capabilities-engine.plan.md), [prebuilt catalog](../../plans/completed/compliance-prebuilt-catalog-incremental.plan.md), [hook + validate config](../../plans/completed/compliance-hook-removal-validate-config.plan.md) |
+| 7 | `co-` hook on PRD writes | Extend `compliance-base/hooks/co-post-tooluse.py` from `.claude/PRPs/plans/*.plan.md` to `.claude/PRPs/prds/*.prd.md`, checking a PRD at capability/component level (it carries no constraint IDs) — the answer [`compliance-capabilities.prd.md`](compliance-capabilities.prd.md) gave its open question 3. Reuse the `st-` hook's debounce helper. | deferred | - | 6 | [backlog](../../../BACKLOG.md) |
 
 ### Phase Details
 

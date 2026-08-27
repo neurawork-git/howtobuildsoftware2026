@@ -87,8 +87,8 @@ resolves to this plugin regardless of what else is enabled.
 
 The live record is the phase table in each PRD, not this file:
 
-- [`.claude/PRPs/prds/neurawork-cc-harness.prd.md`](../../.claude/PRPs/prds/neurawork-cc-harness.prd.md) — the three installable skills.
-- [`.claude/PRPs/prds/stack-compiler.prd.md`](../../.claude/PRPs/prds/stack-compiler.prd.md) — `stack-compiler`, including the Phase 5 installer.
+- [`.claude/PRPs/prds/completed/neurawork-cc-harness.prd.md`](../../.claude/PRPs/prds/completed/neurawork-cc-harness.prd.md) — the three installable skills.
+- [`.claude/PRPs/prds/completed/stack-compiler.prd.md`](../../.claude/PRPs/prds/completed/stack-compiler.prd.md) — `stack-compiler`, including the Phase 5 installer.
 
 ## Shared infrastructure
 

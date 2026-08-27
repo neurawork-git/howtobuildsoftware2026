@@ -16,7 +16,7 @@ The repo **self-hosts** everything it ships: `knowledge-base/`, `claudemd-lerner
 repo itself, so the repo is its own worked example.
 
 Current plugin version: `0.5.1`. The live roadmap is the phase table in
-[`.claude/PRPs/prds/neurawork-cc-harness.prd.md`](.claude/PRPs/prds/neurawork-cc-harness.prd.md).
+[`.claude/PRPs/prds/completed/neurawork-cc-harness.prd.md`](.claude/PRPs/prds/completed/neurawork-cc-harness.prd.md).
 
 ## Install
 
