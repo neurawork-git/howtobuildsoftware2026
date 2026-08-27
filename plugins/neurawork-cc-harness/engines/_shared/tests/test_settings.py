@@ -76,6 +76,39 @@ class TestMergeHooks(unittest.TestCase):
                 settings.merge_hooks(tmp, [HOOK])
 
 
+class TestMatcherGroups(unittest.TestCase):
+    """The 5-tuple form. A PreToolUse hook registered in the catch-all group would
+    spawn a process on EVERY tool call, which is why the matcher is part of the
+    registration rather than something a user has to hand-edit afterwards."""
+
+    def test_matcher_hook_creates_its_own_group(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            settings.merge_hooks(tmp, [("PreToolUse", "a.py", 10, "a.py")])
+            self.assertTrue(settings.merge_hooks(
+                tmp, [("PreToolUse", "skill.py", 10, "skill.py", "Skill")]))
+            data = json.loads((Path(tmp) / ".claude" / "settings.json").read_text())
+            groups = {g["matcher"]: [h["command"] for h in g["hooks"]]
+                      for g in data["hooks"]["PreToolUse"]}
+            self.assertEqual(groups, {"": ["a.py"], "Skill": ["skill.py"]})
+
+    def test_matcher_hook_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = ("PreToolUse", "skill.py", 10, "skill.py", "Skill")
+            self.assertTrue(settings.merge_hooks(tmp, [hook]))
+            self.assertFalse(settings.merge_hooks(tmp, [hook]))
+            data = json.loads((Path(tmp) / ".claude" / "settings.json").read_text())
+            entries = [h for g in data["hooks"]["PreToolUse"] for h in g["hooks"]]
+            self.assertEqual(len(entries), 1)
+
+    def test_four_tuple_still_lands_in_the_catch_all_group(self) -> None:
+        # Regression guard for the claudemd-lerner and compliance-compiler installers,
+        # which pass 4-tuples and are not modified by this change.
+        with tempfile.TemporaryDirectory() as tmp:
+            settings.merge_hooks(tmp, [HOOK])
+            data = json.loads((Path(tmp) / ".claude" / "settings.json").read_text())
+            self.assertEqual(data["hooks"]["SessionEnd"][0]["matcher"], "")
+
+
 class TestSetEnvDefault(unittest.TestCase):
     def test_writes_when_absent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

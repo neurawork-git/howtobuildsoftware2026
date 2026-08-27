@@ -1,5 +1,8 @@
 {
   "knowledge_dir": "knowledge-base",
   "model": "",
-  "compile_age_hours": 6
+  "compile_age_hours": 6,
+  "research_directive": true,
+  "research_skill_match": "^([\\w-]+:)?prp-(plan|prd|debug)$",
+  "research_prompt_match": "^\\s*/(?:[\\w-]+:)?prp-(plan|prd|debug)(?![\\w-])"
 }

@@ -76,5 +76,90 @@ class TestMergeHooks(unittest.TestCase):
                 settings.merge_hooks(tmp, [HOOK])
 
 
+class TestMatcherGroups(unittest.TestCase):
+    """The 5-tuple form. A PreToolUse hook registered in the catch-all group would
+    spawn a process on EVERY tool call, which is why the matcher is part of the
+    registration rather than something a user has to hand-edit afterwards."""
+
+    def test_matcher_hook_creates_its_own_group(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            settings.merge_hooks(tmp, [("PreToolUse", "a.py", 10, "a.py")])
+            self.assertTrue(settings.merge_hooks(
+                tmp, [("PreToolUse", "skill.py", 10, "skill.py", "Skill")]))
+            data = json.loads((Path(tmp) / ".claude" / "settings.json").read_text())
+            groups = {g["matcher"]: [h["command"] for h in g["hooks"]]
+                      for g in data["hooks"]["PreToolUse"]}
+            self.assertEqual(groups, {"": ["a.py"], "Skill": ["skill.py"]})
+
+    def test_matcher_hook_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = ("PreToolUse", "skill.py", 10, "skill.py", "Skill")
+            self.assertTrue(settings.merge_hooks(tmp, [hook]))
+            self.assertFalse(settings.merge_hooks(tmp, [hook]))
+            data = json.loads((Path(tmp) / ".claude" / "settings.json").read_text())
+            entries = [h for g in data["hooks"]["PreToolUse"] for h in g["hooks"]]
+            self.assertEqual(len(entries), 1)
+
+    def test_four_tuple_still_lands_in_the_catch_all_group(self) -> None:
+        # Regression guard for the claudemd-lerner and compliance-compiler installers,
+        # which pass 4-tuples and are not modified by this change.
+        with tempfile.TemporaryDirectory() as tmp:
+            settings.merge_hooks(tmp, [HOOK])
+            data = json.loads((Path(tmp) / ".claude" / "settings.json").read_text())
+            self.assertEqual(data["hooks"]["SessionEnd"][0]["matcher"], "")
+
+
+class TestSetEnvDefault(unittest.TestCase):
+    def test_writes_when_absent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            status, value = settings.set_env_default(tmp, "PRP_HOME", ".claude/PRPs")
+            self.assertEqual((status, value), ("wrote", ".claude/PRPs"))
+            data = json.loads((Path(tmp) / ".claude" / "settings.json").read_text())
+            self.assertEqual(data["env"]["PRP_HOME"], ".claude/PRPs")
+
+    def test_second_call_is_already(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            settings.set_env_default(tmp, "PRP_HOME", ".claude/PRPs")
+            sp = Path(tmp) / ".claude" / "settings.json"
+            before = sp.read_bytes()
+            status, value = settings.set_env_default(tmp, "PRP_HOME", ".claude/PRPs")
+            self.assertEqual((status, value), ("already", ".claude/PRPs"))
+            self.assertEqual(sp.read_bytes(), before)
+
+    def test_conflicting_value_is_left_alone(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            sp = Path(tmp) / ".claude" / "settings.json"
+            sp.parent.mkdir(parents=True)
+            sp.write_text(json.dumps({"env": {"PRP_HOME": "/elsewhere"}}), encoding="utf-8")
+            before = sp.read_bytes()
+            status, value = settings.set_env_default(tmp, "PRP_HOME", ".claude/PRPs")
+            self.assertEqual((status, value), ("conflict", "/elsewhere"))
+            self.assertEqual(sp.read_bytes(), before)
+
+    def test_preserves_hooks_and_other_env_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            settings.merge_hooks(tmp, [HOOK])
+            sp = Path(tmp) / ".claude" / "settings.json"
+            data = json.loads(sp.read_text())
+            data["env"] = {"OTHER": "keep"}
+            sp.write_text(json.dumps(data), encoding="utf-8")
+
+            self.assertEqual(
+                settings.set_env_default(tmp, "PRP_HOME", ".claude/PRPs")[0], "wrote")
+            data = json.loads(sp.read_text())
+            self.assertEqual(data["env"], {"OTHER": "keep", "PRP_HOME": ".claude/PRPs"})
+            entries = [h for g in data["hooks"]["SessionEnd"] for h in g["hooks"]]
+            self.assertEqual(len(entries), 1)
+
+    def test_invalid_json_raises(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            sp = Path(tmp) / ".claude" / "settings.json"
+            sp.parent.mkdir(parents=True)
+            sp.write_text("{ not json")
+            with self.assertRaises(settings.SettingsError):
+                settings.set_env_default(tmp, "PRP_HOME", ".claude/PRPs")
+            self.assertEqual(sp.read_text(encoding="utf-8"), "{ not json")
+
+
 if __name__ == "__main__":
     unittest.main()

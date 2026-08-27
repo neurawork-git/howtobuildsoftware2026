@@ -73,8 +73,11 @@ The skill runs a **three-phase** flow:
    timezone, and whether to seed now (offered only when recommended and the tree
    is clean).
 3. **Execute** — copies the engine + shared helpers into `<dir>/`, scaffolds
-   `daily/` + `knowledge/` + `config.json`, and merges three hooks
-   (`SessionStart`, `PreCompact`, `SessionEnd`) into `.claude/settings.json`.
+   `daily/` + `knowledge/` + `config.json`, and merges five hooks into
+   `.claude/settings.json`: `SessionStart`, `PreCompact` and `SessionEnd` for
+   capture and index injection, plus `UserPromptSubmit` and `PreToolUse`
+   (matcher `Skill`), which spawn the `kb-researcher` agent when a PRP research
+   workflow starts.
 
 When it finishes, the installer prints:
 
@@ -87,7 +90,10 @@ Next steps:
 Run `uv sync --directory <dir>` to resolve the engine's dependencies, then commit
 `<dir>/` and `.claude/settings.json`. From then on:
 
-- Sessions capture automatically (the three hooks).
+- Sessions capture automatically (the three capture hooks).
+- A PRD, plan or debug workflow spawns `neurawork-cc-harness:kb-researcher` as a
+  fourth research axis. Disable with `"research_directive": false` in
+  `<dir>/config.json` — read live, no re-install.
 - Manual compile: `/neurawork-cc-harness:kc-compile`.
 - Query: `uv run --directory <dir> python scripts/query.py "..."`.
 

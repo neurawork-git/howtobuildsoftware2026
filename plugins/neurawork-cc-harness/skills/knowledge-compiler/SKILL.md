@@ -12,6 +12,39 @@ index back. Compilation runs on a manual command or a 6-hour SessionStart gate.
 
 Knowledge always lives inside the repo, never under `.claude/`.
 
+## The five hooks
+
+The install merges **five** hooks into `.claude/settings.json`:
+
+| Event | Hook | Job |
+|---|---|---|
+| `SessionStart` | `hooks/session-start.py` | inject the index; maybe spawn a compile |
+| `PreCompact` | `hooks/pre-compact.py` | capture before context is compacted |
+| `SessionEnd` | `hooks/session-end.py` | capture the session into `daily/` |
+| `UserPromptSubmit` | `hooks/user-prompt-submit.py` | spawn directive on a **typed** `/prp-prd\|plan\|debug` |
+| `PreToolUse` (matcher `Skill`) | `hooks/pre-skill.py` | spawn directive on a **model-invoked** research skill |
+
+The last two inject one shared directive (`scripts/research_directive.py`) telling the
+session to spawn `neurawork-cc-harness:kb-researcher` — the **fourth research axis**,
+next to `prp-core`'s `codebase-explorer`, `codebase-analyst` and `web-researcher` — so a
+PRD or plan starts from what the repo already learned. Two hooks, because a skill is
+entered by two paths and no single event sees both.
+
+**`PreToolUse` must never exit non-zero: exit code 2 on that event blocks the tool
+call.** Both hooks fail open — any exception yields no output and exit 0. The
+`matcher: "Skill"` group is what keeps `pre-skill.py` from spawning a process on every
+tool call; it never joins a `matcher: ""` group, and never collides with
+`compliance-compiler`, which owns `PostToolUse`.
+
+Three config keys in `<kdir>/config.json`, read live (no installer re-run):
+
+- `research_directive` (default `true`) — the kill switch for both hooks.
+- `research_skill_match` — matched against the plugin-qualified skill name.
+- `research_prompt_match` — matched against the raw prompt, anchored at its start.
+
+To remove the feature entirely instead of disabling it, delete the two hook entries
+from `.claude/settings.json`.
+
 ## Authentication
 
 The compiler uses the Claude Agent SDK, which needs `ANTHROPIC_API_KEY` (or

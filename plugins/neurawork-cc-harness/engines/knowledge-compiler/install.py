@@ -1,7 +1,7 @@
 """Install (or adopt) the knowledge-compiler into the current repo.
 
 Copies the payload + the shared helpers into ``<repo>/<kdir>/``, scaffolds the
-daily/ and knowledge/ trees, writes .gitignore, and merges the three hooks into
+daily/ and knowledge/ trees, writes .gitignore, and merges the five hooks into
 .claude/settings.json. ADOPT mode refreshes code without clobbering an existing
 knowledge base.
 
@@ -98,12 +98,18 @@ def _scaffold(target: Path, kdir: str) -> None:
     shutil.copy2(VERSION_FILE, target / "VERSION")
 
 
-def _hooks(kdir: str) -> list[tuple[str, str, int, str]]:
+def _hooks(kdir: str) -> list[tuple[str, str, int, str] | tuple[str, str, int, str, str]]:
     base = f'uv run --directory "$CLAUDE_PROJECT_DIR/{kdir}" python'
     return [
         ("SessionStart", f"{base} hooks/session-start.py", 15, "hooks/session-start.py"),
         ("PreCompact", f"{base} hooks/pre-compact.py", 10, "hooks/pre-compact.py"),
         ("SessionEnd", f"{base} hooks/session-end.py", 10, "hooks/session-end.py"),
+        # The two kb-researcher spawn triggers. A research skill is entered by two paths
+        # and no single event sees both — see payload/scripts/research_directive.py.
+        ("UserPromptSubmit", f"{base} hooks/user-prompt-submit.py", 10,
+         "hooks/user-prompt-submit.py"),
+        # The 5-tuple: the "Skill" matcher is what stops this firing on EVERY tool call.
+        ("PreToolUse", f"{base} hooks/pre-skill.py", 10, "hooks/pre-skill.py", "Skill"),
     ]
 
 

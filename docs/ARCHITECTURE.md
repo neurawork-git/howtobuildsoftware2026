@@ -31,6 +31,8 @@ commands/                      kc-compile.md, cl-update.md, co-extract.md,
                                co-capabilities.md, co-validate.md, nw-ship-pr.md
 workflows/                     nw-ship-pr-review.js (auto-discovered by the runtime and
                                namespaced as neurawork-cc-harness:nw-ship-pr-review)
+agents/                        kb-researcher.md (read-only; the fourth research axis,
+                               namespaced as neurawork-cc-harness:kb-researcher)
 tests/                         structural tests over the prompt-only assets
 hooks/                         hooks.json + version-check.py (the only code that runs
                                FROM the plugin, with CLAUDE_PLUGIN_ROOT — the staleness nudge)
@@ -112,6 +114,43 @@ Three hooks drive capture, merged into `.claude/settings.json`:
   `docs/` are already read at session start). For both, if the last run is older than
   the 6-hour gate *and* there is new `daily/` content *and* no fresh lock, fire a
   detached compile/update (skipped inside a worktree).
+
+## Runtime: the fourth research axis
+
+`knowledge-compiler` installs two further hooks that capture nothing. When a PRP
+research workflow starts, they inject a directive to spawn
+`neurawork-cc-harness:kb-researcher` — the plugin's read-only knowledge-base agent —
+**alongside** `prp-core`'s three research agents:
+
+| Axis | Agent | Answers |
+|---|---|---|
+| where code lives | `prp-core:codebase-explorer` | which files and precedents exist |
+| how it behaves | `prp-core:codebase-analyst` | control flow, state, side effects |
+| what sources say | `prp-core:web-researcher` | external, cited facts |
+| what we already learned | `neurawork-cc-harness:kb-researcher` | prior findings, decisions, gotchas |
+
+Only the fourth has a subject that exists nowhere else: source code can be re-read and
+the web re-searched, but a finding distilled from a session months ago lives only in
+`<kdir>/knowledge/`. The agent retrieves **index-first, then by backlinks** — `grep`ing
+for `[[<dir>/<slug>]]`. That second step is not stylistic: connection articles link
+*down* to their concepts and nothing requires a concept to link back up, so forward
+traversal from a concept hit can never reach the cross-cutting layer.
+
+Two hooks, because a skill is entered by two paths and no single event sees both:
+
+- **`UserPromptSubmit`** (`hooks/user-prompt-submit.py`) — a slash command the user
+  types is expanded into the prompt, never routed as a tool call.
+- **`PreToolUse`**, matcher `Skill` (`hooks/pre-skill.py`) — a model-invoked skill
+  arrives as `tool_name: "Skill"` with no new prompt.
+
+Both render the same string from `payload/scripts/research_directive.py`, so the two
+paths cannot drift into disagreeing about which workflow counts as research. **Exit
+code 2 on `PreToolUse` blocks the tool call**, so both hooks fail open: any exception
+yields no output and exit 0. The `matcher: "Skill"` group — the reason
+`_shared/settings.py` accepts a 5-tuple hook — keeps `pre-skill.py` off every other
+tool call, and keeps it clear of the `matcher: ""` group `compliance-compiler` uses on
+`PostToolUse`. `"research_directive": false` in `<kdir>/config.json` disables both,
+live, with no installer re-run.
 
 Synthesis can also be triggered manually: `/neurawork-cc-harness:kc-compile` and
 `/neurawork-cc-harness:cl-update`, or directly via
