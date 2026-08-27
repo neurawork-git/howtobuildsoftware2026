@@ -15,6 +15,19 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.5.1] — 2026-08-27
+
+### Fixed
+
+- **`stack-compiler` recon reported the wrong stack state.** `engines/stack-compiler/recon.py`
+  counted `applicable` where the scoping pass records `scoped_from`, so a repo that had
+  already been scoped read back as unscoped. Reporting only — no install or payload behaviour
+  changed.
+- **`/nw-doctor` read the queue from the wrong checkout.** `scripts/doctor.py` read the daily
+  queue from the current worktree instead of the main checkout, so a session inside a worktree
+  saw an empty queue, and it now roots the suggested fix commands in the checkout it actually
+  read.
+
 ## [0.5.0] — 2026-08-27
 
 ### Added
