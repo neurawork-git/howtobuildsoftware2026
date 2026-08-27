@@ -76,3 +76,6 @@ temp/
 
 # worktree skill local config
 .claude/*.local.md
+
+# prp-core store metadata (absolute machine path)
+.claude/PRPs/project.json
