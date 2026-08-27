@@ -27,7 +27,7 @@ VERSION_FILE = ENGINE_DIR / "VERSION"
 sys.path.insert(0, str(ENGINE_DIR.parent))  # engines/ for _shared
 
 from _shared.recon import git_root_or_none
-from _shared.settings import merge_hooks
+from _shared.settings import merge_gitignore, merge_hooks
 from _shared.repo_guard import assert_in_repo_not_dotclaude, WriteGuardError
 
 GITIGNORE = """\
@@ -91,15 +91,18 @@ def _scaffold(target: Path, kdir: str) -> None:
         defaults["knowledge_dir"] = kdir
         config.write_text(json.dumps(defaults, indent=2) + "\n", encoding="utf-8")
 
-    gitignore = target / ".gitignore"
-    if not gitignore.exists():
-        gitignore.write_text(GITIGNORE, encoding="utf-8")
+    # Merge, never create-if-absent: a rule added to GITIGNORE in a later release has to
+    # reach the installs that already exist, and only the missing lines are appended so a
+    # user's own rules keep their place.
+    merge_gitignore(target, GITIGNORE)
 
     shutil.copy2(VERSION_FILE, target / "VERSION")
 
 
 def _hooks(kdir: str) -> list[tuple[str, str, int, str] | tuple[str, str, int, str, str]]:
     base = f'uv run --directory "$CLAUDE_PROJECT_DIR/{kdir}" python'
+    # The 4-tuples below register in the catch-all group deliberately: none of these
+    # events carries a tool name, so there is nothing for a matcher to select on.
     return [
         ("SessionStart", f"{base} hooks/session-start.py", 15, "hooks/session-start.py"),
         ("PreCompact", f"{base} hooks/pre-compact.py", 10, "hooks/pre-compact.py"),

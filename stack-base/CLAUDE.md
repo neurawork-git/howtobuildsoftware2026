@@ -46,8 +46,9 @@ installer.
 
 ## The runtime gate (`st-post-tooluse.py` → `validate.py`)
 
-A `PostToolUse` hook, `st-`-prefixed, sits in the `matcher: ""` group beside
-`compliance-base`'s `co-post-tooluse.py`. On each PRD/plan write it runs a fast inline
+A `PostToolUse` hook, `st-`-prefixed, sits in the catch-all `matcher: ""` group;
+`compliance-base`'s `co-post-tooluse.py` shares the event under
+`matcher: "Write|Edit|MultiEdit"`. On each PRD/plan write it runs a fast inline
 structural precheck plus a detached deep LLM check (`validate.py`) that reads the
 document for *intent* — whether it **proposes** a component or merely mentions one — and
 writes `reports/<stem>.md` + a verdict `reports/<stem>.stack.json`. The gate **reads**

@@ -98,8 +98,10 @@ Each skill's `SKILL.md` runs three phases:
 2. **Ask** — `AskUserQuestion` confirms the install dir, and for the learner the
    depth, docs dir, language, excluded dirs, timezone, and whether to seed.
 3. **Execute** — `install.py` copies `payload/` + `_shared/` into `<repo>/<dir>/`,
-   scaffolds data dirs (only if absent — never clobbers), writes `.gitignore`, and
-   **idempotently merges** the hooks into `.claude/settings.json`.
+   scaffolds data dirs (only if absent — never clobbers), and **idempotently merges**
+   both the engine's ignore rules into `<dir>/.gitignore` (append-only: a rule added in
+   a later release reaches an install that already exists, and nothing the user wrote is
+   moved or removed) and the hooks into `.claude/settings.json`.
 
 `install.py` is **ADOPT-aware**: when it detects an existing install it refreshes
 code (`payload/` + `_shared/`) without touching captured data (`daily/`, the wiki,
@@ -150,8 +152,8 @@ paths cannot drift into disagreeing about which workflow counts as research. **E
 code 2 on `PreToolUse` blocks the tool call**, so both hooks fail open: any exception
 yields no output and exit 0. The `matcher: "Skill"` group — the reason
 `_shared/settings.py` accepts a 5-tuple hook — keeps `pre-skill.py` off every other
-tool call, and keeps it clear of the `matcher: ""` group `compliance-compiler` uses on
-`PostToolUse`. `"research_directive": false` in `<kdir>/config.json` disables both,
+tool call. `compliance-compiler` registers its `PostToolUse` hook the same way, under
+`matcher: "Write|Edit|MultiEdit"`. `"research_directive": false` in `<kdir>/config.json` disables both,
 live, with no installer re-run.
 
 Synthesis can also be triggered manually: `/neurawork-cc-harness:kc-compile` and
@@ -210,8 +212,9 @@ This repo installs the harness into itself:
 
 The hook sets live side by side in `.claude/settings.json` — the learner's are
 `cl-`-prefixed on the `SessionStart`/`PreCompact`/`SessionEnd` events; on `PostToolUse`,
-compliance's `co-`-prefixed hook and stack's `st-`-prefixed hook share one `matcher: ""`
-group — so they coexist without clobbering each other. The machinery in those dirs is a
+compliance's `co-`-prefixed hook sits under `matcher: "Write|Edit|MultiEdit"` and stack's
+`st-`-prefixed hook in the catch-all `matcher: ""` group — so they coexist without
+clobbering each other. The machinery in those dirs is a
 copy of the plugin payload — fix bugs in
 `plugins/…/engines/<engine>/payload/` and re-run the installer to refresh, rather
 than hand-editing the installed copy.
