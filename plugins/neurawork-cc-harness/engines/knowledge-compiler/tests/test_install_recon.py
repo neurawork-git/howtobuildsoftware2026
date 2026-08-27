@@ -58,12 +58,51 @@ class TestInstall(unittest.TestCase):
             self.assertTrue((kb / "_shared" / "hookio.py").exists())
             self.assertTrue((kb / "scripts" / "compile.py").exists())
             self.assertTrue((kb / "hooks" / "session-start.py").exists())
+            self.assertTrue((kb / "hooks" / "pre-skill.py").exists())
+            self.assertTrue((kb / "hooks" / "user-prompt-submit.py").exists())
+            self.assertTrue((kb / "scripts" / "research_directive.py").exists())
             self.assertTrue((kb / ".gitignore").exists())
             self.assertTrue((kb / "config.json").exists())
 
             settings = json.loads((repo / ".claude" / "settings.json").read_text())
-            for event in ("SessionStart", "PreCompact", "SessionEnd"):
+            for event in ("SessionStart", "PreCompact", "SessionEnd",
+                          "UserPromptSubmit", "PreToolUse"):
                 self.assertIn(event, settings["hooks"])
+
+    def test_pre_tool_use_hook_is_scoped_to_the_skill_matcher(self) -> None:
+        # In the catch-all group this hook would spawn a process on EVERY tool call.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            # A pre-existing catch-all PostToolUse group stands in for the compliance
+            # engine's: the new group must be created alongside, never joined to it.
+            settings_path = repo / ".claude" / "settings.json"
+            settings_path.parent.mkdir(parents=True)
+            settings_path.write_text(json.dumps({"hooks": {"PostToolUse": [
+                {"matcher": "", "hooks": [
+                    {"type": "command", "command": "co-post-tooluse.py", "timeout": 15}
+                ]}
+            ]}}), encoding="utf-8")
+
+            self.assertEqual(self._install(repo).returncode, 0)
+            settings = json.loads(settings_path.read_text())
+
+            groups = settings["hooks"]["PreToolUse"]
+            self.assertEqual(len(groups), 1)
+            self.assertEqual(groups[0]["matcher"], "Skill")
+            self.assertIn("hooks/pre-skill.py", groups[0]["hooks"][0]["command"])
+            # Everything that was already there is untouched.
+            post = [h["command"] for g in settings["hooks"]["PostToolUse"] for h in g["hooks"]]
+            self.assertEqual(post, ["co-post-tooluse.py"])
+
+    def test_hook_list_declares_both_new_events(self) -> None:
+        sys.path.insert(0, str(ENGINE_DIR))  # the engine dir, for install
+        import install
+
+        hooks = {h[0]: h for h in install._hooks("kb")}
+        self.assertIn("UserPromptSubmit", hooks)
+        self.assertEqual(len(hooks["UserPromptSubmit"]), 4)  # catch-all group
+        self.assertEqual(hooks["PreToolUse"][4], "Skill")
 
     def test_idempotent_reinstall(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

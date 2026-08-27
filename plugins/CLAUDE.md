@@ -22,6 +22,9 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 - `workflows/` — `nw-ship-pr-review.js`, the review fan-out `/nw-ship-pr` triggers. The
   runtime auto-discovers `workflows/*.js` and namespaces them by plugin name, so it
   resolves as `neurawork-cc-harness:nw-ship-pr-review`; the manifest needs no entry.
+- `agents/` — exported agents, namespaced by plugin name. `kb-researcher.md` resolves as
+  `neurawork-cc-harness:kb-researcher`: a read-only (`Read, Grep, Glob`) knowledge-base
+  researcher, spawned by the `knowledge-compiler` payload's two injecting hooks.
 - `tests/` — structural tests over the prompt-only assets (frontmatter agreement, the
   workflow name resolution, and the worktree guard invariants). Run from the plugin root:
   `python3 -m unittest discover -s tests`.
@@ -58,6 +61,10 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   never clobber data) vs **FRESH**. Hook merges are idempotent and use distinct
   filenames + events per skill (`cl-`-prefixed for the learner; `co-`-prefixed on the
   `PostToolUse` event for compliance) so all three skills coexist in one repo.
+- **A hook may claim a matcher group.** `_shared/settings.py` accepts a 5th tuple element,
+  the matcher; a 4-tuple still lands in the `matcher: ""` group. `knowledge-compiler`'s
+  `hooks/pre-skill.py` is the only user: without `matcher: "Skill"` a `PreToolUse` hook
+  spawns a process on *every* tool call.
 - **Test discovery quirk:** `engines/` is a namespace package and the engine dirs
   are hyphenated, so a single `unittest discover -s engines` under-collects (finds
   only `_shared`). Run discovery per test directory — see the root `CLAUDE.md`.

@@ -69,17 +69,23 @@ def set_env_default(
     return "wrote", value
 
 
-def merge_hooks(repo_root: Path | str, hooks: list[tuple[str, str, int, str]]) -> bool:
+def merge_hooks(
+    repo_root: Path | str,
+    hooks: list[tuple[str, str, int, str] | tuple[str, str, int, str, str]],
+) -> bool:
     """Merge ``hooks`` into ``<repo_root>/.claude/settings.json``.
 
-    Each hook is ``(event, command, timeout, marker)``. Returns True if the file
-    was changed, False if every hook was already present (idempotent no-op).
+    Each hook is ``(event, command, timeout, marker)`` or
+    ``(event, command, timeout, marker, matcher)``; the 4-tuple form means
+    ``matcher == ""``. Returns True if the file was changed, False if every hook
+    was already present (idempotent no-op).
 
     - Creates ``.claude/settings.json`` (and the dir) if absent.
     - For each hook: if a hook whose command contains ``marker`` already exists
-      under ``event``, update only its command if it drifted (keeps hand-edited
-      timeout/type); otherwise append a new entry, reusing a ``matcher == ""``
-      group if one exists, else creating one.
+      under ``event`` — in ANY matcher group — update only its command if it
+      drifted (keeps hand-edited timeout/type); otherwise append a new entry,
+      reusing the group whose ``matcher`` equals the requested one if it exists,
+      else creating that group.
     - Writes atomically (tmp + os.replace).
 
     Raises SettingsError if an existing settings.json is invalid JSON.
@@ -92,7 +98,9 @@ def merge_hooks(repo_root: Path | str, hooks: list[tuple[str, str, int, str]]) -
     hooks_obj = data.setdefault("hooks", {})
     changed = False
 
-    for event, command, timeout, marker in hooks:
+    for hook in hooks:
+        event, command, timeout, marker = hook[:4]
+        matcher = hook[4] if len(hook) > 4 else ""
         groups = hooks_obj.setdefault(event, [])
         existing = next(
             (h for g in groups for h in g.get("hooks", []) if marker in str(h.get("command", ""))),
@@ -105,9 +113,9 @@ def merge_hooks(repo_root: Path | str, hooks: list[tuple[str, str, int, str]]) -
                 changed = True
             continue
         entry = {"type": "command", "command": command, "timeout": timeout}
-        target = next((g for g in groups if g.get("matcher", "") == ""), None)
+        target = next((g for g in groups if g.get("matcher", "") == matcher), None)
         if target is None:
-            groups.append({"matcher": "", "hooks": [entry]})
+            groups.append({"matcher": matcher, "hooks": [entry]})
         else:
             target.setdefault("hooks", []).append(entry)
         changed = True

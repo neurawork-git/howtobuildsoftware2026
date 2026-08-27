@@ -15,6 +15,8 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+from research_directive import DEFAULT_PROMPT_MATCH, DEFAULT_SKILL_MATCH
+
 # ── Paths ──────────────────────────────────────────────────────────────
 ROOT_DIR = Path(os.environ.get("KNOWLEDGE_ROOT") or Path(__file__).resolve().parent.parent)
 DAILY_DIR = ROOT_DIR / "daily"
@@ -41,6 +43,13 @@ DEFAULT_CFG = {
     "knowledge_dir": "knowledge-base",
     "model": "",
     "compile_age_hours": 6,
+    # Kill switch for the kb-researcher spawn directive. Read live by both injecting
+    # hooks, so `false` here disables them without an installer re-run.
+    "research_directive": True,
+    # The two match patterns. Their defaults and the reasoning behind their anchoring
+    # live in research_directive.py, next to the code that applies them.
+    "research_skill_match": DEFAULT_SKILL_MATCH,
+    "research_prompt_match": DEFAULT_PROMPT_MATCH,
 }
 
 

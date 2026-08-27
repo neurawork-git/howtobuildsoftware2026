@@ -67,6 +67,10 @@ uv run --directory stack-base python scripts/selection.py --apply <sheet>  # rec
 
 The first two run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
 hooks in `.claude/settings.json` (a 6-hour `SessionStart` gate triggers compile/update).
+`knowledge-compiler` adds two more that capture nothing — `UserPromptSubmit` and
+`PreToolUse` (matcher `Skill`) — which inject a directive to spawn
+`neurawork-cc-harness:kb-researcher` whenever a PRP research workflow starts;
+`"research_directive": false` in `knowledge-base/config.json` disables both, live.
 `compliance-compiler` adds only a `PostToolUse` hook that validates each PRP plan
 write (nothing at `SessionStart` — that budget is left for the knowledge concepts);
 its catalog ships prebuilt with the install and is rebuilt on demand via `co-extract`
@@ -95,11 +99,20 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   Marker blocks are **learner-protected**: `claudemd-lerner` snapshots every
   `owner:name` marker span before its SDK run and restores it byte-for-byte afterwards
   (`payload/scripts/markers.py`), so no tool-owned block is silently reworded.
+  `agents/kb-researcher.md` is the plugin's one exported agent
+  (`neurawork-cc-harness:kb-researcher`): read-only (`Read, Grep, Glob`), it retrieves
+  from a compiled knowledge base index-first and then **by backlinks**, which is the
+  only route to the `connections/` layer.
 - **`.claude-plugin/marketplace.json`** — repo-root marketplace manifest
   (`neurawork-harness`) that distributes the plugin via a `git-subdir` source.
 - **`knowledge-base/`** — a live self-host install of `knowledge-compiler` (see
   `knowledge-base/CLAUDE.md`). Holds the engine machinery plus the tracked
-  `knowledge/` wiki output.
+  `knowledge/` wiki output. Five hooks: three capture/inject, plus
+  `hooks/user-prompt-submit.py` and `hooks/pre-skill.py`, which render one shared
+  directive (`scripts/research_directive.py`) spawning the `kb-researcher` agent when a
+  PRP research workflow starts. Two hooks because a typed `/prp-prd` is only visible to
+  `UserPromptSubmit` and a model-invoked one only to `PreToolUse`. Both fail open —
+  exit code 2 on `PreToolUse` would block the tool call.
 - **`claudemd-lerner/`** — a live self-host install of `claudemd-lerner` (see
   `claudemd-lerner/CLAUDE.md`). Holds only machinery; its outputs are the repo-root
   `CLAUDE.md` hierarchy and `docs/`.
