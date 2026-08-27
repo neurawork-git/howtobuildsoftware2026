@@ -1,6 +1,6 @@
 ---
 name: nw-rules-init
-description: Write the harness baseline coding rules — scope discipline, simplicity/YAGNI, and evaluation-first with THIS repo's real test command — into the repo's root CLAUDE.md as a marker-delimited, idempotent block. Recons the existing CLAUDE.md first (already covered / conflicts / absent) and detects the test runner from the repo before asking whether to write. Trigger when the user says "rules init", "nw-rules-init", "baseline rules", "coding rules", "coding discipline", "test-first rules", "evaluation first", "Regeln einrichten", "Coding-Regeln", "YAGNI-Regeln", or runs /nw-rules-init.
+description: Write the harness baseline coding rules — scope discipline, simplicity/YAGNI, PR routing through /nw-ship-pr, and evaluation-first with THIS repo's real test command — into the repo's root CLAUDE.md as a marker-delimited, idempotent block. Recons the existing CLAUDE.md first (already covered / conflicts / absent) and detects the test runner from the repo before asking whether to write. Trigger when the user says "rules init", "nw-rules-init", "baseline rules", "coding rules", "coding discipline", "test-first rules", "evaluation first", "PR-Regel", "PRs nur über nw-ship-pr", "Regeln einrichten", "Coding-Regeln", "YAGNI-Regeln", or runs /nw-rules-init.
 allowed-tools: Bash, Read, Write, Edit, Grep, Glob, AskUserQuestion
 argument-hint: "[--force]   (--force = refresh an existing block without asking)"
 ---
@@ -9,8 +9,8 @@ argument-hint: "[--force]   (--force = refresh an existing block without asking)
 
 The harness's three engines describe a repo — purpose, commands, architecture, conventions.
 None of them states **how to change it**. This skill writes that missing half into the root
-`CLAUDE.md` as one marker-delimited block: scope discipline, simplicity, and evaluation-first
-carrying the repo's *actual* test command.
+`CLAUDE.md` as one marker-delimited block: scope discipline, simplicity, PR routing through
+`/nw-ship-pr`, and evaluation-first carrying the repo's *actual* test command.
 
 There is no engine. The rule text is static, so there is nothing to synthesize; the recon is
 you reading the repository. What makes the block safe is the other half of this feature: the
@@ -88,6 +88,7 @@ Present the table with real quotes from the file you read:
 |---|---|---|
 | Scope — touch only what the request requires | … | … |
 | Simplicity — minimum that solves the problem | … | … |
+| Pull requests — only via `/nw-ship-pr` | … | … |
 | Evaluation first — failing test before the change | … | … |
 
 This is reading and judgment, not a script. Be specific; a generic verdict makes the whole
@@ -97,13 +98,13 @@ gate worthless.
 
 One `AskUserQuestion`: "Write the baseline rules block into CLAUDE.md?" {Write it / Skip}.
 
-**Pre-recommend "Write it"** only when at least one cluster is `➕ absent`. When all three are
+**Pre-recommend "Write it"** only when at least one cluster is `➕ absent`. When all four are
 `✅ already covered`, recommend **Skip** — writing then duplicates a house rule and spends the
 CLAUDE.md budget for nothing.
 
 On "Skip" → report "nothing written" and **stop**; do not touch `CLAUDE.md`.
 
-The block is all-or-nothing: three clusters, one marker span. There is no per-cluster
+The block is all-or-nothing: four clusters, one marker span. There is no per-cluster
 selection — a block that can emit fewer bullets is not worth a marker span.
 
 ## Stage 4 — already initialised?
@@ -138,6 +139,8 @@ into `CLAUDE.md`:
   code instead of deleting it.
 - **Simplicity** — write the minimum that solves the problem. No speculative features, no
   abstraction for a single use, no configurability nobody asked for.
+- **Pull requests** — open and merge every PR with `/neurawork-cc-harness:nw-ship-pr`. Another
+  PR skill or a bare `gh pr create` skips its review, validation and approval gates.
 - **Evaluation first** — a behaviour change starts with a test that fails for the right reason.
   Done means that test passes, not that the code is written. Run:
 
@@ -147,7 +150,7 @@ into `CLAUDE.md`:
 <!-- neurawork-cc-harness:rules END -->
 ````
 
-No `MUST`/`NEVER` and no `(MANDATORY)`: none of the three clusters guards a secret, data loss,
+No `MUST`/`NEVER` and no `(MANDATORY)`: none of the four clusters guards a secret, data loss,
 a broken deploy, or a trust boundary. Emphasis reserved for everything is emphasis for nothing.
 
 ## Stage 6 — report

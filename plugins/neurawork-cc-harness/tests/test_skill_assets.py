@@ -424,6 +424,14 @@ class RulesBlockTests(unittest.TestCase):
             "ship a rule this repo's own unittest suite violates",
         )
 
+    def test_template_routes_pull_requests_through_nw_ship_pr(self) -> None:
+        # The rule exists because agents reach for whatever PR skill is enabled
+        # (prp-pr, a bare `gh pr create`) and skip the review/validation/approval gates
+        # /nw-ship-pr owns. Without it in the always-read block, the routing is folklore.
+        template = self.template()
+        self.assertIn("**Pull requests**", template)
+        self.assertIn("nw-ship-pr", template)
+
     def test_command_slot_is_one_fence_inside_the_span(self) -> None:
         # The fence is the machine-readable half: rules_block.test_commands() takes the
         # FIRST fence inside the span, and /nw-ship-pr's Phase 4.5 runs those lines. A

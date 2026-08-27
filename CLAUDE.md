@@ -266,6 +266,8 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
   code instead of deleting it.
 - **Simplicity** — write the minimum that solves the problem. No speculative features, no
   abstraction for a single use, no configurability nobody asked for.
+- **Pull requests** — open and merge every PR with `/neurawork-cc-harness:nw-ship-pr`. Another
+  PR skill or a bare `gh pr create` skips its review, validation and approval gates.
 - **Evaluation first** — a behaviour change starts with a test that fails for the right reason.
   Done means that test passes, not that the code is written. Run:
 

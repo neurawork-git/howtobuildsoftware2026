@@ -15,6 +15,17 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.4.1] — 2026-08-27
+
+### Changed
+
+- The `nw-rules-init` block gains a fourth cluster, **Pull requests**: open and merge every PR
+  with `/neurawork-cc-harness:nw-ship-pr`. Agents otherwise reach for whatever PR skill is
+  enabled (`prp-pr`, a bare `gh pr create`) and skip the review, validation and approval gates
+  `/nw-ship-pr` owns. The block is read on every session, which is the only place a routing
+  rule is seen before the agent picks a tool. Rendered size 1,280 → 1,460 characters, inside
+  the 1,500 budget.
+
 ## [0.4.0] — 2026-08-27
 
 ### Added
