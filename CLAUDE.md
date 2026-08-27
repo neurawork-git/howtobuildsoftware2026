@@ -91,7 +91,9 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   `workflows/nw-ship-pr-review.js`, and `/nw-rules-init` (detect the repo's test runner,
   then write the baseline coding rules — scope, simplicity, evaluation-first — into the
   root `CLAUDE.md` as one idempotent block delimited by `neurawork-cc-harness:rules`
-  BEGIN/END marker comments); `tests/` pins their guard invariants, including the block's 1,200-char budget.
+  BEGIN/END marker comments, its test commands in one fenced block that `/nw-ship-pr`'s
+  validation gate and the compliance plan precheck both read); `tests/` pins their guard
+  invariants, including the block's 1,500-char budget.
   Marker blocks are **learner-protected**: `claudemd-lerner` snapshots every
   `owner:name` marker span before its SDK run and restores it byte-for-byte afterwards
   (`payload/scripts/markers.py`), so no tool-owned block is silently reworded.
@@ -225,3 +227,24 @@ For multi-step tasks, state a brief plan:
 Strong success criteria enable independent looping. Weak criteria ("make it work") require constant clarification.
 
 These guidelines are working if: fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+<!-- neurawork-cc-harness:rules BEGIN (auto-managed — re-run /neurawork-cc-harness:nw-rules-init to refresh) -->
+### Coding Discipline
+
+- **Scope** — touch only what the request requires; leave neighbouring code, formatting and
+  working sections alone. Remove only the orphans your change created; name pre-existing dead
+  code instead of deleting it.
+- **Simplicity** — write the minimum that solves the problem. No speculative features, no
+  abstraction for a single use, no configurability nobody asked for.
+- **Evaluation first** — a behaviour change starts with a test that fails for the right reason.
+  Done means that test passes, not that the code is written. Run:
+
+```sh
+cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s _shared/tests
+cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s knowledge-compiler/tests
+cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s claudemd-lerner/tests
+cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s compliance-compiler/tests
+cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s stack-compiler/tests
+cd plugins/neurawork-cc-harness && python3 -m unittest discover -s tests
+```
+<!-- neurawork-cc-harness:rules END -->

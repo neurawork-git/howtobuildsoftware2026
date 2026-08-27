@@ -336,6 +336,126 @@ class TestCapabilityVerdict(unittest.TestCase):
         self.assertEqual(v["undeclared_mandatory"], [])
 
 
+VALIDATION_SECTION = """## Validation
+
+| Gate | Command | Proves |
+|---|---|---|
+| Unit | `python3 -m unittest discover -s tests` | AC1 |
+| Lint | `uvx ruff check` | house style |
+
+## Risks
+"""
+
+
+class TestValidationPrecheck(unittest.TestCase):
+    def test_table_commands_and_a_task_level_test_file_are_found(self) -> None:
+        plan = ("# Plan\n\n**Tests**\n- `tests/test_rules_block.py` (new)\n\n"
+                + VALIDATION_SECTION)
+        v = precheck.validation_precheck(plan)
+        self.assertTrue(v["section_present"])
+        self.assertEqual(
+            v["commands"], ["python3 -m unittest discover -s tests", "uvx ruff check"])
+        self.assertEqual(v["named_test_files"], ["test_rules_block.py"])
+
+    def test_validation_commands_heading_is_recognised_identically(self) -> None:
+        # 10 of this repo's 22 plans spell it this way; an exact-match heading regex
+        # would report a missing section on every one of them.
+        plan = "# Plan\n\n" + VALIDATION_SECTION.replace(
+            "## Validation\n", "## Validation Commands\n")
+        v = precheck.validation_precheck(plan)
+        self.assertTrue(v["section_present"])
+        self.assertEqual(len(v["commands"]), 2)
+
+    def test_absent_section_reports_itself(self) -> None:
+        v = precheck.validation_precheck("# Plan\n\n## Scope\n\nprose\n")
+        self.assertFalse(v["section_present"])
+        self.assertEqual(v["commands"], [])
+
+    def test_section_with_prose_but_no_delimited_span_yields_no_command(self) -> None:
+        v = precheck.validation_precheck("# Plan\n\n## Validation\n\nRun the suite.\n")
+        self.assertTrue(v["section_present"])
+        self.assertEqual(v["commands"], [])
+
+    def test_pytest_in_bare_prose_is_never_a_command(self) -> None:
+        # The documented false positive: nw-rules-init-baseline-rules.plan.md:286,341
+        # discusses pytest-vs-unittest DETECTION in a target repo, not its own gate.
+        v = precheck.validation_precheck(
+            "# Plan\n\n## Validation\n\nNever default to pytest in a unittest repo.\n")
+        self.assertEqual(v["commands"], [])
+
+    def test_a_file_reference_sharing_the_section_is_not_a_command(self) -> None:
+        v = precheck.validation_precheck(
+            "# Plan\n\n## Validation\n\nRead `.claude/ship-pr.local.md` and "
+            "`precheck.py:184-198`, then run `make test`.\n")
+        self.assertEqual(v["commands"], ["make test"])
+
+    def test_fenced_commands_are_taken_one_per_line(self) -> None:
+        plan = "# Plan\n\n## Validation\n\n```bash\nmake test\nmake lint\n```\n"
+        self.assertEqual(
+            precheck.validation_precheck(plan)["commands"], ["make test", "make lint"])
+
+    def test_a_narrower_command_than_the_repo_declares_is_a_count_not_a_failure(self) -> None:
+        plan = "# Plan\n\n## Validation\n\n- `pytest tests/unit/test_one.py`\n"
+        v = precheck.validation_precheck(plan, ["make test", "make lint"])
+        self.assertEqual(v["repo_commands_total"], 2)
+        self.assertEqual(v["repo_commands_named"], 0)
+        self.assertEqual(v["commands"], ["pytest tests/unit/test_one.py"])
+        self.assertNotIn("failed", str(v))
+
+    def test_repo_commands_are_matched_on_the_normalised_string(self) -> None:
+        plan = "# Plan\n\n## Validation\n\n```sh\nmake   test\n```\n"
+        v = precheck.validation_precheck(plan, ["make test", "make lint"])
+        self.assertEqual(v["repo_commands_named"], 1)
+
+    def test_precheck_embeds_the_validation_signals(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _capability_catalog(Path(t))
+            pc = precheck.precheck("# Plan\n\n" + VALIDATION_SECTION, CAP_CFG, catalog)
+            self.assertTrue(pc["validation"]["section_present"])
+            self.assertEqual(pc["validation"]["repo_commands_total"], 0)
+
+    def test_precheck_reads_the_repo_rules_block_when_given_a_root(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            catalog = _capability_catalog(root)
+            (root / "CLAUDE.md").write_text(
+                "# CLAUDE.md\n\n<!-- neurawork-cc-harness:rules BEGIN (auto) -->\n"
+                "- **Evaluation first** — Run:\n\n```sh\nuvx ruff check\n```\n"
+                "<!-- neurawork-cc-harness:rules END -->\n",
+                encoding="utf-8")
+            pc = precheck.precheck(
+                "# Plan\n\n" + VALIDATION_SECTION, CAP_CFG, catalog, repo_root=root)
+            self.assertEqual(pc["validation"]["repo_commands"], ["uvx ruff check"])
+            self.assertEqual(pc["validation"]["repo_commands_named"], 1)
+
+
+class TestValidationPrecheckCorpus(unittest.TestCase):
+    """The survey this check was designed against, pinned so a later regex tightening
+    cannot silently stop matching the plans it was measured on."""
+
+    def _plans(self) -> list[Path]:
+        for parent in Path(__file__).resolve().parents:
+            plans = parent / ".claude" / "PRPs" / "plans"
+            if plans.is_dir():
+                return sorted(plans.rglob("*.plan.md"))
+        return []
+
+    def test_every_plan_in_this_repo_has_a_validation_section(self) -> None:
+        plans = self._plans()
+        if not plans:
+            self.skipTest("no .claude/PRPs/plans next to this engine (pure plugin checkout)")
+        missing = [
+            p.name for p in plans
+            if not precheck.validation_precheck(
+                p.read_text(encoding="utf-8"))["section_present"]
+        ]
+        self.assertEqual(
+            missing, [],
+            "the heading regex is a PREFIX match precisely so both `## Validation` and "
+            "`## Validation Commands` count; a plan reported missing here means the "
+            "regex was tightened, not that the corpus changed")
+
+
 def _installed_hook_path() -> Path | None:
     """The self-hosted ``compliance-base/hooks/co-post-tooluse.py``, or None.
 
@@ -351,25 +471,30 @@ def _installed_hook_path() -> Path | None:
     return None
 
 
+def _load_installed_hook(test: unittest.TestCase):
+    """The installed hook module, or ``skipTest`` in a pure plugin checkout."""
+    import importlib.util
+    import os
+
+    hook_path = _installed_hook_path()
+    if hook_path is None:
+        test.skipTest("no compliance-base install next to this engine")
+    # recursion_guard() sys.exit(0)s on this var — it is set when the hook runs
+    # under a compiler-spawned session, not when a test imports it.
+    test.assertIsNone(os.environ.get("CLAUDE_INVOKED_BY"),
+                      "CLAUDE_INVOKED_BY set — the hook would exit on import")
+    spec = importlib.util.spec_from_file_location("co_post_tooluse_under_test", hook_path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class TestCapabilityAdvisory(unittest.TestCase):
     """The hook's one-sentence advisory about the capability layer."""
 
     def _summary(self, cp: dict) -> str:
-        import importlib.util
-        import os
-
-        hook_path = _installed_hook_path()
-        if hook_path is None:
-            self.skipTest("no compliance-base install next to this engine")
-        # recursion_guard() sys.exit(0)s on this var — it is set when the hook runs
-        # under a compiler-spawned session, not when a test imports it.
-        self.assertIsNone(os.environ.get("CLAUDE_INVOKED_BY"),
-                          "CLAUDE_INVOKED_BY set — the hook would exit on import")
-        spec = importlib.util.spec_from_file_location("co_post_tooluse_under_test", hook_path)
-        assert spec and spec.loader
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module._capability_summary(cp)
+        return _load_installed_hook(self)._capability_summary(cp)
 
     def test_unbuilt_capability_layer_names_the_command(self) -> None:
         text = self._summary({"catalog_built": False})
@@ -388,6 +513,56 @@ class TestCapabilityAdvisory(unittest.TestCase):
         })
         self.assertNotIn("co-capabilities", text)
         self.assertIn("**Capabilities**:", text)
+
+
+class TestValidationAdvisory(unittest.TestCase):
+    """The hook's one-clause advisory about the plan's own validation gate."""
+
+    def _summary(self, plan: str, repo_commands: list[str] | None = None) -> str:
+        module = _load_installed_hook(self)
+        return module._validation_summary(
+            precheck.validation_precheck(plan, repo_commands))
+
+    def test_missing_section_says_what_belongs_there(self) -> None:
+        text = self._summary("# Plan\n\n## Scope\n\nprose\n")
+        self.assertIn("## Validation", text)
+        self.assertIn("test file", text)
+
+    def test_empty_section_names_the_repo_declared_commands(self) -> None:
+        text = self._summary("# Plan\n\n## Validation\n\nRun the suite.\n",
+                             ["make test", "make lint"])
+        self.assertIn("`make test`", text)
+        self.assertIn("`make lint`", text)
+
+    def test_empty_section_without_a_block_still_reports_the_gap(self) -> None:
+        text = self._summary("# Plan\n\n## Validation\n\nRun the suite.\n")
+        self.assertIn("no runnable command", text)
+
+    def test_command_but_no_test_file_reads_as_a_question(self) -> None:
+        text = self._summary("# Plan\n\n## Validation\n\n- `make test`\n", ["make test"])
+        self.assertTrue(text.rstrip().endswith("?"), text)
+
+    def test_no_rules_block_names_the_init_command(self) -> None:
+        plan = "# Plan\n\n**Tests**: `tests/test_x.py`\n\n## Validation\n\n- `make test`\n"
+        self.assertIn("nw-rules-init", self._summary(plan))
+
+    def test_a_complete_plan_gets_a_confirming_clause_only(self) -> None:
+        plan = "# Plan\n\n**Tests**: `tests/test_x.py`\n\n## Validation\n\n- `make test`\n"
+        text = self._summary(plan, ["make test"])
+        self.assertIn("1 command(s)", text)
+        self.assertNotIn("nw-rules-init", text)
+
+    def test_the_advisory_never_reaches_the_blocking_path(self) -> None:
+        # The whole point: `validate_mode: block` is reserved for unaddressed MANDATORY
+        # constraints. A plan with no test is a legitimate state twice over in this corpus.
+        hook_path = _installed_hook_path()
+        if hook_path is None:
+            self.skipTest("no compliance-base install next to this engine")
+        source = hook_path.read_text(encoding="utf-8")
+        _, _, blocking = source.partition("    blocking = (")
+        self.assertTrue(blocking)
+        condition, _, _ = blocking.partition(")")
+        self.assertNotIn("validation", condition)
 
 
 if __name__ == "__main__":

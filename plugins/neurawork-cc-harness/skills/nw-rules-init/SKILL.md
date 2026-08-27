@@ -17,8 +17,15 @@ you reading the repository. What makes the block safe is the other half of this 
 `claudemd-lerner` marker guard (`payload/scripts/markers.py`) restores any marker span the
 learner edits, so the block survives every update and seed run.
 
-The block is deliberately small (< 1,200 characters). A root `CLAUDE.md` is read on every
-session; a marker block spends that budget before a single repo-specific rule is written.
+The block is deliberately small (< 1,500 characters, rendered). A root `CLAUDE.md` is read on
+every session; a marker block spends that budget before a single repo-specific rule is written.
+The number is 1,500 rather than the original 1,200 because the test command is now a fenced list:
+this repo's own six `unittest discover` lines render to 1,281 characters, and a budget the
+shipping repo violates is not a budget.
+
+The fence is **machine-read**: `/nw-ship-pr`'s Phase 4.5 validation gate runs exactly those lines,
+and the `compliance-compiler` plan precheck names them when a plan declares no test. Changing the
+`Run:` label, the fence, or the one-command-per-line rule breaks both readers.
 
 `$ARGUMENTS` may contain `--force` (refresh an existing block without prompting).
 
@@ -59,8 +66,13 @@ Rules that matter more than the table:
   a rule the repo's own suite violates is the exact failure this stage exists to prevent.
 - A repo with several suites in different directories gets the multi-line command it really
   uses, not a single collapsed line that under-collects.
+- Write **every** detected command into the fence, one per line, in the order you detected them.
+  No prompt characters, no comments, no blank lines inside the fence — every non-fence line in it
+  is a command a machine will run.
 - Nothing found → `AskUserQuestion` for the command. If the user declines, the Evaluation-first
-  bullet still ships, with its command sentence dropped. **Never invent a command.**
+  bullet still ships **with no fence at all** — drop the `Run:` label and the fence together. An
+  absent fence is a valid state both readers handle; an invented command is not.
+  **Never invent a command.**
 
 ## Stage 2 — coverage recon
 
@@ -112,10 +124,12 @@ Read the target `CLAUDE.md`, then:
 - marker absent → append the block at end of file, after a blank line.
 - marker present → replace everything between the BEGIN and END markers **inclusive**.
 
-Copy the template **byte-for-byte**, substituting only `<TEST_COMMAND>` with what Stage 1
-resolved, so a re-run over an unchanged repo produces an empty diff:
+Copy the template **byte-for-byte**, substituting only the `<TEST_COMMAND>` line with the
+command lines Stage 1 resolved, so a re-run over an unchanged repo produces an empty diff. The
+outer fence below is four backticks only so the inner ```sh block survives this file; write three
+into `CLAUDE.md`:
 
-```markdown
+````markdown
 <!-- neurawork-cc-harness:rules BEGIN (auto-managed — re-run /neurawork-cc-harness:nw-rules-init to refresh) -->
 ### Coding Discipline
 
@@ -125,9 +139,13 @@ resolved, so a re-run over an unchanged repo produces an empty diff:
 - **Simplicity** — write the minimum that solves the problem. No speculative features, no
   abstraction for a single use, no configurability nobody asked for.
 - **Evaluation first** — a behaviour change starts with a test that fails for the right reason.
-  Run: `<TEST_COMMAND>`. Done means that test passes, not that the code is written.
-<!-- neurawork-cc-harness:rules END -->
+  Done means that test passes, not that the code is written. Run:
+
+```sh
+<TEST_COMMAND>
 ```
+<!-- neurawork-cc-harness:rules END -->
+````
 
 No `MUST`/`NEVER` and no `(MANDATORY)`: none of the three clusters guards a secret, data loss,
 a broken deploy, or a trust boundary. Emphasis reserved for everything is emphasis for nothing.
