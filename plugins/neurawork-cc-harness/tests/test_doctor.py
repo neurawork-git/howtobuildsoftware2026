@@ -241,6 +241,13 @@ class QueueTests(DoctorTestCase):
         self.assertIn("1 pending", finding.message)
         self.assertIn("never completed", finding.message)
         self.assertIn(str(main), finding.message, "say which checkout was read")
+        # The cure has to act on the checkout that was read. A bare relative command runs
+        # against the worktree's own empty install dir and reports "nothing to do".
+        self.assertIn(
+            str(main),
+            finding.fix,
+            "a fix rooted in the worktree silently no-ops and contradicts the finding",
+        )
 
     def test_an_unresolvable_main_checkout_is_never_called_drained(self) -> None:
         wt = self._worktree_over("/nowhere/that/exists", name="orphan-wt")
@@ -253,7 +260,6 @@ class QueueTests(DoctorTestCase):
         )
         self.assertIn("main checkout", finding.message)
         self.assertIn("--repo", finding.fix)
-
 
     def test_an_eligible_gate_warns_rather_than_errors(self) -> None:
         repo = make_repo(self.tmp)

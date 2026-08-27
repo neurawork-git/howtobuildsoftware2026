@@ -440,7 +440,15 @@ def check_queue(
     # somewhere else is otherwise indistinguishable from "0 pending" about here.
     where = f" [read from the main checkout {queue_root}]" if worktree else ""
 
+    # Remediation has to run where the queue IS, not where the doctor stands. From a
+    # worktree a bare `uv run --directory <dir> …` resolves to the WORKTREE's own install
+    # dir, whose daily/ is empty: update.py prints "Nothing to update — docs are current"
+    # and exits 0, an all-clear contradicting the very finding it was offered for, while
+    # the real queue is untouched. Same for the lock — the one blocking the gate lives in
+    # the main checkout, so the path must be absolute.
     command = queue.command.format(dir=install.dirname)
+    if worktree:
+        command = f"cd {queue_root} && {command}"
     if not pending:
         return [Finding(
             "OK", engine.name, "queue",
@@ -471,7 +479,7 @@ def check_queue(
             f"{detail}; a run was spawned at {stamp_time(fresh_lock)} and never completed "
             f"— the fresh lock blocks the gate until {stamp_time(fresh_lock + window)}",
             f"run it in the foreground to see the real error: {command} — then remove "
-            f"{install.dirname}/{queue.lock}",
+            f"{target / queue.lock}",
         )]
 
     # The gate's OWN first input, computed the way the hooks compute it: newest daily
