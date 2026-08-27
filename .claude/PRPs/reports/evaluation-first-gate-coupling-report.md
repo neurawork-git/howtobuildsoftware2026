@@ -113,8 +113,8 @@ to an empty extras list with a comment stating the key's new meaning.
 
 ## Delivery
 
-- **Commits:** `Not created`
-- **Pull Request:** `Not opened`
+- **Commits:** `70adfae feat(harness): the rules block is the one place a repo states its test command`; `a265c3e docs(prp): record the evaluation-first gate-coupling delivery`
+- **Pull Request:** `https://github.com/neurawork-git/howtobuildsoftware2026/pull/38` (OPEN, ready for review)
 - **Base / Head:** `main <- feature/evaluation-first-gate-coupling`
 - **Source PRD:** `None`
 - **Tracked follow-ups:** `None`
