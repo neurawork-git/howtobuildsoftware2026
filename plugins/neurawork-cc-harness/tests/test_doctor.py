@@ -83,10 +83,17 @@ def settings_for(repo: Path, *pairs: tuple[str, str]) -> dict:
     return data
 
 
-def daily(target: Path, name: str, body: str = "log\n") -> Path:
+def daily(target: Path, name: str, body: str = "log\n", mtime: float | None = None) -> Path:
+    """A daily log. `mtime` is explicit wherever the gate's `has_new_daily` matters — a
+    file written now carries real wall-clock time, which is far in the PAST relative to
+    the fixtures' synthetic `self.now`."""
+    import os
+
     path = target / "daily" / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(body, encoding="utf-8")
+    if mtime is not None:
+        os.utime(path, (mtime, mtime))
     return path
 
 
@@ -172,7 +179,7 @@ class QueueTests(DoctorTestCase):
         repo = make_repo(self.tmp, worktree=worktree)
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
-        daily(target, "2026-08-20.md")
+        daily(target, "2026-08-20.md", mtime=self.now - 3600)  # newer than the stamp
         stamp(target, "claudemd-lerner", self.now - 60 * DAY)
         # Fresh against the 6h gate, but well past the in-flight grace.
         lock(target, "claudemd-lerner", self.now - lock_age)
@@ -211,18 +218,36 @@ class QueueTests(DoctorTestCase):
         repo = make_repo(self.tmp)
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
-        daily(target, "2026-08-20.md")
+        daily(target, "2026-08-20.md", mtime=self.now - 3600)
         stamp(target, "claudemd-lerner", self.now - 60 * DAY)  # no lock at all
         finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
         self.assertEqual(finding.severity, "WARN")
         self.assertIn("eligible", finding.message)
+
+    def test_a_stamp_newer_than_every_log_means_the_gate_never_fires(self) -> None:
+        # The gate's first input is `newest daily mtime > last_ts`, not "is there work
+        # left". A run that stamped completion without ingesting its logs leaves the
+        # queue full AND the gate permanently shut: nothing spawns again until capture
+        # writes another log. Reporting that as "eligible" or "reopens at X" would call
+        # the exact went-quiet state this command exists to surface self-healing.
+        repo = make_repo(self.tmp)
+        target = install(repo, "claudemd-lerner", "claudemd-lerner")
+        settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
+        daily(target, "2026-08-20.md", mtime=self.now - 7 * DAY)
+        stamp(target, "claudemd-lerner", self.now - 60)  # stamped AFTER the newest log
+        finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
+        self.assertEqual(finding.severity, "WARN")
+        self.assertIn("will NOT spawn on its own", finding.message)
+        self.assertNotIn("eligible", finding.message)
+        self.assertNotIn("reopens", finding.message)
+        self.assertIn("scripts/update.py", finding.fix)
 
     def test_a_missing_state_file_makes_every_log_pending(self) -> None:
         repo = make_repo(self.tmp)
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
         for name in ("2026-07-02.md", "2026-07-23.md", "2026-08-20.md"):
-            daily(target, name)
+            daily(target, name, mtime=self.now - 3600)
         stamp(target, "claudemd-lerner", self.now - 60 * DAY)
         finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
         self.assertIn("3 pending", finding.message)
@@ -232,14 +257,14 @@ class QueueTests(DoctorTestCase):
         repo = make_repo(self.tmp)
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
-        log = daily(target, "2026-08-20.md", "original\n")
+        log = daily(target, "2026-08-20.md", "original\n", mtime=self.now - 3600)
         state(target, "claudemd-lerner", {"2026-08-20.md": {"hash": doctor.file_hash(log)}})
         stamp(target, "claudemd-lerner", self.now - 60 * DAY)
         self.assertEqual(
             self.check(self.run_checks(repo), "claudemd-lerner", "queue").severity, "OK"
         )
 
-        log.write_text("edited since it was ingested\n", encoding="utf-8")
+        daily(target, "2026-08-20.md", "edited since it was ingested\n", mtime=self.now - 1800)
         finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
         self.assertIn("1 pending", finding.message)
 

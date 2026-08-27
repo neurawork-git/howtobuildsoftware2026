@@ -428,6 +428,24 @@ def check_queue(
             f"{install.dirname}/{queue.lock}",
         )]
 
+    # The gate's OWN first input, computed the way the hooks compute it: newest daily
+    # mtime vs the completion stamp (session-start.py:87, cl-session-start.py:57). It is
+    # NOT the same question as `pending`, which asks whether the work was done. When a run
+    # stamped completion without ingesting the logs, the stamp out-dates every log and the
+    # gate stops firing — the queue never drains and nothing ever spawns again. Reported
+    # as "eligible" or "reopens at X" that reads as self-healing, which is the exact
+    # "harness went quiet" state this command exists to surface.
+    newest = max((m for m in (mtime(log) for log in logs) if m is not None), default=None)
+    has_new_daily = newest is not None and (last_ts is None or newest > last_ts)
+    if not has_new_daily:
+        return [Finding(
+            "WARN", engine.name, "queue",
+            f"{detail}; the completion stamp is newer than every daily log, so the "
+            "SessionStart gate will NOT spawn on its own — the queue cannot drain "
+            "until capture next writes a log",
+            f"run it now: {command}",
+        )]
+
     if fresh_lock is None and (last_ts is None or (now - last_ts) >= window):
         last = f"last completed {stamp_time(last_ts)}" if last_ts else "never completed"
         return [Finding(
