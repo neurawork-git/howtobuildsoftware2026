@@ -37,7 +37,20 @@ stopped moving, a hook you are not sure ever fired.
      start). Both are fixed by re-running the engine's install skill in ADOPT mode.
    - **version / shared WARN** — the in-repo copy is behind, ahead of, or has drifted
      from the plugin. Re-run the install skill; `_shared/` is refreshed on every install.
-   - **credentials WARN** — capture still works, compile/update/extract cannot.
+   - **plugin currency WARN** — the *installed plugin itself* is older than the
+     marketplace clone on this machine, so every fix shipped since then is stranded.
+     `/plugin update neurawork-cc-harness`, then `/reload-plugins`. When the doctor also
+     notes a `reinstall` finding, do that update **before** re-running any install skill —
+     otherwise the skill copies the running plugin's older payload.
+   - **queue WARN "stamped but nothing ingested"** — a completion stamp with no
+     `state.json`. A completed run writes its ingest state before it stamps, so the engine
+     either died before doing any work (a detached hook discards the traceback) or the
+     stamp came from a seed run. Run the named command in the foreground and read the
+     error; for `claudemd-lerner` the hook's own output is in `scripts/update.log`.
+   - **credentials WARN** — no API key and no subscription login: capture still works,
+     compile/update/extract cannot. A **NOTE** instead means a subscription login exists
+     and the engines will fall back to it — they run, but an API key is what third-party
+     plugin use is sanctioned for.
 
 3. Offer to run the fixes, one at a time, and let the user choose. Never run a fix
    without asking: every one of them writes into the repo, and several (a foreground

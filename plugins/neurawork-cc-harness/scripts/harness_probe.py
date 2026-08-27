@@ -22,9 +22,12 @@ caller turns that into a finding.
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+
+PLUGIN_NAME = "neurawork-cc-harness"
 
 
 @dataclass
@@ -177,6 +180,18 @@ def is_behind(installed: str, shipped: str) -> bool:
         return installed != shipped
 
 
+def _version_key(value: str) -> tuple[int, ...] | None:
+    """`"0.5.1"` -> `(0, 5, 1)`, `"4"` -> `(4,)`, anything else -> None.
+
+    Engine VERSIONs are single integers and plugin versions are dotted semver; one
+    key covers both, so `compare` stays the only ordering primitive.
+    """
+    try:
+        return tuple(int(part) for part in value.strip().split("."))
+    except ValueError:
+        return None
+
+
 def compare(installed: str | None, shipped: str | None) -> str:
     """`behind` / `ahead` / `same` / `unknown`.
 
@@ -187,10 +202,15 @@ def compare(installed: str | None, shipped: str | None) -> str:
         return "unknown"
     if installed == shipped:
         return "same"
-    try:
-        return "behind" if int(installed) < int(shipped) else "ahead"
-    except ValueError:
+    left, right = _version_key(installed), _version_key(shipped)
+    if left is None or right is None:
         return "unknown"  # differing and unorderable
+    width = max(len(left), len(right))
+    left += (0,) * (width - len(left))
+    right += (0,) * (width - len(right))
+    if left == right:
+        return "same"  # "0.5" and "0.5.0" name the same release
+    return "behind" if left < right else "ahead"
 
 
 def load_settings(repo_root: Path) -> tuple[dict, str | None]:
@@ -335,3 +355,182 @@ def find_stale(repo_root: Path, plugin_root: Path, settings: dict) -> list[dict]
                 "shipped": shipped,
             })
     return stale
+
+
+# ── Plugin currency ────────────────────────────────────────────────────
+#
+# Whether the INSTALLED plugin is the newest one available is a different question
+# from whether an engine install matches the plugin, and until now nothing answered
+# it: a fix stays stranded in a cache until a version bump plus `/plugin update`
+# (knowledge/concepts/plugin-version-bump-propagates-cache.md). The answer is on
+# disk — Claude Code keeps a local clone of every known marketplace — so it needs
+# neither the network nor a `git` process, both of which the doctor's contract bans.
+# Every artifact is optional: a CI checkout has none of them and must still get a
+# full report, so each absence becomes a note, never an exception.
+
+
+@dataclass
+class PluginState:
+    """What the four on-disk plugin artifacts say, or None where one was unreadable."""
+
+    plugins_dir: Path | None = None
+    installed_version: str | None = None
+    install_path: Path | None = None
+    marketplace: str | None = None
+    marketplace_location: Path | None = None
+    available_version: str | None = None
+    running_version: str | None = None
+    # Sibling version dirs beside `install_path`, excluding the installed one.
+    other_cached: list[str] = field(default_factory=list)
+    # Why a field is None, in the operator's terms. Empty when everything resolved.
+    notes: list[str] = field(default_factory=list)
+
+
+def claude_config_dir() -> Path:
+    """`$CLAUDE_CONFIG_DIR` or `~/.claude` — where Claude Code keeps its own state."""
+    return Path(os.environ.get("CLAUDE_CONFIG_DIR") or (Path.home() / ".claude"))
+
+
+def plugins_dir() -> Path:
+    return claude_config_dir() / "plugins"
+
+
+def _read_json(path: Path) -> object | None:
+    """Parsed JSON, or None for a missing, unreadable or invalid file. Never raises."""
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, ValueError):
+        return None
+
+
+def _installed_entry(data: object) -> tuple[str | None, dict | None]:
+    """`(marketplace, entry)` for the harness in `installed_plugins.json`.
+
+    The file is `{"version": 2, "plugins": {"<plugin>@<marketplace>": [entry, ...]}}`,
+    and one plugin can be installed at several scopes — user scope is the one the
+    running session loads, so it wins when both are present.
+    """
+    if not isinstance(data, dict):
+        return None, None
+    plugins = data.get("plugins")
+    if not isinstance(plugins, dict):
+        return None, None
+    for key, entries in plugins.items():
+        if not str(key).startswith(f"{PLUGIN_NAME}@"):
+            continue
+        marketplace = str(key).split("@", 1)[1] or None
+        if isinstance(entries, dict):
+            entries = [entries]
+        if not isinstance(entries, list):
+            return marketplace, None
+        candidates = [e for e in entries if isinstance(e, dict)]
+        if not candidates:
+            return marketplace, None
+        user_scoped = [e for e in candidates if e.get("scope") == "user"]
+        return marketplace, (user_scoped or candidates)[0]
+    return None, None
+
+
+def _marketplace_source_path(location: Path) -> str | None:
+    """The harness's `source.path` inside its marketplace clone."""
+    data = _read_json(location / ".claude-plugin" / "marketplace.json")
+    if not isinstance(data, dict):
+        return None
+    for entry in data.get("plugins", []):
+        if isinstance(entry, dict) and entry.get("name") == PLUGIN_NAME:
+            source = entry.get("source")
+            if isinstance(source, dict) and source.get("path"):
+                return str(source["path"])
+    return None
+
+
+def _plugin_version(root: Path) -> str | None:
+    data = _read_json(Path(root) / ".claude-plugin" / "plugin.json")
+    if isinstance(data, dict) and data.get("version"):
+        return str(data["version"])
+    return None
+
+
+def probe_plugin(plugin_root: Path) -> PluginState:
+    """Read the plugin install registry, the marketplace clone and the running root.
+
+    `plugin_root` is where THIS process was loaded from — which is not necessarily
+    the installed cache (a symlinked local checkout, or a session started before an
+    update), and that difference is itself worth reporting.
+    """
+    state = PluginState(running_version=_plugin_version(Path(plugin_root)))
+
+    root = plugins_dir()
+    if not root.is_dir():
+        state.notes.append(f"{root} does not exist")
+        return state
+    state.plugins_dir = root
+
+    marketplace, entry = _installed_entry(_read_json(root / "installed_plugins.json"))
+    state.marketplace = marketplace
+    if entry is None:
+        state.notes.append(
+            f"no {PLUGIN_NAME} entry in {root / 'installed_plugins.json'}"
+        )
+    else:
+        state.installed_version = str(entry["version"]) if entry.get("version") else None
+        if entry.get("installPath"):
+            state.install_path = Path(str(entry["installPath"]))
+
+    if state.install_path is not None:
+        try:
+            state.other_cached = sorted(
+                child.name
+                for child in state.install_path.parent.iterdir()
+                if child.is_dir() and child.name != state.install_path.name
+            )
+        except OSError:
+            pass
+
+    markets = _read_json(root / "known_marketplaces.json")
+    location = None
+    if isinstance(markets, dict) and marketplace:
+        record = markets.get(marketplace)
+        if isinstance(record, dict) and record.get("installLocation"):
+            location = Path(str(record["installLocation"]))
+    if location is None:
+        state.notes.append(
+            f"no installLocation for marketplace {marketplace!r} in "
+            f"{root / 'known_marketplaces.json'}"
+        )
+        return state
+    state.marketplace_location = location
+
+    source_path = _marketplace_source_path(location)
+    if source_path is None:
+        state.notes.append(f"no {PLUGIN_NAME} source path in {location}'s marketplace.json")
+        return state
+    source_root = location / source_path
+    state.available_version = _plugin_version(source_root)
+    if state.available_version is None:
+        state.notes.append(f"no version in {source_root}/.claude-plugin/plugin.json")
+    return state
+
+
+def engine_version_drift(plugin_root: Path, state: PluginState) -> list[str]:
+    """Engines whose VERSION in the RUNNING plugin differs from the marketplace clone.
+
+    Composed with a `behind` currency verdict this answers the operational question
+    the per-engine check alone cannot: re-running an install skill right now would
+    copy the running plugin's older payload, so the plugin has to be updated first.
+    """
+    if state.marketplace_location is None:
+        return []
+    source_path = _marketplace_source_path(state.marketplace_location)
+    if source_path is None:
+        return []
+    available_root = state.marketplace_location / source_path
+    drifted = []
+    for engine in ENGINES.values():
+        running = read_version(Path(plugin_root) / "engines" / engine.name / "VERSION")
+        newest = read_version(available_root / "engines" / engine.name / "VERSION")
+        if running is None or newest is None:
+            continue
+        if running != newest:
+            drifted.append(engine.name)
+    return drifted

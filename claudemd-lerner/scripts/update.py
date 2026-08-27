@@ -17,8 +17,11 @@ import argparse
 import asyncio
 import json
 import os
+import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # <ldir> for _shared
 
 from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
 from config import (
@@ -121,8 +124,8 @@ NEVER write under .claude/. If nothing in the log warrants a doc change, make no
 edits."""
 
 
-async def update_one(log_path: Path, state: dict) -> float:
-    """Apply a single daily log to the docs. Returns the API cost."""
+async def update_one(log_path: Path, state: dict) -> tuple[float, bool]:
+    """Apply a single daily log to the docs. Returns ``(cost, ingested)``."""
     from claude_agent_sdk import (
         AssistantMessage,
         ClaudeAgentOptions,
@@ -163,7 +166,7 @@ async def update_one(log_path: Path, state: dict) -> float:
                 print(f"  Cost: ${cost:.4f}")
     except Exception as e:
         print(f"  Error: {e}")
-        return 0.0
+        return 0.0, False
     finally:
         # `finally`, not a trailing call: the early return above must not skip the guard.
         for message in restore(guarded):
@@ -177,7 +180,7 @@ async def update_one(log_path: Path, state: dict) -> float:
     state["updated_count"] = state.get("updated_count", 0) + 1
     state["total_cost"] = state.get("total_cost", 0.0) + cost
     save_state(state)
-    return cost
+    return cost, True
 
 
 def _select(args, state: dict) -> list[Path]:
@@ -220,11 +223,20 @@ def main() -> None:
         return
 
     total = 0.0
+    ingested_any = False
     for i, log_path in enumerate(to_update, 1):
         print(f"\n[{i}/{len(to_update)}] Applying {log_path.name}...")
-        total += asyncio.run(update_one(log_path, state))
+        cost, ingested = asyncio.run(update_one(log_path, state))
+        total += cost
+        ingested_any = ingested_any or ingested
 
-    _stamp_last_update()
+    # Stamp only on real progress: the stamp shuts the SessionStart gate for
+    # `update_age_hours`, so stamping a run where every log errored defers the work
+    # silently instead of letting the next session retry it.
+    if ingested_any:
+        _stamp_last_update()
+    else:
+        print("\nNothing was ingested — leaving the completion stamp untouched.")
     print(f"\nDone. Total cost: ${total:.2f}.")
 
 
