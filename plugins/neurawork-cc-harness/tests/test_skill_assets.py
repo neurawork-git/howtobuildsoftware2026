@@ -88,6 +88,27 @@ class SkillFrontmatterTests(unittest.TestCase):
                     "an empty description means the skill never auto-triggers",
                 )
 
+    def test_every_install_skill_is_registered_as_an_engine(self) -> None:
+        # An installable skill whose staleness nudge cannot name it is the defect: the
+        # nudge's whole payload is "re-run /neurawork-cc-harness:<engine>", and find_stale
+        # skips any engine with no install_skill. This was carried in README prose while
+        # one engine had no installer; now that all four do, pin it mechanically.
+        sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+        try:
+            import harness_probe
+        finally:
+            sys.path.remove(str(PLUGIN_ROOT / "scripts"))
+        engines = {p.name for p in (PLUGIN_ROOT / "engines").iterdir()
+                   if p.is_dir() and (p / "install.py").is_file()}
+        self.assertTrue(engines, "no engine with an install.py — the engines/ tree moved")
+        for skill in sorted(SKILLS.glob("*/SKILL.md")):
+            name = skill.parent.name
+            if name not in engines:
+                continue  # a workflow skill installs nothing — no engine to register
+            with self.subTest(skill=name):
+                self.assertIn(name, harness_probe.ENGINES)
+                self.assertEqual(harness_probe.ENGINES[name].install_skill, name)
+
     def test_every_command_has_a_description(self) -> None:
         commands = sorted(COMMANDS.glob("*.md"))
         self.assertTrue(commands, "no commands found — the commands/ tree moved")

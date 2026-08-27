@@ -8,16 +8,18 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 ## Layout
 
 - `.claude-plugin/plugin.json` — plugin manifest (`name`, description, author, MIT).
-- `skills/<skill>/SKILL.md` — the three **install skills** (`knowledge-compiler`,
-  `claudemd-lerner`, `compliance-compiler`). Each runs a three-phase flow: **Recon**
-  (read-only) → **Ask** (AskUserQuestion) → **Execute** (run `install.py`). Plus the
+- `skills/<skill>/SKILL.md` — the four **install skills** (`knowledge-compiler`,
+  `claudemd-lerner`, `compliance-compiler`, `stack-compiler`). Each runs a three-phase
+  flow: **Recon** (read-only) → **Ask** (AskUserQuestion) → **Execute** (run `install.py`). Plus the
   **workflow skills** `nw-worktree` (create + enter a Hand worktree) and
   `nw-rules-init` (write the marker-delimited baseline coding rules into the target's
   root `CLAUDE.md`), which install nothing — see the gotcha below.
 - `commands/` — slash commands `kc-compile.md`, `cl-update.md` (manual compile /
   update; bypass the SessionStart 6-hour gate), `co-extract.md`,
   `co-capabilities.md`, `co-validate.md` (rebuild the constraint catalog / derive the
-  capability layer + stack scaffold / validate a PRP plan), `nw-ship-pr.md`
+  capability layer + stack scaffold / validate a PRP plan), `st-scope.md`, `st-rank.md`,
+  `st-select.md`, `st-validate.md` (the three product-scoping passes / validate a PRD or
+  plan against the chosen stack), `nw-ship-pr.md`
   (the PR lifecycle; a workflow surface, not an install), and `nw-doctor.md`
   (the read-only harness health report — see `scripts/` below).
 - `scripts/` — plugin-side diagnostics that install **nothing**: stdlib-only, run under
@@ -68,14 +70,15 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 - **Install modes:** `install.py` detects **ADOPT** (existing install — refresh code,
   never clobber data) vs **FRESH**. Hook merges are idempotent and use distinct
   filenames + events per skill (`cl-`-prefixed for the learner; `co-`-prefixed on the
-  `PostToolUse` event for compliance) so all three skills coexist in one repo.
+  `PostToolUse` event for compliance, `st-`-prefixed for stack-compiler) so all four
+  skills coexist in one repo — the two `PostToolUse` hooks share one matcher group.
 - **A hook may claim a matcher group.** `_shared/settings.py` accepts a 5th tuple element,
   the matcher; a 4-tuple still lands in the `matcher: ""` group, which is correct for the
   events that carry no tool name (`SessionStart`, `PreCompact`, `SessionEnd`,
   `UserPromptSubmit`). `knowledge-compiler`'s `hooks/pre-skill.py` uses `matcher: "Skill"`
-  and `compliance-compiler`'s `hooks/co-post-tooluse.py` uses
-  `matcher: "Write|Edit|MultiEdit"`: without one, the hook spawns a process on *every*
-  tool call. Re-running an installer **moves** an entry found under a different matcher
+  and both `compliance-compiler`'s `hooks/co-post-tooluse.py` and `stack-compiler`'s
+  `hooks/st-post-tooluse.py` use `matcher: "Write|Edit|MultiEdit"`: without one, the
+  hook spawns a process on *every* tool call. Re-running an installer **moves** an entry found under a different matcher
   into the requested group, so a narrowing reaches installs that already exist.
 - **Test discovery quirk:** `engines/` is a namespace package and the engine dirs
   are hyphenated, so a single `unittest discover -s engines` under-collects (finds

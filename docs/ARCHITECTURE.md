@@ -1,16 +1,17 @@
 # Architecture — neurawork-cc-harness
 
-How the harness is put together: the plugin source, the three engines, the shared
-infrastructure, the install flow, and how this repo self-hosts all three skills. For
+How the harness is put together: the plugin source, the four engines, the shared
+infrastructure, the install flow, and how this repo self-hosts all four skills. For
 *using* it see [INSTALL.md](INSTALL.md).
 
-## The three skills
+## The four skills
 
 | Skill | Captures / reads | Produces | Constitution |
 |-------|------------------|----------|--------------|
 | `knowledge-compiler` | session transcripts → `<dir>/daily/` logs | `<dir>/knowledge/` wiki (`index.md`, `concepts/`, `connections/`) | `knowledge-base/AGENTS.md` |
 | `claudemd-lerner` | session transcripts → `<dir>/daily/` logs | repo-root `CLAUDE.md` hierarchy + `docs/` (edited in place) | `claudemd-lerner/AGENTS.md` |
 | `compliance-compiler` | GDPR/SOC2/ISO27001 standards (~30 parallel agents) | `<dir>/catalog/` constraint JSON + `index.md` + `capabilities.{json,md}` + `stack.json` | `compliance-base/AGENTS.md` |
+| `stack-compiler` | the tracked `<dir>/product.md` + the capability catalog | no artifact of its own — the applicability, ranking and chosen-component fields of `compliance-base/catalog/stack.json` | `stack-base/AGENTS.md` |
 
 The first two follow the same **LLM-as-compiler** model: sessions emit append-only
 `daily/` logs (the "source code"); an LLM (the "compiler" / "learner") reads the logs
@@ -28,7 +29,8 @@ different source (the standards themselves), and adds a validation half: a
 skills/<skill>/SKILL.md        install skills (recon → ask → execute)
                                + nw-worktree/ (workflow skill, no engine)
 commands/                      kc-compile.md, cl-update.md, co-extract.md,
-                               co-capabilities.md, co-validate.md, nw-ship-pr.md
+                               co-capabilities.md, co-validate.md, st-scope.md,
+                               st-rank.md, st-select.md, st-validate.md, nw-ship-pr.md
 workflows/                     nw-ship-pr-review.js (auto-discovered by the runtime and
                                namespaced as neurawork-cc-harness:nw-ship-pr-review)
 agents/                        kb-researcher.md (read-only; the fourth research axis,
@@ -44,8 +46,8 @@ engines/
     tests/
   claudemd-lerner/             (same shape)
   compliance-compiler/         (same shape; payload has extract.py + validate.py + catalog scripts)
-  stack-compiler/              (no install.py/recon.py yet — hand-installed; payload has
-                               scope/rank/selection + validate.py; kept in sync by test_payload_drift.py)
+  stack-compiler/              (same shape; payload has scope/rank/selection + validate.py;
+                               the self-host is pinned by test_payload_drift.py between installs)
 ```
 
 The repo-root `.claude-plugin/marketplace.json` (marketplace `neurawork-harness`)
@@ -55,7 +57,7 @@ distributes `plugins/neurawork-cc-harness` via a `git-subdir` source; with no pi
 ### install skills vs. workflow skills
 
 Two component categories live side by side. An **install skill** (`knowledge-compiler`,
-`claudemd-lerner`, `compliance-compiler`) exists to copy an `engines/<engine>/payload/`
+`claudemd-lerner`, `compliance-compiler`, `stack-compiler`) exists to copy an `engines/<engine>/payload/`
 into a target repo and merge hooks into `.claude/settings.json`; it owns an `install.py`,
 a `recon.py`, a `VERSION`, and a data artifact in the repo. A **workflow skill**
 (`nw-worktree`, and the `nw-ship-pr` command with its `nw-ship-pr-review.js`) copies
@@ -190,7 +192,7 @@ engine's stamped `VERSION` (`<repo>/<dir>/VERSION`) against the plugin's shipped
 hook command in `.claude/settings.json`, and prints a staleness nudge when an install is
 behind. It has to live at the plugin level: an installed hook resolves its paths from its
 own on-disk location and never sees the plugin, so it cannot read the shipped `VERSION`.
-The manifest's semver `version` names the plugin *release* and is independent of the three
+The manifest's semver `version` names the plugin *release* and is independent of the four
 per-engine integer `VERSION` counters (which advance separately).
 
 ## Self-hosting in this repo
@@ -206,14 +208,15 @@ This repo installs the harness into itself:
   `reports/` are gitignored.
 - `stack-base/` — `stack-compiler` machinery + the tracked scoping input `product.md`;
   it owns no data artifact (its passes write `compliance-base/catalog/stack.json`
-  through that engine's `stack.py`). Unlike the other three it has no installer yet
-  and is **installed by hand**, kept byte-identical with the plugin payload by
-  `engines/stack-compiler/tests/test_payload_drift.py`. See [`stack-base/CLAUDE.md`](../stack-base/CLAUDE.md).
+  through that engine's `stack.py`). Installed and refreshed by
+  `/neurawork-cc-harness:stack-compiler` like the other three;
+  `engines/stack-compiler/tests/test_payload_drift.py` backs that installer up between
+  runs, catching a direct edit to either copy that was never propagated. See [`stack-base/CLAUDE.md`](../stack-base/CLAUDE.md).
 
 The hook sets live side by side in `.claude/settings.json` — the learner's are
 `cl-`-prefixed on the `SessionStart`/`PreCompact`/`SessionEnd` events; on `PostToolUse`,
-compliance's `co-`-prefixed hook sits under `matcher: "Write|Edit|MultiEdit"` and stack's
-`st-`-prefixed hook in the catch-all `matcher: ""` group — so they coexist without
+compliance's `co-`-prefixed hook and stack's `st-`-prefixed hook share the
+`matcher: "Write|Edit|MultiEdit"` group — so they coexist without
 clobbering each other. The machinery in those dirs is a
 copy of the plugin payload — fix bugs in
 `plugins/…/engines/<engine>/payload/` and re-run the installer to refresh, rather

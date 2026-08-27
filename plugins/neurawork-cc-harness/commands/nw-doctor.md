@@ -43,9 +43,6 @@ stopped moving, a hook you are not sure ever fired.
    without asking: every one of them writes into the repo, and several (a foreground
    compile, an installer re-run) cost money or change tracked files.
 
-`stack-compiler` ships no installer — its self-host is mirrored by hand from
-`plugins/neurawork-cc-harness/engines/stack-compiler/payload/`, so its fixes are manual.
-
 For compliance gaps beyond "the catalog files exist and parse" — mandatory-unchosen
 capabilities, `chosen_from` drift — point the user at
 `uv run --directory <compliance-dir> python scripts/stack.py`, which owns that answer.

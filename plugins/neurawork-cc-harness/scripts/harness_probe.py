@@ -124,9 +124,7 @@ ENGINES: dict[str, Engine] = {
         signature=("scripts/scope.py", "scripts/rank.py"),
         data_dirs=(),  # owns no data artifact — it writes into compliance-base
         queue=None,
-        # No install.py yet: the self-host is hand-mirrored and pinned byte-for-byte
-        # by engines/stack-compiler/tests/test_payload_drift.py.
-        install_skill=None,
+        install_skill="stack-compiler",
     ),
 }
 
@@ -311,7 +309,8 @@ def find_stale(repo_root: Path, plugin_root: Path, settings: dict) -> list[dict]
 
     Only engines with an installer: the nudge's whole payload is "re-run
     /neurawork-cc-harness:<engine>", and naming a slash command that does not exist
-    is worse than staying quiet. ``stack-compiler`` surfaces in the doctor instead.
+    is worse than staying quiet. All four engines have one; an engine added without
+    an installer surfaces in the doctor instead.
     """
     stale = []
     for engine in ENGINES.values():

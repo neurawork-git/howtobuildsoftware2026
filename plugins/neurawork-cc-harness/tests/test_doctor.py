@@ -17,6 +17,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
@@ -381,15 +382,30 @@ class VersionTests(DoctorTestCase):
     def test_the_shared_fix_never_points_at_a_payload(self) -> None:
         # `_shared/` is deliberately absent from every payload/ — the installer copies it
         # from engines/_shared/. An installer-less engine told to "mirror the payload"
-        # would go looking for files that are not there.
+        # would go looking for files that are not there. All four shipped engines now
+        # have an installer, so the branch is exercised through a synthetic one: it is
+        # the guard for the next engine that arrives before its install.py.
+        repo = make_repo(self.tmp)
+        install(repo, "stack-compiler", "stack-base")
+        settings_for(repo, ("stack-compiler", "stack-base"))
+        target = repo / "stack-base" / "_shared" / "gitctx.py"
+        target.write_text(target.read_text(encoding="utf-8") + "# local edit\n", encoding="utf-8")
+        engine = replace(probe.ENGINES["stack-compiler"], install_skill=None)
+        installed = probe.Install("stack-compiler", "stack-base", "both", [], True)
+        finding = doctor.check_shared(repo, PLUGIN_ROOT, installed, engine)[0]
+        self.assertEqual(finding.severity, "WARN")
+        self.assertNotIn("payload", finding.fix)
+        self.assertIn("engines/_shared", finding.fix)
+
+    def test_a_drifted_shared_on_an_installable_engine_names_its_installer(self) -> None:
         repo = make_repo(self.tmp)
         install(repo, "stack-compiler", "stack-base")
         settings_for(repo, ("stack-compiler", "stack-base"))
         target = repo / "stack-base" / "_shared" / "gitctx.py"
         target.write_text(target.read_text(encoding="utf-8") + "# local edit\n", encoding="utf-8")
         finding = self.check(self.run_checks(repo), "stack-compiler", "shared")
-        self.assertNotIn("payload", finding.fix)
-        self.assertIn("engines/_shared", finding.fix)
+        self.assertEqual(finding.severity, "WARN")
+        self.assertIn("/neurawork-cc-harness:stack-compiler", finding.fix)
 
 
 class WiringTests(DoctorTestCase):

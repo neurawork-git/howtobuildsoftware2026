@@ -1,10 +1,11 @@
 """Drift guard: the shipped payload must match this repo's own stack-base/ self-host.
 
-`stack-compiler` has no `install.py` yet (it lands in the PRD's Phase 5), so the
-self-host was installed by hand. Until then this test is what keeps the two copies
-identical — a payload edit that is not mirrored, or a self-host edit that never
-reaches the payload, fails here rather than shipping different behaviour to installs
-than this repo runs. It covers `scripts/`, `hooks/`, the flat files, and VERSION;
+`install.py` propagates the payload into a self-host, but only when someone re-runs
+it: a direct edit to `stack-base/scripts/` still diverges silently. This test is what
+keeps the two copies identical in between — a payload edit that is not mirrored, or a
+self-host edit that never reaches the payload, fails here rather than shipping
+different behaviour to installs than this repo runs. It covers `scripts/`, `hooks/`,
+the flat files, and VERSION;
 `_shared/` is deliberately not in `payload/` (the installer refreshes it).
 
 Skips gracefully when stack-base/ is absent (a pure plugin checkout with no

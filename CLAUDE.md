@@ -6,15 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository documents how to build software in 2026 and ships the tooling
 that does it: **`neurawork-cc-harness`**, a Claude Code plugin (under `plugins/`)
-that keeps a repo's project knowledge fresh. The plugin bundles three independently
+that keeps a repo's project knowledge fresh. The plugin bundles four independently
 installable skills — `knowledge-compiler` (distils session logs into a per-repo
 knowledge base), `claudemd-lerner` (keeps the `CLAUDE.md` hierarchy + `docs/`
-current), and `compliance-compiler` (parallel agents distil GDPR/SOC2/ISO27001 into
+current), `compliance-compiler` (parallel agents distil GDPR/SOC2/ISO27001 into
 a tracked constraint catalog, and a `PostToolUse` hook validates PRP plans against
-it). All write **inside the target repo, never under `.claude/`**.
+it), and `stack-compiler` (narrows that catalog to one product — which capabilities
+apply, which component was chosen from a closed pool — and gates every PRD/plan write
+against those choices). All write **inside the target repo, never under `.claude/`**.
 
-This repo **self-hosts** all three skills: `knowledge-base/`, `claudemd-lerner/`,
-and `compliance-base/` are live installs of the harness into this repo itself.
+This repo **self-hosts** all four skills: `knowledge-base/`, `claudemd-lerner/`,
+`compliance-base/` and `stack-base/` are live installs of the harness into this repo
+itself.
 
 ## Build / test / lint / run commands
 
@@ -84,7 +87,9 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
 (default: all extracted). Slash commands:
 `/neurawork-cc-harness:kc-compile`, `/neurawork-cc-harness:cl-update`,
 `/neurawork-cc-harness:co-extract`, `/neurawork-cc-harness:co-capabilities`,
-`/neurawork-cc-harness:co-validate`, and `/neurawork-cc-harness:nw-doctor` — the
+`/neurawork-cc-harness:co-validate`, `/neurawork-cc-harness:st-scope`,
+`/neurawork-cc-harness:st-rank`, `/neurawork-cc-harness:st-select`,
+`/neurawork-cc-harness:st-validate`, and `/neurawork-cc-harness:nw-doctor` — the
 read-only health report to run **first** whenever the harness seems quiet (nothing
 compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
 
@@ -137,10 +142,10 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   uses a `co-`-prefixed `PostToolUse` hook (no `SessionStart`) so it coexists with
   the other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
   (`asyncio.gather` + a semaphore) — the harness's only parallel compile path.
-- **`stack-base/`** — a self-host install of `stack-compiler` (product scoping),
-  **installed by hand**: its `install.py` / `recon.py` / slash commands land in a
-  later phase, so `plugins/…/engines/stack-compiler/payload/` and `stack-base/` are
-  kept byte-identical by `tests/test_payload_drift.py`, not by an installer. It owns
+- **`stack-base/`** — a live self-host install of `stack-compiler` (product scoping),
+  installed and refreshed by `/neurawork-cc-harness:stack-compiler` like the other
+  three; `tests/test_payload_drift.py` backs that installer up between runs, catching
+  a direct edit to either copy that was never propagated. It owns
   **no data artifact**. Three passes, all writing into
   `compliance-base/catalog/stack.json` through `compliance-base/scripts/stack.py` —
   the single schema owner: `scripts/scope.py` decides per capability *whether* it
@@ -161,8 +166,8 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   deliberately partial, because an undecided capability stays a counted gap rather
   than a silent omission. `product.md` is tracked; `.shards/` and `reports/` are
   gitignored. It also wires a **second** `PostToolUse` hook (`st-`-prefixed,
-  `hooks/st-post-tooluse.py`, in the catch-all `matcher: ""` group — compliance's `co-`
-  hook moved to `matcher: "Write|Edit|MultiEdit"`, so the two no longer share a group)
+  `hooks/st-post-tooluse.py`, registered under `matcher: "Write|Edit|MultiEdit"` — the
+  same group compliance's `co-` hook sits in)
   that gates each PRD/plan write against the recorded stack: a fast inline
   precheck plus a detached deep `scripts/validate.py` report (`reports/<stem>.md` +
   a `.stack.json` verdict). The gate **reads** `stack.json`, never writes it;
