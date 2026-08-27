@@ -30,10 +30,24 @@ RULES_SKILL = SKILLS / "nw-rules-init" / "SKILL.md"
 REVIEW_WORKFLOW = WORKFLOWS / "nw-ship-pr-review.js"
 
 # The rules block is read on every session in every repo that installs it. Past this the
-# block costs more than the repo-specific rules it sits next to.
-RULES_BLOCK_BUDGET = 1200
-# A command long enough to stand in for a real multi-suite repo when measuring the block.
-SAMPLE_TEST_COMMAND = "python3 -m unittest discover -s engines/knowledge-compiler/tests"
+# block costs more than the repo-specific rules it sits next to. Raised from 1200 when the
+# command slot became a fence: this repo's own six suites render to 1281 characters, and a
+# budget the shipping repo violates is not a budget.
+RULES_BLOCK_BUDGET = 1500
+# THIS repo's six suites — the worst realistic case, and the one the budget is sized against.
+SAMPLE_TEST_COMMAND = "\n".join(
+    (
+        "cd plugins/neurawork-cc-harness/engines && "
+        f"python3 -m unittest discover -s {suite}"
+        for suite in (
+            "_shared/tests",
+            "knowledge-compiler/tests",
+            "claudemd-lerner/tests",
+            "compliance-compiler/tests",
+            "stack-compiler/tests",
+        )
+    )
+) + "\ncd plugins/neurawork-cc-harness && python3 -m unittest discover -s tests"
 
 # The is_main_checkout probe: both sides normalised to absolute, or the test compares
 # output formats instead of locations.
@@ -187,6 +201,38 @@ class GuardInvariantTests(unittest.TestCase):
             "an absent or empty validate_commands list must SKIP the gate, never block",
         )
 
+    def test_validation_gate_merges_the_rules_block_with_the_config_extras(self) -> None:
+        # Section-scoped, NOT file-wide: both sources and the anchoring rule are also
+        # discussed in Phase 0.2, so a whole-file search stays green even after Phase 4.5
+        # has quietly gone back to reading one of them.
+        section = self.ship_pr_section("## Phase 4.5", "## Phase 5")
+        for needle in ("$RULES", "$VALIDATE", "duplicates dropped"):
+            with self.subTest(needle=needle):
+                self.assertIn(
+                    needle,
+                    section,
+                    "the gate's input is the CLAUDE.md rules block plus the configured "
+                    "extras, deduped; naming only one source reintroduces the "
+                    "hand-transcribed second copy of the repo's test command",
+                )
+        self.assertIn(
+            "SKIP",
+            section,
+            "an empty merged list must SKIP the gate, never block",
+        )
+        self.assertIn(
+            "<wt-root>",
+            section,
+            "the gate runs in the shipped checkout",
+        )
+        self.assertNotIn(
+            "$MAIN_ROOT/",
+            section.split("If one command")[0],
+            "a gate anchored to the main checkout tests <base>, not the PR: GREEN for a "
+            "PR that breaks the suite, and blind to a test directory the PR itself adds. "
+            "Only the documented single-command exception may name the main root",
+        )
+
     # Section-scoped like the cleanup-probe test above, and for the same reason: a
     # file-wide search for "open items" stays green on the Phase 5 mention alone, even
     # after Phase 6.5 stopped consuming them — the exact silent loss these pin.
@@ -256,8 +302,10 @@ class RulesBlockTests(unittest.TestCase):
     and small enough to earn its place in a root CLAUDE.md."""
 
     def template(self) -> str:
+        # Four backticks: the template now nests a ```sh fence, so a three-backtick outer
+        # fence would end at the inner one and hand back half a block.
         text = RULES_SKILL.read_text(encoding="utf-8")
-        blocks = re.findall(r"```markdown\n(.*?)```", text, re.DOTALL)
+        blocks = re.findall(r"````markdown\n(.*?)\n````", text, re.DOTALL)
         templates = [b for b in blocks if "neurawork-cc-harness:rules BEGIN" in b]
         self.assertEqual(
             len(templates),
@@ -287,6 +335,35 @@ class RulesBlockTests(unittest.TestCase):
             template,
             "the runner detected in Stage 1 must have a slot; a hard-coded command would "
             "ship a rule this repo's own unittest suite violates",
+        )
+
+    def test_command_slot_is_one_fence_inside_the_span(self) -> None:
+        # The fence is the machine-readable half: rules_block.test_commands() takes the
+        # FIRST fence inside the span, and /nw-ship-pr's Phase 4.5 runs those lines. A
+        # second fence, or one outside the markers, silently changes what both read.
+        template = self.template()
+        fences = [i for i, line in enumerate(template.splitlines())
+                  if line.startswith("```")]
+        self.assertEqual(
+            len(fences),
+            2,
+            "the template must carry exactly one fenced block — the command list",
+        )
+        begin = template.index("neurawork-cc-harness:rules BEGIN")
+        end = template.index("neurawork-cc-harness:rules END")
+        opening = template.index("```")
+        self.assertLess(begin, opening)
+        self.assertLess(opening, end, "a fence outside the span is invisible to both readers")
+
+    def test_run_label_immediately_precedes_the_fence(self) -> None:
+        # Both readers key on the fence, but a human editing the block keys on `Run:`.
+        # Separating them is how a future edit ends up moving the commands out of the span.
+        lines = self.template().splitlines()
+        opening = next(i for i, line in enumerate(lines) if line.startswith("```"))
+        self.assertEqual(lines[opening - 1], "")
+        self.assertTrue(
+            lines[opening - 2].rstrip().endswith("Run:"),
+            "the Evaluation-first bullet must end with `Run:` directly above the fence",
         )
 
     def test_rendered_block_stays_inside_the_budget(self) -> None:

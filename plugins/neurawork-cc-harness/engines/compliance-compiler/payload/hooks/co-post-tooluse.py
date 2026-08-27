@@ -77,11 +77,41 @@ def _capability_summary(cp: dict) -> str:
     return f" Plan declares {len(cp['declared'])} capability/capabilities{tail}."
 
 
+def _validation_summary(v: dict) -> str:
+    """One advisory clause about the plan's own validation gate. Never blocks — two of
+    this repo's plans legitimately name no unit test (a 51-line hotfix, a docs plan), so
+    a verdict here would be wrong before it was useful.
+
+    Order is by strength of signal: a missing section is a fact, a section with no
+    runnable command is a fact, and 'names no test file' is the weakest of the three —
+    it is phrased as a question on purpose."""
+    if not v["section_present"]:
+        return (" No '## Validation' section — add one naming a runnable command and the "
+                "test files this change adds.")
+    if not v["commands"]:
+        if v["repo_commands_total"]:
+            shown = ", ".join(f"`{c}`" for c in v["repo_commands"][:15])
+            tail = " …" if v["repo_commands_total"] > 15 else ""
+            return (" '## Validation' names no runnable command — this repo declares: "
+                    f"{shown}{tail}.")
+        return (" '## Validation' names no runnable command (commands are read from "
+                "backticked or fenced spans only).")
+    if not v["named_test_files"]:
+        return (f" Validation names {len(v['commands'])} command(s) but the plan names no "
+                "test file — is this change covered by a test?")
+    if not v["repo_commands_total"]:
+        return (f" Validation names {len(v['commands'])} command(s) and "
+                f"{len(v['named_test_files'])} test file(s); this repo declares no test "
+                "command — run `/neurawork-cc-harness:nw-rules-init` to state one.")
+    return (f" Validation names {len(v['commands'])} command(s) and "
+            f"{len(v['named_test_files'])} test file(s).")
+
+
 def _summary(pc: dict) -> str:
     if not pc["catalog_built"]:
         return ("Compliance catalog not built yet — run "
                 "`/neurawork-cc-harness:co-extract` to enable plan checks.")
-    caps = _capability_summary(pc["capabilities"])
+    caps = _capability_summary(pc["capabilities"]) + _validation_summary(pc["validation"])
     missing = pc["missing_mandatory_ids"]
     if not missing:
         return (f"Compliance precheck: all {pc['mandatory_total']} mandatory "
@@ -113,7 +143,9 @@ def main() -> None:
     root = effective_root()
     catalog_dir = root / "catalog"
     try:
-        pc = precheck(plan_path.read_text(encoding="utf-8"), cfg, catalog_dir)
+        # repo_root, not the compliance install dir: the rules block lives in the working
+        # tree's CLAUDE.md, so a worktree run reads the branch's own declared commands.
+        pc = precheck(plan_path.read_text(encoding="utf-8"), cfg, catalog_dir, repo_root)
     except OSError:
         return
 

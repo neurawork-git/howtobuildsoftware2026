@@ -143,8 +143,24 @@ VALIDATE=$(printf '%s\n' "$FM" | sed -n '/^validate_commands:/,/^[a-z_]*:/p' \
            | grep '^[[:space:]]*- ' | sed 's/^[[:space:]]*- *//')
 ```
 
-An absent, empty, or unreadable key yields an empty list — which means the Phase 4.5 gate
-**SKIPs**. It is never a failure.
+An absent, empty, or unreadable key yields an empty list — but that alone no longer means the
+gate SKIPs: the key is only half the input.
+
+**The repo's own test commands come from its `CLAUDE.md` rules block**, the one
+`/neurawork-cc-harness:nw-rules-init` writes and the `claudemd-lerner` marker guard protects.
+Its Evaluation-first bullet ends with `Run:` followed by one fenced block, one command per line.
+Read it from **`<wt-root>`** — the shipped checkout from Phase 0.1, inserted literally, never
+`$MAIN_ROOT` — for the same reason the gate itself runs there: a PR that adds a test directory
+declares it in *its* `CLAUDE.md`, and the main checkout holds `<base>`.
+
+```bash
+RULES=$(sed -n '/neurawork-cc-harness:rules BEGIN/,/neurawork-cc-harness:rules END/p' <wt-root>/CLAUDE.md 2>/dev/null \
+        | sed -n '/^```/,/^```/p' | grep -v '^```')
+```
+
+The block carries exactly one fence (pinned by `plugins/neurawork-cc-harness/tests/test_skill_assets.py`).
+Absent file, absent block or absent fence → an empty list, never a failure — the same rule the
+config read follows.
 
 Missing config → the fields stay empty; only when needed (Phase 6.5) are they asked for and
 written. Auto-gitignore: `.claude/*.local.md` covers the config; the marker
@@ -284,8 +300,18 @@ continues to Phase 5 (including on a re-entry, Phase 0.1), **before** the explan
 not on the turn that starts the background review (that one ends immediately). Local and
 synchronous, independent of the review workflow.
 
-Input is `validate_commands` from Phase 0.2. **Absent or empty → gate `SKIP`, no block.**
-Otherwise run each command **in the shipped checkout** — `<wt-root>` from Phase 0.1, inserted
+Input is **`$RULES` followed by `$VALIDATE`** from Phase 0.2 — the rules block's commands first,
+then the config's extras, with exact-string duplicates dropped and the order otherwise preserved.
+**The merged list absent or empty → gate `SKIP`, no block.**
+
+**The two sources have disjoint roles, and that is what stops the key from becoming a second copy
+of the block:** the block states the repo's **test** command — one authoring place, the one the
+plan precheck reads too — and `validate_commands` states **everything else** the repo wants green
+before a merge (a type-check, a schema check, a lint the repo actually passes). A repo that never
+ran `/neurawork-cc-harness:nw-rules-init` has no block, so the key alone is the input and the gate
+behaves exactly as it did before this coupling existed.
+
+Run each command **in the shipped checkout** — `<wt-root>` from Phase 0.1, inserted
 literally — **each in its own Bash call**, and record its exit status:
 
 ```bash
@@ -309,7 +335,8 @@ genuinely needs the main checkout's environment, anchor **that** command to `$MA
 why in the config comment — never move the whole gate off the branch.
 
 **Interpretation (robust, never a false block):**
-- **Empty list / no config** → **SKIP**, no block, no question.
+- **Empty merged list** (no rules block AND no `validate_commands`) → **SKIP**, no block, no
+  question.
 - **A command is not installed at all** (`command not found`, missing runner) → **skip that
   command with a named reason** — an infrastructure fact, not a validation failure. If nothing
   could run, the whole gate is `SKIP`.
@@ -318,8 +345,8 @@ why in the config comment — never move the whole gate off the branch.
   deliberately takes effect only at the approval gate (Phase 6), so the override path exists.
 - **All commands that ran exited 0** → **GREEN**.
 
-The list is whatever the repo declares authoritative — for this repo, the test and lint commands
-in its `CLAUDE.md`. That is why the gate is a list of commands rather than one hardcoded tool: it
+The list is whatever the repo declares authoritative — its `CLAUDE.md` rules block plus the
+configured extras. That is why the gate is a list of commands rather than one hardcoded tool: it
 covers tests, not only types, and it never reports a permanent `SKIP` because some tool the repo
 does not use is missing.
 
@@ -332,12 +359,17 @@ Present it to the user briefly and clearly, fed by the workflow result:
 4. **Risk / irreversible steps** — `explanation.risk`
 5. **Review findings** — `findings`, **blocking first** (`blocking_count`). None → "no blockers".
 6. **Validation gate** (Phase 4.5) — `GREEN` | `RED (command X failed: …)` |
-   `skipped (reason)`. **RED feeds the approval gate** (Phase 6): treat it like a blocking finding.
+   `skipped (reason)`, and **which source produced the commands that ran** (`CLAUDE.md` rules
+   block / `validate_commands` / both). Without that the merged list is a two-file investigation
+   every time a command surprises someone, and a `SKIP` looks the same whether the block is
+   missing or the key is empty. **RED feeds the approval gate** (Phase 6): treat it like a
+   blocking finding.
 7. **Open items** — everything the run surfaced that is unfinished and is **not** a review
    finding. Name each one as `title` / `why` / `where` — the same three fields a finding carries,
    so Phase 6.5 has one shape to write. Three sources, all settled by now:
    - **Degraded validation** — the Phase 4.5 verdict when it is not `GREEN`: `SKIP` with its
-     reason (empty or absent `validate_commands`; a configured command that is not installed), or
+     reason (an empty merged list — no rules block and no `validate_commands`; a configured
+     command that is not installed), or
      `RED`. A `RED` item becomes real only once the user overrides it at Phase 6 — until then the
      run may loop back and fix it — so list it here and confirm it in Phase 6.5.
    - **Unverified claims** — anything asserted in points 1-4 that the run did not prove.
@@ -411,7 +443,8 @@ Sink per config (`$SINK` from Phase 0.2):
   **De-dup**: an item whose `title` is already in the backlog is NOT appended again.
   **Recurring mechanical items must therefore use these fixed titles verbatim** — LLM-authored
   prose for a condition that re-surfaces every run grows one near-duplicate per merge:
-  - `the /nw-ship-pr validation gate is not configured` — `validate_commands` empty or absent;
+  - `the /nw-ship-pr validation gate is not configured` — no rules block AND no
+    `validate_commands`, so the merged list was empty;
   - `the /nw-ship-pr validation gate could not run` — commands configured, none installed;
   - `PR #<nr> was merged with a failing <command>` — a `RED` gate overridden at the gate;
   - `PR #<nr> was merged on a fallback mini-review` — the Phase 4 null/empty path.
@@ -452,10 +485,14 @@ validation commands, then write the config into the **MAIN checkout** (survives
 
 - **Sink proposal**, probed in this order: `.claude/PRPs/feature-backlog.md`, then
   `.claude/BACKLOG.md`, then fall back to `github-issues`.
-- **`validate_commands` proposal**: the repo's authoritative commands when they are readable from
-  its `CLAUDE.md` (build / test / lint section) — propose exactly those. When no source of truth
-  is readable, propose an **empty list** rather than guessing; an empty list is a clean `SKIP`,
-  a guessed command is a false block waiting to happen.
+- **`validate_commands` proposal**: the key is the **extras** list, never a copy of the repo's
+  test command. So:
+  - `$RULES` non-empty (the repo has a rules block) → propose an **empty list**. Those commands
+    already run; transcribing them here creates the second copy that drifts.
+  - `$RULES` empty → offer to run `/neurawork-cc-harness:nw-rules-init`, which writes the repo's
+    detected test command into one authoring place, instead of transcribing commands into the key.
+  Either way, propose an **empty list** rather than guessing a command: an empty list is a clean
+  `SKIP`, a guessed command is a false block waiting to happen.
 
 ```bash
 cat > "$MAIN_ROOT/.claude/ship-pr.local.md" <<EOF
@@ -463,9 +500,9 @@ cat > "$MAIN_ROOT/.claude/ship-pr.local.md" <<EOF
 followup_sink: <backlog-file|github-issues|none>
 backlog_path: <.claude/PRPs/feature-backlog.md  # backlog-file only>
 worktree_cleanup_default: ask   # ask | remove | defer
-validate_commands:              # empty or absent → Phase 4.5 SKIPs
-  - <command 1>
-  - <command 2>
+validate_commands:              # EXTRAS only — the test command lives in CLAUDE.md's rules block
+  - <non-test command 1>
+  - <non-test command 2>
 ---
 
 # ship-pr local config (per-repo, gitignored). Edit + re-run /nw-ship-pr to change.
