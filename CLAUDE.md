@@ -63,6 +63,7 @@ uv run --directory stack-base python scripts/scope.py           # which capabili
 uv run --directory stack-base python scripts/rank.py            # order each one's components
 uv run --directory stack-base python scripts/selection.py       # render the selection sheet
 uv run --directory stack-base python scripts/selection.py --apply <sheet>  # record the choices
+uv run --directory stack-base python scripts/validate.py <document>  # check a PRD/plan against the chosen stack
 ```
 
 The first two run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
@@ -149,7 +150,12 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   failed gate writes nothing. Scoping and ranking are all-or-nothing; selection is
   deliberately partial, because an undecided capability stays a counted gap rather
   than a silent omission. `product.md` is tracked; `.shards/` and `reports/` are
-  gitignored.
+  gitignored. It also wires a **second** `PostToolUse` hook (`st-`-prefixed,
+  `hooks/st-post-tooluse.py`, in the same `matcher: ""` group as compliance's `co-`
+  hook) that gates each PRD/plan write against the recorded stack: a fast inline
+  precheck plus a detached deep `scripts/validate.py` report (`reports/<stem>.md` +
+  a `.stack.json` verdict). The gate **reads** `stack.json`, never writes it;
+  `config.json`'s `validate_mode` sets `warn` | `block` per document type.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Each skill's behaviour is specified by an `AGENTS.md` constitution copied into the

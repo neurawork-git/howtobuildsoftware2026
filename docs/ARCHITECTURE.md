@@ -44,6 +44,8 @@ engines/
     tests/
   claudemd-lerner/             (same shape)
   compliance-compiler/         (same shape; payload has extract.py + validate.py + catalog scripts)
+  stack-compiler/              (no install.py/recon.py yet — hand-installed; payload has
+                               scope/rank/selection + validate.py; kept in sync by test_payload_drift.py)
 ```
 
 The repo-root `.claude-plugin/marketplace.json` (marketplace `neurawork-harness`)
@@ -191,7 +193,7 @@ per-engine integer `VERSION` counters (which advance separately).
 
 ## Self-hosting in this repo
 
-This repo installs **all three** skills into itself:
+This repo installs the harness into itself:
 
 - `knowledge-base/` — `knowledge-compiler` machinery + the tracked `knowledge/` wiki.
 - `claudemd-lerner/` — `claudemd-lerner` machinery; its outputs are this repo's
@@ -200,10 +202,16 @@ This repo installs **all three** skills into itself:
   (constraint JSON + `index.md` + `capabilities.{json,md}` + `stack.json`);
   `catalog/.shards/` and
   `reports/` are gitignored.
+- `stack-base/` — `stack-compiler` machinery + the tracked scoping input `product.md`;
+  it owns no data artifact (its passes write `compliance-base/catalog/stack.json`
+  through that engine's `stack.py`). Unlike the other three it has no installer yet
+  and is **installed by hand**, kept byte-identical with the plugin payload by
+  `engines/stack-compiler/tests/test_payload_drift.py`. See [`stack-base/CLAUDE.md`](../stack-base/CLAUDE.md).
 
-All three hook sets live side by side in `.claude/settings.json` — the learner's are
-`cl-`-prefixed on the `SessionStart`/`PreCompact`/`SessionEnd` events, compliance's
-single hook is `co-`-prefixed on `PostToolUse` — so they coexist without clobbering
-each other. The machinery in those dirs is a copy of the plugin payload — fix bugs in
+The hook sets live side by side in `.claude/settings.json` — the learner's are
+`cl-`-prefixed on the `SessionStart`/`PreCompact`/`SessionEnd` events; on `PostToolUse`,
+compliance's `co-`-prefixed hook and stack's `st-`-prefixed hook share one `matcher: ""`
+group — so they coexist without clobbering each other. The machinery in those dirs is a
+copy of the plugin payload — fix bugs in
 `plugins/…/engines/<engine>/payload/` and re-run the installer to refresh, rather
 than hand-editing the installed copy.
