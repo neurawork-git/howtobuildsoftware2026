@@ -217,6 +217,50 @@ class GuardInvariantTests(unittest.TestCase):
                     "`git branch -d` eats the branch",
                 )
 
+    def test_main_root_is_resolved_in_phase_0_before_any_use(self) -> None:
+        # Section-scoped, NOT a global count: ten `$MAIN_ROOT` uses survived a file-wide
+        # read precisely because nothing tied a use to its resolution. The two assertions
+        # are (a) no shell variable at all — shell state does not survive between Bash
+        # calls, so an unbound one degrades to an absolute path off `/` — and (b) the
+        # first placeholder occurrence in the phases is the resolution itself.
+        text = SHIP_PR.read_text(encoding="utf-8")
+        self.assertNotIn(
+            "MAIN_ROOT",
+            text,
+            "a shell variable cannot carry the main checkout root between phases: each "
+            "Bash call is a fresh subshell, so `git -C \"$MAIN_ROOT\"` runs against `/`. "
+            "The resolved path is inserted literally as <main-root> instead",
+        )
+        _, _, phases = text.partition("## Phase 0 ")
+        self.assertTrue(phases, "Phase 0 is missing from the command file")
+        first_use = phases.index("<main-root>")
+        before = phases[:first_use]
+        self.assertIn(
+            "### 0.1",
+            before,
+            "the first mention of the main root in the phases must be its resolution in "
+            "Phase 0.1 — a use that precedes it has nothing to insert",
+        )
+        self.assertNotIn(
+            "## Phase 1",
+            before,
+            "the main root is resolved in Phase 0.1 and nowhere else; a resolution that "
+            "has drifted into a later phase leaves 0.2's config read unbound",
+        )
+        resolution = self.ship_pr_section("### 0.1", "### 0.2")
+        self.assertIn(
+            "git rev-parse --git-common-dir",
+            resolution,
+            "the main root is derived from --git-common-dir's parent; without the command "
+            "the placeholder has no value",
+        )
+        self.assertIn(
+            "inserted literally",
+            resolution,
+            "every later phase writes the resolved path into its command literally; "
+            "dropping that statement is what invites a shell variable back",
+        )
+
     def test_worktree_skill_only_mentions_branch_switching_to_forbid_it(self) -> None:
         offenders = [
             line
@@ -269,7 +313,7 @@ class GuardInvariantTests(unittest.TestCase):
             "the gate runs in the shipped checkout",
         )
         self.assertNotIn(
-            "$MAIN_ROOT/",
+            "<main-root>/",
             section.split("If one command")[0],
             "a gate anchored to the main checkout tests <base>, not the PR: GREEN for a "
             "PR that breaks the suite, and blind to a test directory the PR itself adds. "

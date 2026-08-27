@@ -16,3 +16,7 @@
 | [[concepts/swappable-backend-interfaces]] | Transcriber and Storage interfaces keep STT and image storage vendor-neutral | daily/2026-08-13.md | 2026-08-20 |
 | [[concepts/editable-transcript-before-send]] | STT shown editable before manual send to keep dictation errors out of the tree | daily/2026-08-13.md | 2026-08-20 |
 | [[connections/sdk-subprocess-forces-api-key]] | Wrapped CLI's OAuth login is exactly the path an account app must not use | daily/2026-08-13.md | 2026-08-20 |
+| [[concepts/plugin-version-bump-propagates-cache]] | Fixes reach installed caches only via a version bump; marketplace pulls on new version | daily/2026-08-27.md | 2026-08-27 |
+| [[concepts/semver-patch-for-reporting-only-change]] | Reporting-only recon fix is patch-level; 0.3.0 → 0.3.1 | daily/2026-08-27.md | 2026-08-27 |
+| [[concepts/verify-generated-artifacts-before-commit]] | LLM-generated docs verified against real files/config before commit | daily/2026-08-27.md | 2026-08-27 |
+| [[concepts/connection-articles-enable-backward-retrieval]] | Connection articles surface non-obvious links a forward-only agent misses | daily/2026-08-27.md | 2026-08-27 |

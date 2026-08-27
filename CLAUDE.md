@@ -63,6 +63,7 @@ uv run --directory stack-base python scripts/scope.py           # which capabili
 uv run --directory stack-base python scripts/rank.py            # order each one's components
 uv run --directory stack-base python scripts/selection.py       # render the selection sheet
 uv run --directory stack-base python scripts/selection.py --apply <sheet>  # record the choices
+uv run --directory stack-base python scripts/validate.py <document>  # check a PRD/plan against the chosen stack
 python3 plugins/neurawork-cc-harness/scripts/doctor.py          # read-only harness health report
 ```
 
@@ -159,7 +160,13 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   failed gate writes nothing. Scoping and ranking are all-or-nothing; selection is
   deliberately partial, because an undecided capability stays a counted gap rather
   than a silent omission. `product.md` is tracked; `.shards/` and `reports/` are
-  gitignored.
+  gitignored. It also wires a **second** `PostToolUse` hook (`st-`-prefixed,
+  `hooks/st-post-tooluse.py`, in the catch-all `matcher: ""` group — compliance's `co-`
+  hook moved to `matcher: "Write|Edit|MultiEdit"`, so the two no longer share a group)
+  that gates each PRD/plan write against the recorded stack: a fast inline
+  precheck plus a detached deep `scripts/validate.py` report (`reports/<stem>.md` +
+  a `.stack.json` verdict). The gate **reads** `stack.json`, never writes it;
+  `config.json`'s `validate_mode` sets `warn` | `block` per document type.
 - **`docs/`** — longer-form guides: [`docs/INSTALL.md`](docs/INSTALL.md),
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Each skill's behaviour is specified by an `AGENTS.md` constitution copied into the

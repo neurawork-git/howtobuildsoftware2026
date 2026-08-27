@@ -40,6 +40,8 @@ see [[concepts/plugin-manifest-name-verification]].
 
 - [[concepts/readme-getting-started-vs-contributing]] — where the install path lives vs the clone instructions
 - [[concepts/plugin-manifest-name-verification]] — how the marketplace and plugin names were validated
+- [[concepts/plugin-version-bump-propagates-cache]] — how a version bump moves a fix through this marketplace path into installed caches
+- [[concepts/semver-patch-for-reporting-only-change]] — the versioning choice for this plugin's bumps
 
 ## Sources
 

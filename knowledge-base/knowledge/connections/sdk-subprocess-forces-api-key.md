@@ -42,3 +42,4 @@ single shared `ANTHROPIC_API_KEY` in `.env` for v1 and an optional per-user
 
 - [[concepts/claude-agent-sdk-subprocess-architecture]]
 - [[concepts/api-key-vs-subscription-for-account-apps]]
+- [[concepts/connection-articles-enable-backward-retrieval]] — this article is probe #3's target: the non-obvious link a forward-only agent would miss

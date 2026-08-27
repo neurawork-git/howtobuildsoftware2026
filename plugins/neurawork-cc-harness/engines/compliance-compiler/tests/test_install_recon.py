@@ -85,6 +85,49 @@ class TestInstall(unittest.TestCase):
             self.assertIn("PostToolUse", settings["hooks"])
             # compliance-compiler no longer registers a SessionStart hook
             self.assertNotIn("SessionStart", settings["hooks"])
+            # The matcher is what keeps the hook out of every non-write tool call: in the
+            # catch-all group each one starts a `uv run` subprocess only to exit.
+            self.assertEqual(
+                [g["matcher"] for g in settings["hooks"]["PostToolUse"]],
+                ["Write|Edit|MultiEdit"],
+            )
+
+    def test_adopt_narrows_a_catch_all_registration(self) -> None:
+        # The upgrade path for a repo installed before the hook carried a matcher: the
+        # entry must MOVE, or the narrowing reaches fresh installs only.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+            sp = repo / ".claude" / "settings.json"
+            settings = json.loads(sp.read_text())
+            entry = settings["hooks"]["PostToolUse"][0]["hooks"][0]
+            settings["hooks"]["PostToolUse"] = [{"matcher": "", "hooks": [entry]}]
+            sp.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+            self.assertEqual(self._install(repo).returncode, 0)
+            groups = json.loads(sp.read_text())["hooks"]["PostToolUse"]
+            self.assertEqual([g["matcher"] for g in groups], ["Write|Edit|MultiEdit"])
+            self.assertEqual(len([h for g in groups for h in g["hooks"]]), 1)
+
+    def test_adopt_appends_a_missing_ignore_rule(self) -> None:
+        # `catalog/.shards/` shipped after the first releases. A create-if-absent write
+        # left an existing install tracking its shard files forever; the merge appends
+        # only what is missing and leaves the user's own rules in place.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+            gi = repo / CDIR / ".gitignore"
+            kept = [line for line in gi.read_text(encoding="utf-8").splitlines()
+                    if line.strip() and "catalog/.shards/" not in line]
+            gi.write_text("my-own-rule/\n" + "\n".join(kept) + "\n", encoding="utf-8")
+
+            self.assertEqual(self._install(repo).returncode, 0)
+            lines = gi.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(lines[0], "my-own-rule/")
+            self.assertEqual(lines.count("catalog/.shards/"), 1)
+            self.assertEqual(lines.count("reports/"), 1)
 
     def test_idempotent_reinstall(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

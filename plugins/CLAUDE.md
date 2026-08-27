@@ -70,9 +70,13 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   filenames + events per skill (`cl-`-prefixed for the learner; `co-`-prefixed on the
   `PostToolUse` event for compliance) so all three skills coexist in one repo.
 - **A hook may claim a matcher group.** `_shared/settings.py` accepts a 5th tuple element,
-  the matcher; a 4-tuple still lands in the `matcher: ""` group. `knowledge-compiler`'s
-  `hooks/pre-skill.py` is the only user: without `matcher: "Skill"` a `PreToolUse` hook
-  spawns a process on *every* tool call.
+  the matcher; a 4-tuple still lands in the `matcher: ""` group, which is correct for the
+  events that carry no tool name (`SessionStart`, `PreCompact`, `SessionEnd`,
+  `UserPromptSubmit`). `knowledge-compiler`'s `hooks/pre-skill.py` uses `matcher: "Skill"`
+  and `compliance-compiler`'s `hooks/co-post-tooluse.py` uses
+  `matcher: "Write|Edit|MultiEdit"`: without one, the hook spawns a process on *every*
+  tool call. Re-running an installer **moves** an entry found under a different matcher
+  into the requested group, so a narrowing reaches installs that already exist.
 - **Test discovery quirk:** `engines/` is a namespace package and the engine dirs
   are hyphenated, so a single `unittest discover -s engines` under-collects (finds
   only `_shared`). Run discovery per test directory — see the root `CLAUDE.md`.

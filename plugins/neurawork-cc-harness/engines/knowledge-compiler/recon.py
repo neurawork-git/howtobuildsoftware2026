@@ -19,10 +19,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # engines/ for 
 
 from _shared.recon import git_root_or_none, emit_recon_json
 
+# Every event install.py registers. The lookup below scans all matcher groups of an
+# event, so the Skill-scoped PreToolUse hook is found like any other.
 HOOK_EVENTS = {
     "SessionStart": "session-start.py",
     "PreCompact": "pre-compact.py",
     "SessionEnd": "session-end.py",
+    "UserPromptSubmit": "user-prompt-submit.py",
+    "PreToolUse": "pre-skill.py",
 }
 
 
