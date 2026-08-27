@@ -28,15 +28,23 @@ import harness_probe as probe  # noqa: E402
 DAY = 24 * 3600
 
 
-def make_repo(tmp: Path, *, worktree: bool = False) -> Path:
-    """A repo root the doctor can resolve: `.git` dir, or `.git` file for a worktree."""
-    repo = tmp / "repo"
+def make_repo(tmp: Path, *, name: str = "repo") -> Path:
+    """A main checkout the doctor can resolve: `.git` is a directory."""
+    repo = tmp / name
     repo.mkdir()
-    if worktree:
-        (repo / ".git").write_text("gitdir: /elsewhere/.git/worktrees/wt\n", encoding="utf-8")
-    else:
-        (repo / ".git").mkdir()
+    (repo / ".git").mkdir()
     return repo
+
+
+def make_worktree(tmp: Path, main: Path | str, *, name: str = "wt") -> Path:
+    """A linked worktree: `.git` is a FILE holding `gitdir: <main>/.git/worktrees/<name>`.
+
+    Pass `main` as a string to fabricate a gitdir the doctor cannot resolve.
+    """
+    wt = tmp / name
+    wt.mkdir()
+    (wt / ".git").write_text(f"gitdir: {main}/.git/worktrees/{name}\n", encoding="utf-8")
+    return wt
 
 
 def install(repo: Path, engine_name: str, dirname: str, version: str | None = None) -> Path:
@@ -175,8 +183,8 @@ class HealthyInstallTests(DoctorTestCase):
 
 
 class QueueTests(DoctorTestCase):
-    def _stalled(self, *, worktree: bool = False, lock_age: float = 2 * 3600) -> Path:
-        repo = make_repo(self.tmp, worktree=worktree)
+    def _stalled(self, *, lock_age: float = 2 * 3600) -> Path:
+        repo = make_repo(self.tmp)
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
         daily(target, "2026-08-20.md", mtime=self.now - 3600)  # newer than the stamp
@@ -207,12 +215,45 @@ class QueueTests(DoctorTestCase):
             finding.fix, "", "an in-flight run must not be offered a lock-removal fix"
         )
 
-    def test_the_same_stall_inside_a_worktree_is_suppressed_by_design(self) -> None:
+    def _worktree_over(self, main: Path | str, *, name: str = "wt") -> Path:
+        """A worktree carrying only the install CODE — the queue state never lives here.
+
+        Every capture hook resolves its output through `_shared/gitctx.state_home()` and
+        writes daily/, state.json, the stamp and the lock into the MAIN checkout, and all
+        four are gitignored, so a worktree genuinely has none of them. A fixture that put
+        logs in the worktree would be testing a state production cannot reach.
+        """
+        wt = make_worktree(self.tmp, main, name=name)
+        install(wt, "claudemd-lerner", "claudemd-lerner")
+        settings_for(wt, ("claudemd-lerner", "claudemd-lerner"))
+        return wt
+
+    def test_a_worktree_reads_the_queue_from_the_main_checkout(self) -> None:
+        # Run from a worktree, the doctor must report the MAIN checkout's queue. Reading
+        # the worktree's own empty dirs would answer "drained — 0 pending daily logs of 0"
+        # at exit 0 for a repo whose harness has stopped, and this repo's documented flow
+        # (/nw-worktree → implement → ship) makes the worktree the likely place to run it.
+        main = self._stalled()
         finding = self.check(
-            self.run_checks(self._stalled(worktree=True)), "claudemd-lerner", "queue"
+            self.run_checks(self._worktree_over(main)), "claudemd-lerner", "queue"
         )
+        self.assertEqual(finding.severity, "ERROR")
+        self.assertIn("1 pending", finding.message)
+        self.assertIn("never completed", finding.message)
+        self.assertIn(str(main), finding.message, "say which checkout was read")
+
+    def test_an_unresolvable_main_checkout_is_never_called_drained(self) -> None:
+        wt = self._worktree_over("/nowhere/that/exists", name="orphan-wt")
+        finding = self.check(self.run_checks(wt), "claudemd-lerner", "queue")
         self.assertEqual(finding.severity, "NOTE")
-        self.assertIn("worktree", finding.message)
+        self.assertNotIn(
+            "drained",
+            finding.message,
+            "a queue that could not be read must never be reported as empty",
+        )
+        self.assertIn("main checkout", finding.message)
+        self.assertIn("--repo", finding.fix)
+
 
     def test_an_eligible_gate_warns_rather_than_errors(self) -> None:
         repo = make_repo(self.tmp)
@@ -267,6 +308,39 @@ class QueueTests(DoctorTestCase):
         daily(target, "2026-08-20.md", "edited since it was ingested\n", mtime=self.now - 1800)
         finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
         self.assertIn("1 pending", finding.message)
+
+
+class MainCheckoutRootTests(unittest.TestCase):
+    """Resolving the main checkout from a worktree's `.git` file, process-free.
+
+    Every ambiguous layout must answer None: the caller then says it could not look,
+    which is the only honest alternative to reading the wrong directory.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.tmp = Path(self._tmp.name)
+
+    def test_resolves_a_real_linked_worktree(self) -> None:
+        main = make_repo(self.tmp)
+        wt = make_worktree(self.tmp, main)
+        self.assertEqual(doctor.main_checkout_root(wt), main)
+
+    def test_a_main_checkout_has_no_gitdir_file(self) -> None:
+        self.assertIsNone(doctor.main_checkout_root(make_repo(self.tmp)))
+
+    def test_a_relative_gitdir_is_not_guessed_at(self) -> None:
+        wt = self.tmp / "wt"
+        wt.mkdir()
+        (wt / ".git").write_text("gitdir: ../main/.git/worktrees/wt\n", encoding="utf-8")
+        self.assertIsNone(doctor.main_checkout_root(wt))
+
+    def test_an_unexpected_layout_is_not_guessed_at(self) -> None:
+        wt = self.tmp / "wt2"
+        wt.mkdir()
+        (wt / ".git").write_text("gitdir: /some/other/place\n", encoding="utf-8")
+        self.assertIsNone(doctor.main_checkout_root(wt))
 
 
 class VersionTests(DoctorTestCase):
