@@ -39,6 +39,7 @@ whenever documentation references plugin identifiers.
 
 - [[concepts/plugin-marketplace-install]] — the install commands whose names were verified
 - [[concepts/readme-getting-started-vs-contributing]] — documentation these verified names were written into
+- [[concepts/verify-generated-artifacts-before-commit]] — the same verify-against-ground-truth discipline applied to generated docs
 
 ## Sources
 
