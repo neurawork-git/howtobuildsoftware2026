@@ -9,13 +9,49 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 MANIFEST = PLUGIN_ROOT / ".claude-plugin" / "plugin.json"
 HOOKS_JSON = PLUGIN_ROOT / "hooks" / "hooks.json"
+CHANGELOG = PLUGIN_ROOT / "CHANGELOG.md"
 
 
 class TestManifest(unittest.TestCase):
+    def manifest(self) -> dict:
+        return json.loads(MANIFEST.read_text(encoding="utf-8"))
+
     def test_valid_json_with_semver_version(self) -> None:
-        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        data = self.manifest()
         self.assertEqual(data["name"], "neurawork-cc-harness")
         self.assertRegex(data["version"], r"^\d+\.\d+\.\d+$")
+
+    def test_the_plugin_is_traceable_from_the_manifest_alone(self) -> None:
+        # A marketplace reader has the manifest and nothing else; without these there is
+        # no route from an installed copy back to the source or the install guide.
+        data = self.manifest()
+        for key in ("homepage", "repository"):
+            with self.subTest(key=key):
+                self.assertTrue(
+                    str(data.get(key, "")).startswith("https://"),
+                    f"{key} must be an absolute URL",
+                )
+        keywords = data.get("keywords") or []
+        self.assertIsInstance(data.get("keywords"), list)
+        self.assertTrue(keywords, "an empty keywords list makes the plugin unsearchable")
+        for keyword in keywords:
+            with self.subTest(keyword=keyword):
+                self.assertIsInstance(keyword, str)
+                self.assertTrue(keyword.strip())
+
+    def test_the_changelog_covers_the_shipped_version(self) -> None:
+        # The bump-discipline guard: the version is the ONLY signal an installed copy has
+        # that a newer one exists, so a release has to say what it contains. Deterministic
+        # and offline — a git-diff "bump required" check needs a base ref, which a shallow
+        # clone does not have and a merge commit reports falsely.
+        version = self.manifest()["version"]
+        self.assertTrue(CHANGELOG.is_file(), "CHANGELOG.md is missing from the plugin root")
+        self.assertIn(
+            f"## [{version}]",
+            CHANGELOG.read_text(encoding="utf-8"),
+            f"plugin.json is {version} but CHANGELOG.md has no section for it — an "
+            "entry-less release tells an upgrading user nothing about what changed",
+        )
 
 
 class TestHooksJson(unittest.TestCase):

@@ -25,6 +25,11 @@ from pathlib import Path
 # .claude/settings.json. Used to locate where each engine was installed (the dir
 # is user-configurable, so we read it back from the command line rather than
 # assuming the default dir name).
+#
+# Three entries, not four: `stack-compiler` ships no install.py (PRD phase 5), so no repo
+# can install it from the marketplace and there is no installer to re-run when a version
+# looks stale — a nudge would name a command that does not exist. The host repo's own
+# stack-base/ was put in place by hand. It joins this map when phase 5 ships its installer.
 ENGINES = {
     "knowledge-compiler": "hooks/session-start.py",
     "claudemd-lerner": "hooks/cl-session-start.py",

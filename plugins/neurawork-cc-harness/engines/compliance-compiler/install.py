@@ -35,7 +35,7 @@ sys.path.insert(0, str(ENGINE_DIR.parent))  # engines/ for _shared
 
 from _shared.recon import git_root_or_none
 from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
-from _shared.settings import SettingsError, merge_hooks, set_env_default
+from _shared.settings import SettingsError, merge_gitignore, merge_hooks, set_env_default
 
 # Where prp-core writes its artifact store. Its resolver is
 # ``"${PRP_HOME:-$HOME/.prp}/<repo-name>-<hash>"``, so an unset PRP_HOME puts every plan
@@ -102,9 +102,10 @@ def _scaffold(target: Path, cdir: str) -> None:
         defaults["catalog_dir"] = cdir
         config.write_text(json.dumps(defaults, indent=2) + "\n", encoding="utf-8")
 
-    gitignore = target / ".gitignore"
-    if not gitignore.exists():
-        gitignore.write_text(GITIGNORE, encoding="utf-8")
+    # Merge, never create-if-absent: `catalog/.shards/` was added after the first releases,
+    # so an install that predates it keeps its shard files tracked until this runs. Only the
+    # missing lines are appended — a user's own rules keep their place.
+    merge_gitignore(target, GITIGNORE)
 
     shutil.copy2(VERSION_FILE, target / "VERSION")
 
@@ -158,10 +159,15 @@ def _seed_stack(target: Path) -> None:
               "in the catalog dir to retry.")
 
 
-def _hooks(cdir: str) -> list[tuple[str, str, int, str]]:
+def _hooks(cdir: str) -> list[tuple[str, str, int, str, str]]:
     base = f'uv run --directory "$CLAUDE_PROJECT_DIR/{cdir}" python'
+    # The matcher is the registration, not a hand-edit: without it the hook is in the
+    # catch-all group and every tool call in every session pays for a `uv run` subprocess
+    # that reads stdin and exits. The hook keeps its own WRITE_TOOLS check — a matcher is
+    # an optimisation, and a settings.json someone edited by hand must still be safe.
     return [
-        ("PostToolUse", f"{base} hooks/co-post-tooluse.py", 15, "hooks/co-post-tooluse.py"),
+        ("PostToolUse", f"{base} hooks/co-post-tooluse.py", 15,
+         "hooks/co-post-tooluse.py", "Write|Edit|MultiEdit"),
     ]
 
 

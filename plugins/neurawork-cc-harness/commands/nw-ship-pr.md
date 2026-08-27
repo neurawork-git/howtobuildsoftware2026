@@ -41,6 +41,12 @@ config file, and runs in any repo that has `git` + `gh`.
   `if is_main_checkout; then …; else … (worktree path) fi`. Because ground-rule prose is not
   sourced into each Bash subshell, the affected blocks (8.3 / 8.4) inline the raw
   `[ … = … ]` test themselves; `is_main_checkout` is the named intent.
+- **Two roots, resolved once, inserted literally:** `<wt-root>` (the shipped checkout,
+  `git rev-parse --show-toplevel`) and `<main-root>` (the main checkout, the **parent** of
+  `git rev-parse --git-common-dir`). Both are resolved in **Phase 0.1** and nowhere else, and
+  every later phase writes the resolved path into its command **literally** — for the same reason
+  `is_main_checkout` is inlined above: shell state does not survive between Bash calls, so a
+  variable assigned in one call is empty in the next and the command silently runs against `/`.
 
 ---
 
@@ -82,6 +88,12 @@ git rev-parse --git-common-dir                                  # -> <main-root>
 git status --short -- ':(exclude).claude/.ship-pr-state.json'   # -> DIRTY (empty == clean)
 git rev-list --count origin/<branch>..HEAD                      # -> AHEAD (0 == no new commit)
 ```
+
+`<main-root>` is the **parent** of what `--git-common-dir` prints (`<main-root>/.git`);
+`<wt-root>` is the shipped checkout. Both are resolved **here, once**, and every later phase that
+names one of them uses the resolved path **inserted literally** into its command. Neither is ever
+a shell variable: shell state does not survive between Bash calls, so a variable assigned in one
+call is empty in the next and the command degrades to an absolute path off `/`.
 
 Then read each candidate **individually** (`cat`, literal path; "does not exist" is not an error)
 and compare its `head_sha` yourself against `<sha>` — **the first MATCHING one counts**, not the
@@ -150,7 +162,7 @@ gate SKIPs: the key is only half the input.
 `/neurawork-cc-harness:nw-rules-init` writes and the `claudemd-lerner` marker guard protects.
 Its Evaluation-first bullet ends with `Run:` followed by one fenced block, one command per line.
 Read it from **`<wt-root>`** — the shipped checkout from Phase 0.1, inserted literally, never
-`$MAIN_ROOT` — for the same reason the gate itself runs there: a PR that adds a test directory
+`<main-root>` — for the same reason the gate itself runs there: a PR that adds a test directory
 declares it in *its* `CLAUDE.md`, and the main checkout holds `<base>`.
 
 ```bash
@@ -324,14 +336,14 @@ cd <wt-root> && <command 2>; echo "exit=$?"
 Insert the commands and the path literally, one call each — a loop over a computed list hits the
 same call-form refusal as the marker write in Phase 4.
 
-**`<wt-root>`, never `$MAIN_ROOT`** — this is the whole point of the gate. The documented flow is
+**`<wt-root>`, never `<main-root>`** — this is the whole point of the gate. The documented flow is
 `/nw-worktree` → work in the sibling worktree → `/nw-ship-pr` from there, and the main checkout
 holds `<base>`, not the PR branch (8.1 and 8.4 rely on exactly that). A gate anchored to the main
 checkout would run the repo's tests against **base** and never see the shipped commits: `GREEN`
 for a PR that breaks the suite, `RED` for a base failure the PR actually fixes — and a command the
 PR itself introduces (a new test directory, say) would find nothing there at all. In the main
 checkout `<wt-root>` is the main root, so the same line is correct in both cases. If one command
-genuinely needs the main checkout's environment, anchor **that** command to `$MAIN_ROOT` and say
+genuinely needs the main checkout's environment, anchor **that** command to `<main-root>` and say
 why in the config comment — never move the whole gate off the branch.
 
 **Interpretation (robust, never a false block):**
@@ -495,7 +507,8 @@ validation commands, then write the config into the **MAIN checkout** (survives
   `SKIP`, a guessed command is a false block waiting to happen.
 
 ```bash
-cat > "$MAIN_ROOT/.claude/ship-pr.local.md" <<EOF
+# <main-root> from Phase 0.1, inserted literally (no shell variable survives the call).
+cat > <main-root>/.claude/ship-pr.local.md <<EOF
 ---
 followup_sink: <backlog-file|github-issues|none>
 backlog_path: <.claude/PRPs/feature-backlog.md  # backlog-file only>
@@ -508,7 +521,7 @@ validate_commands:              # EXTRAS only — the test command lives in CLAU
 # ship-pr local config (per-repo, gitignored). Edit + re-run /nw-ship-pr to change.
 EOF
 # idempotent auto-gitignore (shares the rule with the nw-worktree skill config):
-GI="$MAIN_ROOT/.gitignore"
+GI=<main-root>/.gitignore   # insert the resolved path literally — 0.1 already produced it
 grep -qxF '.claude/*.local.md'      "$GI" 2>/dev/null || printf '\n# ship-pr / worktree skill local config\n.claude/*.local.md\n' >> "$GI"
 grep -qxF '.claude/.ship-pr-state.json' "$GI" 2>/dev/null || printf '.claude/.ship-pr-state.json\n' >> "$GI"
 ```
@@ -609,8 +622,8 @@ ARTIFACTS=$(git ls-files -o -i --exclude-standard --directory \
 - **not empty** → show the list + `AskUserQuestion` *"These gitignored artifacts are lost on
   worktree cleanup — what now?"*:
   - **Copy into main** → rescue each file into the main checkout via
-    `cp -a <path> "$MAIN_ROOT"/<path>` (directories with `mkdir -p` first), then continue
-    normally. Survives `remove`.
+    `cp -a <path> <main-root>/<path>` (`<main-root>` from Phase 0.1, inserted literally;
+    directories with `mkdir -p` first), then continue normally. Survives `remove`.
   - **Keep the worktree** → force the cleanup in 8.4 to **"later"** (do NOT remove the worktree),
     otherwise merge normally.
   - **Don't care, continue** → discard consciously, continue normally.
@@ -635,10 +648,10 @@ gh pr merge <nr> --merge \
   works from both. The `|| echo` swallows the "remote ref does not exist" case when the repo
   setting `delete_branch_on_merge` already removed the remote.
 - **The local branch** is NOT deleted here — 8.3 does it (MAIN: `git branch -d`) or 8.4
-  (worktree: `git -C "$MAIN_ROOT" branch -d`).
+  (worktree: `git -C <main-root> branch -d`).
 - **The rule behind it:** anything that implicitly runs `git checkout <base>` breaks from a linked
   worktree — base is active in the main checkout. In the 8.x worktree paths always use
-  `git -C "$MAIN_ROOT" …` plus checkout-free remote ops.
+  `git -C <main-root> …` (the Phase 0.1 path, inserted literally) plus checkout-free remote ops.
 
 ### 8.3 — Cleanup (MAIN checkout)
 
@@ -696,17 +709,18 @@ clean up from the main root.
    ```bash
    rm -f <worktree-path>/.claude/.ship-pr-state.json
    ```
-   **Then** from the main root:
+   **Then** from the main root — `<main-root>` is the value Phase 0.1 resolved, **inserted
+   literally** into each line below (there is no shell variable to carry it here):
    ```bash
    # GUARD (hard blocking): the removal sequence runs ONLY when the session really left the
    # worktree (cwd == main checkout). `git worktree remove` does NOT refuse to delete the cwd
    # worktree — the guard MUST therefore skip the sequence, not merely warn. Otherwise it
    # destroys the session cwd (getcwd errors).
    if [ "$(git rev-parse --path-format=absolute --git-dir)" = "$(git rev-parse --path-format=absolute --git-common-dir)" ]; then
-     git -C "$MAIN_ROOT" pull --ff-only origin <base>
-     git -C "$MAIN_ROOT" worktree remove <worktree-path>
-     git -C "$MAIN_ROOT" branch -d <branch>
-     git -C "$MAIN_ROOT" worktree prune && git -C "$MAIN_ROOT" remote prune origin
+     git -C <main-root> pull --ff-only origin <base>
+     git -C <main-root> worktree remove <worktree-path>
+     git -C <main-root> branch -d <branch>
+     git -C <main-root> worktree prune && git -C <main-root> remote prune origin
    else
      echo "still in the worktree (ExitWorktree no-op OR error) → do NOT remove, fall back to step 3 (later)"
    fi

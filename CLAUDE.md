@@ -151,8 +151,9 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   deliberately partial, because an undecided capability stays a counted gap rather
   than a silent omission. `product.md` is tracked; `.shards/` and `reports/` are
   gitignored. It also wires a **second** `PostToolUse` hook (`st-`-prefixed,
-  `hooks/st-post-tooluse.py`, in the same `matcher: ""` group as compliance's `co-`
-  hook) that gates each PRD/plan write against the recorded stack: a fast inline
+  `hooks/st-post-tooluse.py`, in the catch-all `matcher: ""` group — compliance's `co-`
+  hook moved to `matcher: "Write|Edit|MultiEdit"`, so the two no longer share a group)
+  that gates each PRD/plan write against the recorded stack: a fast inline
   precheck plus a detached deep `scripts/validate.py` report (`reports/<stem>.md` +
   a `.stack.json` verdict). The gate **reads** `stack.json`, never writes it;
   `config.json`'s `validate_mode` sets `warn` | `block` per document type.
