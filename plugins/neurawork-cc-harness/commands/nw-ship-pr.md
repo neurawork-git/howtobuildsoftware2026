@@ -333,6 +333,22 @@ Present it to the user briefly and clearly, fed by the workflow result:
 5. **Review findings** — `findings`, **blocking first** (`blocking_count`). None → "no blockers".
 6. **Validation gate** (Phase 4.5) — `GREEN` | `RED (command X failed: …)` |
    `skipped (reason)`. **RED feeds the approval gate** (Phase 6): treat it like a blocking finding.
+7. **Open items** — everything the run surfaced that is unfinished and is **not** a review
+   finding. Name each one as `title` / `why` / `where` — the same three fields a finding carries,
+   so Phase 6.5 has one shape to write. Three sources, all settled by now:
+   - **Degraded validation** — the Phase 4.5 verdict when it is not `GREEN`: `SKIP` with its
+     reason (empty or absent `validate_commands`; a configured command that is not installed), or
+     `RED`. A `RED` item becomes real only once the user overrides it at Phase 6 — until then the
+     run may loop back and fix it — so list it here and confirm it in Phase 6.5.
+   - **Unverified claims** — anything asserted in points 1-4 that the run did not prove.
+     Concretely: the Phase 4 fallback path where the workflow returned `null`/empty and the merge
+     rests on an inline mini-review.
+   - **Known-broken state** — what the augmentation step below surfaces from session knowledge: a
+     contradiction between diff and intent, a workaround shipped knowingly, a subsystem the
+     session found broken and did not fix.
+
+   This is the **only** collection point for non-finding items. A later phase does not invent new
+   ones; it reports what was collected here.
 
 **Augment:** reconcile the workflow `explanation` with your own session knowledge and add to it
 (the main loop often knows the intent more precisely than the diff agent). **Mark contradictions
@@ -359,25 +375,52 @@ gate (often: merge, address later). No fix loop over small stuff.
 Runs **only** after the gate decision "approve & merge". After "fix findings first", "fix
 validation failures first", or "cancel" no merge follows — then this step is skipped.
 
-The **non-blocking** findings from the review (severity `nice-to-have`) PLUS every `blocking`
-finding the user consciously overrode at the gate ("merge anyway") are persisted here instead of
-being lost. **If there are 0 deferred findings → skip this step entirely** (no question, no
-write, no empty commit).
+What is persisted here are the **deferred items** — the union of four sources, all settled by
+this point in the run:
+
+1. review findings with severity `nice-to-have`;
+2. review findings with severity `blocking` that the user consciously overrode at the Phase 6
+   gate ("merge anyway");
+3. the **Phase 5 open items** (degraded validation, unverified claims, known-broken state), with
+   the `RED` gate item included only when the user chose "merge anyway";
+4. nothing else — Phase 7 and later cannot contribute, because they run after this step, and by
+   design they STOP rather than defer.
+
+**If there are 0 deferred items → skip this step entirely** (no question, no write, no empty
+commit).
+
+Every item has the same shape: `title` / `why` / `where`. **`where` is the file, path, or phase
+the item concerns** — `file:line` for a review finding, the config or code path for an open item
+that has one, and the surfacing phase (e.g. `Phase 4.5 validation gate`) when it has none. The
+rendered line below is unchanged; the live backlog already carries path-only and directory-only
+locations.
 
 **Why before the merge and not after:** the `backlog-file` sink writes relatively, i.e. into the
 working tree of the branch being shipped. After the merge the entry no longer reaches the PR and
 stays behind as an uncommitted change; from a worktree, `git worktree remove` (8.4) even deletes
-it without comment. Both inputs of this step — the `nice-to-have` findings from Phase 5 and the
-`blocking` findings overridden at the gate in Phase 6 — are already settled at this point, so
-nothing is missing here.
+it without comment. Every input of this step — the `nice-to-have` findings and the open items
+from Phase 5, the `blocking` findings overridden at the gate in Phase 6 — is already settled at
+this point, so nothing is missing here.
 
 Sink per config (`$SINK` from Phase 0.2):
-- **`backlog-file`** (default when `$BACKLOG` exists): append one line per finding to `$BACKLOG`
+- **`backlog-file`** (default when `$BACKLOG` exists): append one line per item to `$BACKLOG`
   (default `.claude/PRPs/feature-backlog.md`):
   ```
-  - [ ] **<finding.title>** — <finding.why>  (`<finding.file>:<finding.line>`, ship-pr deferred #<nr>)
+  - [ ] **<item.title>** — <item.why>  (`<item.where>`, ship-pr deferred #<nr>)
   ```
-  **De-dup**: a finding whose `title` is already in the backlog is NOT appended again.
+  **De-dup**: an item whose `title` is already in the backlog is NOT appended again.
+  **Recurring mechanical items must therefore use these fixed titles verbatim** — LLM-authored
+  prose for a condition that re-surfaces every run grows one near-duplicate per merge:
+  - `the /nw-ship-pr validation gate is not configured` — `validate_commands` empty or absent;
+  - `the /nw-ship-pr validation gate could not run` — commands configured, none installed;
+  - `PR #<nr> was merged with a failing <command>` — a `RED` gate overridden at the gate;
+  - `PR #<nr> was merged on a fallback mini-review` — the Phase 4 null/empty path.
+
+  The first two are repo conditions and carry no PR number, so the second run under the same
+  condition finds the title already present and appends nothing. The last two are per-PR by
+  construction. Free-prose titles stay correct for the session-knowledge items, where de-dup is
+  best-effort.
+
   Then commit + push so the entry travels with the PR. **Every command MUST be anchored to
   `<wt-root>`** (the shipped checkout from Phase 0.1, inserted literally — call-form rule from
   Phase 4). Two reasons, both binding: `$BACKLOG` comes from the config call in Phase 0.2 and is
@@ -397,11 +440,11 @@ Sink per config (`$SINK` from Phase 0.2):
   Commit trailer as in the ground rules. The push must be **through** before Phase 7 queries
   mergeability — otherwise Phase 7 judges a state GitHub does not know yet. (`mergeable` briefly
   drops to `UNKNOWN` after the push; the `UNKNOWN` branch in Phase 7 covers that.)
-- **`github-issues`**: per finding
-  `gh issue create --title "<finding.title>" --body "<why> · <file>:<line> · ship-pr #<nr>"`.
+- **`github-issues`**: per item
+  `gh issue create --title "<item.title>" --body "<item.why> · <item.where> · ship-pr #<nr>"`.
   Writes outward, so nothing to commit. In a repo without a GitHub remote → report quietly, do
   not crash.
-- **`none`**: write nothing, name the findings in the Phase 9 report only.
+- **`none`**: write nothing, name the items in the Phase 9 report only.
 
 **First run (no `.claude/ship-pr.local.md`):** ask once via `AskUserQuestion` for the sink AND the
 validation commands, then write the config into the **MAIN checkout** (survives
@@ -436,6 +479,19 @@ grep -qxF '.claude/.ship-pr-state.json' "$GI" 2>/dev/null || printf '.claude/.sh
 The first run belongs in this step: a sink choice that only ran after the merge could never serve
 the run that needs it. Therefore the capture exists **exactly once** in this file, here — no
 second block in Phase 8.x.
+
+**Two named exclusions** — deliberate, with their reasons, so Phase 9 can report them instead of
+inventing a sink for them:
+- **A deferred worktree removal is not captured.** It is local, ephemeral state decided *after*
+  this step (8.4), and the Phase 9 report already prints the exact removal commands — that is the
+  whole record needed. Writing it to a tracked backlog would put a machine-local chore into a
+  shared file.
+- **On "fix findings first" / "fix validation failures first" / "cancel" this step does not run**
+  (see the opening sentence), so nothing is written. Instead the run's report names the open
+  items and states plainly that they were **not** persisted; the branch and the PR still exist,
+  so the items are recoverable from the run that follows. Do **not** write to the sink on those
+  paths: the branch may be abandoned, and a commit + push there would carry a backlog entry into
+  a PR nobody merges.
 
 **Two deliberately unhandled points:**
 - If `$BACKLOG` has grown on `<base>` meanwhile, the merge in 8.1 can conflict on that file. That
@@ -656,12 +712,17 @@ rm -f <wt-root>/.claude/.ship-pr-state.json
 Report briefly:
 - PR #<nr> merged (merge SHA), `<base>` up to date, branch gone remote + local.
 - **Validation gate:** `GREEN` / `RED (overridden)` / `skipped (reason)`.
-- **Follow-ups:** N findings written to `<sink>`, for `backlog-file` with the commit that carried
-  them into the PR (or "none deferred").
 - **Worktree:** removed | later (commands above) | n/a (main checkout).
 - **Capture:** for a worktree session, the one-line 8.0 contract (redirected into the main
   checkout, nothing to flush).
-- open / deferred items.
+- **Open items:** the readback of Phase 6.5 — N items written to `<sink>` (for `backlog-file`,
+  with the commit that carried them into the PR), or "none deferred"; then the items **not**
+  persisted, by name and reason: a deferred worktree removal when there is one, and anything the
+  named exclusions covered. On a run that never reached Phase 6.5 (cancel / fix-first), name the
+  Phase 5 open items and state that they were not persisted.
+
+**This report names no open item that Phase 6.5 neither wrote nor explicitly excluded.** If one
+appears here, Phase 6.5's input set was incomplete — fix the input set, not the report.
 
 ---
 
