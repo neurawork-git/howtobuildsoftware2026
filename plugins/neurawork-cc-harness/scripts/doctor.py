@@ -49,6 +49,11 @@ EXIT = {"OK": 0, "NOTE": 0, "WARN": 1, "ERROR": 2}
 # Findings that belong to the repo rather than to any one engine.
 REPO = "-"
 
+# Findings about the INSTALLED PLUGIN itself, which is neither the repo nor an engine:
+# its own section, so "is what I am running current" reads separately from "is this
+# repo's install intact".
+PLUGIN = "plugin"
+
 # How long a fresh lock over an older completion stamp reads as "still running" rather
 # than "stalled". The gate hooks write the lock BEFORE spawning the child, and the child
 # stamps its completion only at the very end, so that state is ALSO what a perfectly
@@ -210,11 +215,26 @@ def check_environment(
 
     if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
         findings.append(Finding("OK", REPO, "credentials", "an API credential is set"))
+    elif (probe.claude_config_dir() / ".credentials.json").exists():
+        # Existence only — the contents are never read, parsed or rendered. The engines
+        # call the SDK, which spawns the bundled Claude Code CLI, which falls back to
+        # this subscription login: "cannot run" would be false here. But subscription
+        # credentials are not sanctioned for third-party plugin use (root CLAUDE.md, and
+        # the knowledge base's connection article on why the SDK forces an API key), so
+        # the fix line still asks for one.
+        findings.append(Finding(
+            "NOTE", REPO, "credentials",
+            "neither ANTHROPIC_API_KEY nor CLAUDE_CODE_OAUTH_TOKEN is set — the engines "
+            "will fall back to the bundled Claude Code CLI's subscription login, which is "
+            "not sanctioned for third-party plugin use",
+            "export ANTHROPIC_API_KEY=... (or CLAUDE_CODE_OAUTH_TOKEN)",
+        ))
     else:
         findings.append(Finding(
             "WARN", REPO, "credentials",
-            "neither ANTHROPIC_API_KEY nor CLAUDE_CODE_OAUTH_TOKEN is set — capture keeps "
-            "working, but compile / update / extract cannot run",
+            "neither ANTHROPIC_API_KEY nor CLAUDE_CODE_OAUTH_TOKEN is set and there is no "
+            "subscription login either — capture keeps working, but compile / update / "
+            "extract cannot run",
             "export ANTHROPIC_API_KEY=... (or CLAUDE_CODE_OAUTH_TOKEN)",
         ))
 
@@ -225,6 +245,86 @@ def check_environment(
             "and both compile gates are suppressed here by design, so the queue below is "
             "read from the main checkout, not from here",
         ))
+    return findings
+
+
+def check_plugin(plugin_root: Path) -> list[Finding]:
+    """Is the installed plugin the newest one available, and is it what is running?
+
+    Offline and read-only: every answer comes from JSON Claude Code already keeps on
+    disk, including a local clone of the marketplace. Reads outside the repo for the
+    only time — bounded to `${CLAUDE_CONFIG_DIR:-~/.claude}/plugins/`.
+    """
+    state = probe.probe_plugin(plugin_root)
+
+    if state.plugins_dir is None:
+        return [Finding(
+            "NOTE", PLUGIN, "currency",
+            f"plugin currency was not inspectable ({'; '.join(state.notes)}) — this run "
+            "says nothing about whether the installed plugin is the newest one",
+        )]
+
+    findings: list[Finding] = []
+    verdict = probe.compare(state.installed_version, state.available_version)
+    if verdict == "same":
+        findings.append(Finding(
+            "OK", PLUGIN, "currency",
+            f"installed {state.installed_version} matches the {state.marketplace} "
+            "marketplace",
+        ))
+    elif verdict == "behind":
+        findings.append(Finding(
+            "WARN", PLUGIN, "currency",
+            f"installed {state.installed_version} is behind the {state.marketplace} "
+            f"marketplace's {state.available_version} — every fix shipped since then is "
+            "stranded in the clone",
+            f"/plugin update {probe.PLUGIN_NAME}, then /reload-plugins",
+        ))
+    elif verdict == "ahead":
+        findings.append(Finding(
+            "NOTE", PLUGIN, "currency",
+            f"installed {state.installed_version} is AHEAD of the {state.marketplace} "
+            f"marketplace's {state.available_version} — normal in the harness's own repo, "
+            "where the source is bumped before the clone is refreshed",
+        ))
+    else:
+        detail = "; ".join(state.notes) or (
+            f"installed {state.installed_version!r} and available "
+            f"{state.available_version!r} are not comparable"
+        )
+        findings.append(Finding(
+            "NOTE", PLUGIN, "currency",
+            f"cannot tell whether the plugin is current ({detail})",
+        ))
+
+    running = Path(plugin_root).resolve()
+    if state.install_path is not None and running != state.install_path.resolve():
+        findings.append(Finding(
+            "NOTE", PLUGIN, "running",
+            f"this doctor ran from {running} (version {state.running_version}), not from "
+            f"the installed {state.install_path} (version {state.installed_version}) — a "
+            "session started before an update keeps running the older cache",
+            "restart the session, or /reload-plugins",
+        ))
+
+    if state.other_cached:
+        findings.append(Finding(
+            "NOTE", PLUGIN, "cache",
+            f"{plural(len(state.other_cached), 'other version')} left in the plugin cache: "
+            f"{', '.join(state.other_cached)} — inert, listed so the disk use is not a "
+            "mystery",
+        ))
+
+    if verdict == "behind":
+        drifted = probe.engine_version_drift(plugin_root, state)
+        if drifted:
+            findings.append(Finding(
+                "NOTE", PLUGIN, "reinstall",
+                "re-running an install skill now would still install the running "
+                f"plugin's older payload ({', '.join(drifted)}) — update the plugin first, "
+                "then re-install",
+                f"/plugin update {probe.PLUGIN_NAME}, /reload-plugins, then the install skill",
+            ))
     return findings
 
 
@@ -482,6 +582,23 @@ def check_queue(
             f"{target / queue.lock}",
         )]
 
+    # A completed run writes its ingest state BEFORE it stamps (update.py records the log
+    # in state.json inside the per-log loop, and stamps only after the loop). So a stamp
+    # with no state.json at all cannot have come from a run that did work — which makes
+    # every stamp-based verdict below argue from a stamp that proves nothing. Checked
+    # after the lock branches: a run still in flight has not written state yet either,
+    # and "a run is stuck right now" is the more actionable of the two.
+    if not isinstance(state, dict) and last_ts is not None:
+        return [Finding(
+            "WARN", engine.name, "queue",
+            f"{detail}; {queue.stamp} is stamped ({stamp_time(last_ts)}) but "
+            f"{queue.state} does not exist — a completed run writes its ingest state "
+            "before it stamps, so either the engine failed before ingesting anything "
+            "(a detached hook discards the traceback) or the stamp came from seed.py, "
+            "which stamps without ingesting",
+            f"run it in the foreground and read the error: {command}",
+        )]
+
     # The gate's OWN first input, computed the way the hooks compute it: newest daily
     # mtime vs the completion stamp (session-start.py:87, cl-session-start.py:57). It is
     # NOT the same question as `pending`, which asks whether the work was done. When a run
@@ -570,6 +687,7 @@ def run_checks(repo_root: Path, plugin_root: Path, now: float) -> list[Finding]:
     queue_root = main_checkout_root(repo_root) if worktree else repo_root
 
     findings = check_environment(repo_root, settings_error, worktree)
+    findings.extend(check_plugin(plugin_root))
     installs = {i.engine: i for i in probe.discover(repo_root, settings)}
 
     for name, engine in probe.ENGINES.items():

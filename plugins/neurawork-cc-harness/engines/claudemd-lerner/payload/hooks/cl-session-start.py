@@ -29,6 +29,7 @@ from config import (
     DAILY_DIR,
     LAST_UPDATE_FILE,
     LOCK_FILE,
+    SCRIPTS_DIR,
     load_cfg,
 )
 from utils import should_update
@@ -61,15 +62,31 @@ def maybe_spawn_update(age_hours: float) -> None:
         return
 
     cmd = ["uv", "run", "--directory", str(KDIR), "python", "scripts/update.py", "--all"]
+    # The child is detached and nobody waits for it, so DEVNULL made every failure —
+    # including a crash at import, before argparse — indistinguishable from a clean run.
+    # Append to a log beside the scripts (gitignored via `scripts/*.log`, like flush.log).
+    log = None
+    try:
+        SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+        # The handle must outlive this block — Popen dups it for the detached child
+        # — and the OSError fallback below rules out a `with`.
+        log = open(SCRIPTS_DIR / "update.log", "a", encoding="utf-8")  # noqa: SIM115
+    except OSError:
+        log = None  # logging must never be the reason the gate does not fire
     try:
         subprocess.Popen(
-            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            cmd,
+            stdout=log or subprocess.DEVNULL,
+            stderr=subprocess.STDOUT if log else subprocess.DEVNULL,
             env=child_env(), start_new_session=True,
         )
         LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
         LOCK_FILE.write_text(str(now), encoding="utf-8")
     except OSError:
         pass
+    finally:
+        if log is not None:
+            log.close()  # the child keeps its own duplicated file descriptor
 
 
 def main() -> None:

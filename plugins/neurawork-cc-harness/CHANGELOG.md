@@ -15,6 +15,44 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.6.0] — 2026-08-27
+
+### Fixed
+
+- **`claudemd-lerner` never ran.** `payload/scripts/update.py` imported `_shared.repo_guard`
+  with no `sys.path` bootstrap — the only payload script missing the line its siblings carry —
+  so every invocation died at import with `ModuleNotFoundError: No module named '_shared'`,
+  before `argparse` and before `main()`. The `SessionStart` hook spawns it detached with both
+  streams at `/dev/null`, so the crash produced no `CLAUDE.md` updates and no trace.
+  `engines/claudemd-lerner/VERSION` goes `4` → `5`, so existing installs are nudged to
+  re-install.
+- **A failed update advanced the gate anyway.** `update.py` stamped `last-update.json`
+  unconditionally after its per-log loop, shutting the 6-hour `SessionStart` gate over work
+  that never happened. It now stamps only when at least one log actually ingested.
+
+### Added
+
+- **The update child's output is kept.** `hooks/cl-session-start.py` appends the detached
+  run's stdout and stderr to `scripts/update.log` (already gitignored via `scripts/*.log`)
+  instead of discarding both. A log that cannot be opened falls back to `/dev/null` — the
+  gate never fails because logging failed.
+- **`/nw-doctor` answers whether the plugin is current.** A new `plugin` section compares the
+  installed version against the marketplace clone already on disk (offline, read-only, no
+  `git` process): WARN when behind with the `/plugin update` + `/reload-plugins` fix, NOTE
+  when ahead or unreadable, plus notes for a running plugin root that differs from the
+  installed path, leftover cache versions, and — only when behind and an engine `VERSION`
+  differs — that re-installing now would still install the older engine.
+- **`/nw-doctor` names an engine that never ran.** A completion stamp with no ingest state
+  and pending logs is now its own WARN instead of a benign "the gate reopens at X".
+
+### Changed
+
+- **The credentials finding stopped asserting something false.** With no API key but a
+  subscription login present it is a NOTE saying the engines fall back to the bundled Claude
+  Code CLI (still recommending an API key, which is what third-party plugin use is sanctioned
+  for); with no auth at all it stays a WARN. The credentials file is checked for existence
+  only — never read, parsed or rendered.
+
 ## [0.5.1] — 2026-08-27
 
 ### Fixed

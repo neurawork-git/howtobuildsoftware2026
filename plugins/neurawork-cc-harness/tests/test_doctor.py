@@ -267,6 +267,9 @@ class QueueTests(DoctorTestCase):
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
         daily(target, "2026-08-20.md", mtime=self.now - 3600)
+        # An earlier log really was ingested, so the stamp is trustworthy and the gate
+        # condition is what is under test here — not "this engine never ran".
+        state(target, "claudemd-lerner", {"2026-07-01.md": {"hash": "cafe"}})
         stamp(target, "claudemd-lerner", self.now - 60 * DAY)  # no lock at all
         finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
         self.assertEqual(finding.severity, "WARN")
@@ -282,6 +285,7 @@ class QueueTests(DoctorTestCase):
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
         daily(target, "2026-08-20.md", mtime=self.now - 7 * DAY)
+        state(target, "claudemd-lerner", {"2026-07-01.md": {"hash": "cafe"}})
         stamp(target, "claudemd-lerner", self.now - 60)  # stamped AFTER the newest log
         finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
         self.assertEqual(finding.severity, "WARN")
