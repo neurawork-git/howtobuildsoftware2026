@@ -93,7 +93,7 @@ class UpdateRuntimeTests(unittest.TestCase):
         lerner = repo / "lerner"
         (lerner / "scripts").mkdir(parents=True)
         (lerner / "daily").mkdir()
-        (repo / ".git").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
 
         for name in ("update.py", "config.py", "utils.py", "markers.py"):
             shutil.copy2(PAYLOAD / "scripts" / name, lerner / "scripts" / name)
@@ -207,7 +207,9 @@ class UpdateRuntimeTests(unittest.TestCase):
 
     def test_the_hook_survives_a_log_that_cannot_be_opened(self) -> None:
         # `update.log` occupied by a DIRECTORY: the open fails. Logging is an
-        # observability nicety — it must never be the reason the gate stops firing.
+        # observability nicety — it must never be the reason the gate stops firing, so
+        # the proof is that the spawn still happened, not merely that the hook exited 0
+        # (`main()` swallows every exception, so the exit code alone proves nothing).
         with tempfile.TemporaryDirectory() as tmp:
             lerner = self._stage(Path(tmp), STUB_OK)
             (lerner / "hooks").mkdir()
@@ -215,13 +217,29 @@ class UpdateRuntimeTests(unittest.TestCase):
                          lerner / "hooks" / "cl-session-start.py")
             (lerner / "scripts" / "update.log").mkdir()
 
-            env = {**os.environ, "LERNER_ROOT": str(lerner)}
+            # A stub `uv` so the spawn is observable without a real detached run
+            # building a venv in a temp dir that is about to be deleted.
+            bin_dir = Path(tmp) / "bin"
+            bin_dir.mkdir()
+            stub_uv = bin_dir / "uv"
+            stub_uv.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            stub_uv.chmod(0o755)
+
+            env = {
+                **os.environ,
+                "LERNER_ROOT": str(lerner),
+                "PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}",
+            }
             result = subprocess.run(
                 [sys.executable, "hooks/cl-session-start.py"],
                 cwd=lerner, capture_output=True, text=True, env=env, timeout=60,
                 input="{}", check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(
+                (lerner / "scripts" / "cl-update.lock").exists(),
+                "the gate did not fire — an unopenable log must not stop the spawn",
+            )
 
 
 if __name__ == "__main__":

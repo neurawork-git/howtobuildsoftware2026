@@ -30,6 +30,7 @@ they demonstrably do.
 | Command or check | Result | Evidence |
 | --- | --- | --- |
 | `cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s claudemd-lerner/tests` | passed | `Ran 37 tests ... OK` (was 30; 7 new in `test_update_runtime.py`) |
+| Correction pass: the repaired hook test against a hook with the `OSError` fallback deleted | failed as required | `AssertionError: ... the gate did not fire — an unopenable log must not stop the spawn`. Before the repair the same mutation left the test green. |
 | `cd plugins/neurawork-cc-harness && python3 -m unittest discover -s tests` | passed | `Ran 102 tests ... OK` (was 78; 24 new in `test_doctor_plugin.py`) |
 | `... discover -s _shared/tests` | passed | `Ran 56 tests ... OK` |
 | `... discover -s knowledge-compiler/tests` | passed | `Ran 36 tests ... OK` |
@@ -72,13 +73,20 @@ they demonstrably do.
   `/plugin update` between planning and implementation, so the machine now reads
   `0.5.1 == 0.5.1`. That path was proved against a scratch copy of the real registry rather
   than by mutating the operator's own state, which the doctor's contract forbids.
+- **`uvx ruff check` is deliberately not a gate in this repo.** `.claude/ship-pr.local.md`
+  records why: the tree carries ~145 pre-existing findings, so it would be a permanent false
+  RED. The `/nw-ship-pr` validation gate ran the six `unittest` suites from the `CLAUDE.md`
+  rules block instead, and came back GREEN.
 - **The real `update.py` was not run against this repo's six pending logs**, per the plan's
   Agent Notes: it costs money and rewrites tracked docs. That is the operator's call once
   this ships.
 
 ## Review Dispositions
 
-None.
+| ID | Disposition | Reason and evidence | Tracking |
+| --- | --- | --- | --- |
+| `R1` | `FIXED` | `claudemd-lerner/VERSION` still read `4` while the engine shipped `5`, though the self-host code is byte-identical to the payload — the doctor would have printed a false `WARN version — installed 4 is behind the shipped 5` in exactly the report this change makes trustworthy. Verified by reading both files (`4` vs `5`); bumped to `5`. | `Not applicable` |
+| `R2` | `FIXED` | `test_the_hook_survives_a_log_that_cannot_be_opened` was vacuous: `_stage` created `.git` as an empty directory, and `gitctx.repo_root()` shells out to `git rev-parse --show-toplevel`, so the hook's gate returned before `maybe_spawn_update` ever ran — and `main()`'s `except Exception: pass` made `returncode == 0` unconditional. The stage now runs `git init -q`, the spawn is observed through a stub `uv` on `PATH`, and the assertion is that `cl-update.lock` exists. Proved by deleting the `OSError` fallback from the hook: the test now fails with "the gate did not fire", where before it passed. | `Not applicable` |
 
 ## Completion Gate
 
@@ -96,8 +104,8 @@ plugin `0.5.1` → `0.6.0`, CHANGELOG). Nothing else.
 
 ## Delivery
 
-- **Commits:** `Pending — /nw-ship-pr`
-- **Pull Request:** `Pending — /nw-ship-pr`
+- **Commits:** `4cd2d36` fix(lerner,doctor): revive the learner and make the doctor say what is dead; plus the R1/R2 correction commit
+- **Pull Request:** `https://github.com/neurawork-git/howtobuildsoftware2026/pull/45`
 - **Base / Head:** `main <- feature/doctor-currency`
 - **Source PRD:** `None`
 - **Tracked follow-ups:** `None`
