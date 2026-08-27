@@ -100,8 +100,12 @@ def _stack_state(root: Path, cdir: str | None) -> dict:
         return {
             "exists": True,
             "total": len(choices),
+            # `scoped_from`, not `applicable`: the scaffold in stack.py writes
+            # `applicable: True` for every entry before the scope pass has ever run, so
+            # an `applicable is not None` count reports "fully scoped" on a repo where
+            # nothing was scoped. `scoped_from` is stamped by the pass itself.
             "scoped": sum(1 for e in choices.values()
-                          if isinstance(e, dict) and e.get("applicable") is not None),
+                          if isinstance(e, dict) and e.get("scoped_from")),
             "chosen": sum(1 for e in choices.values()
                           if isinstance(e, dict) and e.get("chosen")),
         }

@@ -209,9 +209,11 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(self._install(repo).returncode, 0)
             (repo / CDIR / "catalog" / "stack.json").write_text(
                 json.dumps({"choices": {
-                    "a": {"applicable": True, "chosen": "Postgres"},
-                    "b": {"applicable": True, "chosen": None},
-                    "c": {"applicable": None, "chosen": None},
+                    "a": {"applicable": True, "scoped_from": "h1", "chosen": "Postgres"},
+                    "b": {"applicable": True, "scoped_from": "h1", "chosen": None},
+                    # scaffolded but never scoped: stack.py defaults `applicable` to True,
+                    # so only `scoped_from` distinguishes this from a scoped entry
+                    "c": {"applicable": True, "chosen": None},
                 }}), encoding="utf-8")
 
             res = subprocess.run([sys.executable, str(RECON)], cwd=repo,

@@ -27,7 +27,7 @@ CHANGELOG section.
 
 | Command or check | Result | Evidence |
 | --- | --- | --- |
-| `cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s stack-compiler/tests` | passed | Ran 198 tests — OK (includes the new 9-case `test_install_recon.py`) |
+| `cd plugins/neurawork-cc-harness/engines && python3 -m unittest discover -s stack-compiler/tests` | passed | Ran 198 tests — OK (includes the new 9-case `test_install_recon.py`); re-run green after the R1 fix |
 | `… -s _shared/tests` | passed | Ran 56 tests — OK (new `test_stale_stack_compiler_detected`, `test_manifest` on `0.5.0`) |
 | `… -s knowledge-compiler/tests` | passed | Ran 36 tests — OK |
 | `… -s claudemd-lerner/tests` | passed | Ran 30 tests — OK |
@@ -76,7 +76,11 @@ covered by the temp-repo suite and by the self-host migration above.
 
 ## Review Dispositions
 
-None.
+| ID | Disposition | Reason and evidence | Tracking |
+| --- | --- | --- | --- |
+| `R1` recon's `scoped` counter is always equal to `total` (nice-to-have, correctness) | `FIXED` | Confirmed against `compliance-base/scripts/stack.py:202`: `scaffold` writes `"applicable": prev.get("applicable", True)` for every entry, so an `applicable is not None` count reports "fully scoped" on a repo where the scope pass never ran — exactly the field SKILL.md Phase A tells the install skill to read. `_stack_state` now counts `scoped_from`, the field the pass itself stamps (the `chosen` counter already used that pattern), and `test_recon_finds_the_install_and_the_sibling` gained a scaffolded-but-unscoped fixture entry. Readback on this repo: 68/68 `scoped_from` present, so the real value is unchanged and correct. | Not applicable |
+
+`blocking_count: 0`, `total_findings: 1`.
 
 ## Completion Gate
 
