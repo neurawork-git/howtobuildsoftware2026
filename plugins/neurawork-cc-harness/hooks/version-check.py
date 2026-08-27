@@ -9,89 +9,37 @@ shipped VERSION (<plugin>/engines/<engine>/VERSION). When an install is behind, 
 prints a SessionStart additionalContext note telling the user to re-run the
 installer (ADOPT) to propagate the upgrade.
 
+The engine registry and the discovery/comparison primitives live in
+``scripts/harness_probe.py`` — one map read by this nudge and by ``scripts/doctor.py``.
+A second copy is what let this hook's own list fall a whole engine behind reality.
+
 Stdlib-only, runs under system python3 (no uv). Silent no-op when nothing is stale
 or when the repo has no harness install. Never raises — a hook crash must not break
-session start.
+session start, so even the probe import degrades to a silent no-op.
 """
 
 from __future__ import annotations
 
 import json
 import os
-import re
+import sys
 from pathlib import Path
 
-# engine name -> a unique substring of that engine's installed hook command in
-# .claude/settings.json. Used to locate where each engine was installed (the dir
-# is user-configurable, so we read it back from the command line rather than
-# assuming the default dir name).
-#
-# Three entries, not four: `stack-compiler` ships no install.py (PRD phase 5), so no repo
-# can install it from the marketplace and there is no installer to re-run when a version
-# looks stale — a nudge would name a command that does not exist. The host repo's own
-# stack-base/ was put in place by hand. It joins this map when phase 5 ships its installer.
-ENGINES = {
-    "knowledge-compiler": "hooks/session-start.py",
-    "claudemd-lerner": "hooks/cl-session-start.py",
-    "compliance-compiler": "hooks/co-post-tooluse.py",
-}
-
-_DIR_RE = re.compile(r"\$CLAUDE_PROJECT_DIR/([^\"'\s]+)")
-
-
-def installed_dir_for(settings: dict, marker: str) -> str | None:
-    """Return the install dir segment for the hook command containing `marker`."""
-    hooks_obj = settings.get("hooks")
-    if not isinstance(hooks_obj, dict):
-        return None
-    for groups in hooks_obj.values():
-        if not isinstance(groups, list):
-            continue
-        for group in groups:
-            for hook in group.get("hooks", []):
-                command = str(hook.get("command", ""))
-                if marker in command:
-                    m = _DIR_RE.search(command)
-                    if m:
-                        return m.group(1)
-    return None
-
-
-def read_version(path: Path) -> str | None:
-    """Return the stripped VERSION file content, or None (never raises)."""
-    try:
-        return path.read_text(encoding="utf-8").strip()
-    except OSError:
-        return None
-
-
-def is_behind(installed: str, shipped: str) -> bool:
-    """True if the installed version is older than the shipped version."""
-    try:
-        return int(installed) < int(shipped)
-    except ValueError:
-        return installed != shipped
-
-
-def find_stale(repo_root: Path, plugin_root: Path, settings: dict) -> list[dict]:
-    """List engines whose installed VERSION is behind the shipped VERSION."""
-    stale = []
-    for engine, marker in ENGINES.items():
-        dirname = installed_dir_for(settings, marker)
-        if not dirname:
-            continue
-        installed = read_version(repo_root / dirname / "VERSION")
-        shipped = read_version(plugin_root / "engines" / engine / "VERSION")
-        if installed is None or shipped is None:
-            continue
-        if is_behind(installed, shipped):
-            stale.append({
-                "engine": engine,
-                "dir": dirname,
-                "installed": installed,
-                "shipped": shipped,
-            })
-    return stale
+# File-relative, NOT CLAUDE_PLUGIN_ROOT: the probe is the module sitting next to this
+# hook, so it is found from __file__ even when the env var is absent or points elsewhere.
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    # The three re-exports are this module's public surface: engines/_shared/tests/
+    # test_version_check.py calls them here, and its passing unmodified is the proof
+    # that lifting them into the probe changed no behaviour.
+    from harness_probe import (
+        find_stale,
+        installed_dir_for,
+        is_behind,
+        read_version,
+    )
+except Exception:  # noqa: BLE001 — a missing probe must not break session start
+    find_stale = installed_dir_for = is_behind = read_version = None  # type: ignore[assignment]
 
 
 def _build_note(stale: list[dict]) -> str:
@@ -111,7 +59,7 @@ def _build_note(stale: list[dict]) -> str:
 def main() -> None:
     try:
         project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
-        if not project_dir:
+        if not project_dir or find_stale is None:
             return
         repo_root = Path(project_dir)
         plugin_root = Path(

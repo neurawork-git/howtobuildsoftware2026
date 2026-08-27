@@ -25,6 +25,7 @@ COMMANDS = PLUGIN_ROOT / "commands"
 WORKFLOWS = PLUGIN_ROOT / "workflows"
 
 SHIP_PR = COMMANDS / "nw-ship-pr.md"
+DOCTOR_COMMAND = COMMANDS / "nw-doctor.md"
 WORKTREE_SKILL = SKILLS / "nw-worktree" / "SKILL.md"
 RULES_SKILL = SKILLS / "nw-rules-init" / "SKILL.md"
 REVIEW_WORKFLOW = WORKFLOWS / "nw-ship-pr-review.js"
@@ -96,6 +97,48 @@ class SkillFrontmatterTests(unittest.TestCase):
                     frontmatter(command).get("description"),
                     "a command without a description is invisible in the slash-command list",
                 )
+
+
+class DoctorCommandTests(unittest.TestCase):
+    """The doctor's entry point is the property whose loss is silent: a `uv run`
+    invocation still works on a healthy repo and fails on exactly the broken ones the
+    command exists to diagnose."""
+
+    def fences(self) -> list[str]:
+        text = DOCTOR_COMMAND.read_text(encoding="utf-8")
+        # The fence is indented inside a numbered step, so it never starts at column 0.
+        return re.findall(r"```[a-z]*\n(.*?)\n *```", text, re.DOTALL)
+
+    def test_it_runs_the_plugin_side_script(self) -> None:
+        self.assertTrue(DOCTOR_COMMAND.is_file(), "commands/nw-doctor.md is missing")
+        self.assertIn(
+            '"${CLAUDE_PLUGIN_ROOT}/scripts/doctor.py"',
+            DOCTOR_COMMAND.read_text(encoding="utf-8"),
+            "only the plugin holds the shipped VERSIONs the doctor compares against",
+        )
+        self.assertTrue((PLUGIN_ROOT / "scripts" / "doctor.py").is_file())
+
+    def test_no_command_it_runs_needs_uv(self) -> None:
+        fences = self.fences()
+        self.assertTrue(fences, "the command file must show the invocation in a fence")
+        for fence in fences:
+            with self.subTest(fence=fence[:40]):
+                self.assertNotIn(
+                    "uv run",
+                    fence,
+                    "a missing uv and an absent .venv are states the doctor exists to "
+                    "report; a `uv run` entry point cannot start in either of them",
+                )
+                self.assertIn("python3", fence)
+
+    def test_it_states_that_it_only_reads(self) -> None:
+        text = DOCTOR_COMMAND.read_text(encoding="utf-8")
+        self.assertIn(
+            "never removes a lock",
+            text,
+            "the read-only contract has to be in the prose the model follows, or the "
+            "command starts 'helpfully' clearing locks it was asked to report",
+        )
 
 
 class WorkflowResolutionTests(unittest.TestCase):

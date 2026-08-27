@@ -177,6 +177,44 @@ written by another tool (e.g. `coding-suite:coding-discipline-init`) is protecte
 
 ---
 
+## When the harness seems quiet — run the doctor first
+
+```text
+/neurawork-cc-harness:nw-doctor              # [--json] for the machine-readable form
+```
+
+Installs nothing, writes nothing. The engines run as **detached, fire-and-forget hooks
+whose output goes to `DEVNULL`**, so a compile or update that dies leaves no trace at all:
+daily logs keep accumulating while the gate stays shut behind a lock nobody cleared. The
+doctor is the signal that state has none of its own. For every engine it reports:
+
+- **discovery** — the install dir, found by hook marker *and* by directory signature. An
+  install dir no hook names never fires; a hook naming a missing dir errors at every
+  session start. Both are ERRORs, both name the install skill that fixes them.
+- **version and `_shared/` drift** — installed vs shipped, including *ahead*, plus a
+  byte comparison of the copied shared helpers against the plugin's.
+- **integrity** — every payload file, `config.json`, `VERSION`, `.gitignore`, `.venv`.
+- **queue** — pending daily logs (absent from `state.json`, or edited since), the age of
+  the last successful run, and the lock. A fresh lock over an older completion stamp is
+  the stall: it names when the run was spawned, when the gate reopens, and the foreground
+  command that shows the real error.
+- **environment** — `uv` on `PATH`, python ≥ 3.12, an API credential, and whether this
+  checkout is a worktree (where both gates are suppressed by design, so queue lag there
+  is a note, not a fault).
+
+It runs under **system `python3`, not `uv run`** — a missing `uv` or an absent `.venv` is
+one of the states it exists to report — and needs no API key. Exit code: `0` clean, `1`
+warnings, `2` errors, so it also works in a script:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.py" --json
+```
+
+Every finding carries a fix command; the doctor never runs one. It removes no lock, spawns
+no compile, and leaves the repo byte-identical.
+
+---
+
 ## Local development (working ON the plugin)
 
 If you are developing the plugin from a checkout of *this* repo, you do not need a
