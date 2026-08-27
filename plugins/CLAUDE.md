@@ -17,8 +17,16 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 - `commands/` — slash commands `kc-compile.md`, `cl-update.md` (manual compile /
   update; bypass the SessionStart 6-hour gate), `co-extract.md`,
   `co-capabilities.md`, `co-validate.md` (rebuild the constraint catalog / derive the
-  capability layer + stack scaffold / validate a PRP plan), and `nw-ship-pr.md`
-  (the PR lifecycle; a workflow surface, not an install).
+  capability layer + stack scaffold / validate a PRP plan), `nw-ship-pr.md`
+  (the PR lifecycle; a workflow surface, not an install), and `nw-doctor.md`
+  (the read-only harness health report — see `scripts/` below).
+- `scripts/` — plugin-side diagnostics that install **nothing**: stdlib-only, run under
+  system `python3` (no `uv`, no venv), never imported by payload code.
+  `harness_probe.py` holds the engine registry and install discovery; `doctor.py` is the
+  read-only health report behind `/nw-doctor`. They live here and not in an engine
+  because only the plugin has `CLAUDE_PLUGIN_ROOT` and the shipped `VERSION`s to compare
+  against — and because half the states the doctor reports (`uv` missing, no `.venv`,
+  `uv sync` never run) would stop a `uv run` entry point from starting at all.
 - `workflows/` — `nw-ship-pr-review.js`, the review fan-out `/nw-ship-pr` triggers. The
   runtime auto-discovers `workflows/*.js` and namespaces them by plugin name, so it
   resolves as `neurawork-cc-harness:nw-ship-pr-review`; the manifest needs no entry.
@@ -52,9 +60,9 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   into every target. Don't fork per-engine copies.
 - **A workflow skill has no engine — that is intended, not an omission.** `nw-worktree`
   and `nw-ship-pr` copy nothing into a target repo, so they have no `install.py`, no
-  `recon.py`, no `payload/`, no `VERSION`, and no entry in `hooks/version-check.py`'s
-  `ENGINES` map (which keys off installed hook commands — a component that installs no
-  hook can never appear there). Don't "fix" the missing engine. Their only per-repo state
+  `recon.py`, no `payload/`, no `VERSION`, and no entry in `scripts/harness_probe.py`'s
+  `ENGINES` registry (a component that installs nothing has no install to discover or
+  version). Don't "fix" the missing engine. Their only per-repo state
   is a lazily written `.claude/*.local.md` config, shared by path and key with a
   `coding-suite` install so the two never keep two drifting profiles.
 - **Install modes:** `install.py` detects **ADOPT** (existing install — refresh code,

@@ -63,7 +63,11 @@ uv run --directory stack-base python scripts/scope.py           # which capabili
 uv run --directory stack-base python scripts/rank.py            # order each one's components
 uv run --directory stack-base python scripts/selection.py       # render the selection sheet
 uv run --directory stack-base python scripts/selection.py --apply <sheet>  # record the choices
+python3 plugins/neurawork-cc-harness/scripts/doctor.py          # read-only harness health report
 ```
+
+The doctor is the one entry point that is **not** `uv run`: a missing `uv` or an absent
+`.venv` is a state it exists to report, so it runs under system `python3` from the plugin.
 
 The first two run automatically via the `SessionStart` / `PreCompact` / `SessionEnd`
 hooks in `.claude/settings.json` (a 6-hour `SessionStart` gate triggers compile/update).
@@ -78,8 +82,10 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
 `validate_frameworks` config key scopes which frameworks plans are checked against
 (default: all extracted). Slash commands:
 `/neurawork-cc-harness:kc-compile`, `/neurawork-cc-harness:cl-update`,
-`/neurawork-cc-harness:co-extract`, `/neurawork-cc-harness:co-capabilities`, and
-`/neurawork-cc-harness:co-validate`.
+`/neurawork-cc-harness:co-extract`, `/neurawork-cc-harness:co-capabilities`,
+`/neurawork-cc-harness:co-validate`, and `/neurawork-cc-harness:nw-doctor` — the
+read-only health report to run **first** whenever the harness seems quiet (nothing
+compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
 
 ## High-level architecture
 
@@ -98,6 +104,10 @@ its catalog ships prebuilt with the install and is rebuilt on demand via `co-ext
   BEGIN/END marker comments, its test commands in one fenced block that `/nw-ship-pr`'s
   validation gate and the compliance plan precheck both read); `tests/` pins their guard
   invariants, including the block's 1,500-char budget.
+  `scripts/` is a fourth surface that installs nothing either: plugin-side, stdlib-only,
+  system-`python3` diagnostics. `harness_probe.py` owns the engine registry and install
+  discovery (by hook marker *and* by directory signature — their disagreement is the
+  finding), read by both `hooks/version-check.py` and `scripts/doctor.py` (`/nw-doctor`).
   Marker blocks are **learner-protected**: `claudemd-lerner` snapshots every
   `owner:name` marker span before its SDK run and restores it byte-for-byte afterwards
   (`payload/scripts/markers.py`), so no tool-owned block is silently reworded.

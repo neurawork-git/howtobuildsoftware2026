@@ -49,7 +49,7 @@ seed and wires its own hooks — independent, install one or all three):
 
 The first five commands belong to the install skills: they act on what an install put into
 the repo, and otherwise run on their own hooks (a 6-hour `SessionStart` gate for the first
-two, `PostToolUse` for compliance). The last two are **workflow surfaces** — prompt-only
+two, `PostToolUse` for compliance). The last three are **workflow surfaces** — prompt-only
 procedures that install nothing and work in any git repo, with or without an install.
 
 | Command | What it does |
@@ -61,10 +61,18 @@ procedures that install nothing and work in any git repo, with or without an ins
 | `/neurawork-cc-harness:co-validate <plan>` | Validate a PRP plan against the catalog (deep gap report). |
 | `/nw-worktree <slug>` | Create a sibling (Hand) git worktree on a new branch and switch the session into it. |
 | `/nw-ship-pr [pr]` | PR lifecycle in a fixed order: commit → push → PR → parallel review → validation gate → explanation → **approval gate** → follow-up capture → merge → branch/worktree cleanup. |
+| `/nw-doctor [--json]` | Read-only health report: which engines are installed and wired, version and `_shared/` drift, file integrity, and whether each queue is draining. |
+
+**If the harness seems quiet — nothing compiled, `CLAUDE.md` stopped moving, a hook you are
+unsure ever fired — run `/nw-doctor` first.** The engines run as detached hooks whose output
+goes nowhere, so a compile that dies leaves no trace; the doctor is what surfaces it. It
+only reads: no lock is removed, no compile is spawned, nothing is written. It needs no API
+key and no `uv` — it runs under system `python3` precisely so it still works when the thing
+it diagnoses is what is broken. Exit code: `0` clean, `1` warnings, `2` errors.
 
 The `co-extract` / `co-capabilities` / `co-validate` (and the compile/update) LLM paths need
-`ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`; install, scaffolding, and the
-inline plan precheck run without it.
+`ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`; install, scaffolding, the inline plan
+precheck, and `/nw-doctor` run without it.
 
 For the full install/upgrade flow (requirements, recon, seeding), see the
 [install & upgrade guide](docs/INSTALL.md), and for how the harness is built,
