@@ -67,8 +67,8 @@ two of the four installs are inert: the compliance and stack `PostToolUse` gates
 writes — and the `kb-researcher` spawn directive matches nothing, so the agent is never
 spawned automatically.
 
-**2. The `gh` CLI**, installed and authenticated. `/nw-ship-pr` calls it 18 times for
-default-branch detection, PR create/view/checks, and merge. It uses the CLI directly —
+**2. The `gh` CLI**, installed and authenticated. `/nw-ship-pr` uses it throughout for
+default-branch detection, PR create/view/checks, and merge. It calls the CLI directly —
 not a GitHub plugin, not GitHub MCP.
 
 **API key.** The LLM paths — `kc-compile`, `cl-update`, `co-extract`, `co-capabilities`,
