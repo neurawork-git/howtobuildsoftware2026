@@ -122,6 +122,36 @@ def repo_root_from(start: Path) -> Path | None:
     return None
 
 
+def main_checkout_root(repo_root: Path) -> Path | None:
+    """The MAIN checkout behind a linked worktree, read from its `.git` FILE.
+
+    The file holds ``gitdir: <main>/.git/worktrees/<name>``, so the main working tree is
+    three levels up. Every unexpected shape — a relative gitdir, a layout that is not
+    ``.git/worktrees/<name>``, a root that is not a directory — answers None, and the
+    caller then says it could not look. Guessing here would point the queue check at the
+    wrong repository, which is worse than admitting the gap.
+
+    This exists because the queue state is not where the doctor is standing: every capture
+    hook resolves its output through ``_shared/gitctx.state_home()`` and writes the daily
+    log, ``state.json``, the completion stamp and the lock into the MAIN checkout. A
+    worktree holds none of them — they are gitignored too — so reading the queue out of a
+    worktree finds an empty directory and calls a stalled harness drained.
+    """
+    try:
+        text = (repo_root / ".git").read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    if not text.startswith("gitdir:"):
+        return None
+    gitdir = Path(text.split(":", 1)[1].strip())
+    if not gitdir.is_absolute():
+        return None
+    if gitdir.parent.name != "worktrees" or gitdir.parent.parent.name != ".git":
+        return None
+    root = gitdir.parent.parent.parent
+    return root if root.is_dir() else None
+
+
 def in_worktree(repo_root: Path) -> bool:
     """True in a linked worktree: git puts a `.git` FILE there, not a directory."""
     return (repo_root / ".git").is_file()
@@ -192,7 +222,8 @@ def check_environment(
         findings.append(Finding(
             "NOTE", REPO, "worktree",
             f"{repo_root} is a linked worktree — capture redirects into the main checkout "
-            "and both compile gates are suppressed here by design",
+            "and both compile gates are suppressed here by design, so the queue below is "
+            "read from the main checkout, not from here",
         ))
     return findings
 
@@ -360,12 +391,29 @@ def check_integrity(
 
 
 def check_queue(
-    repo_root: Path, install: probe.Install, engine: probe.Engine, now: float, worktree: bool
+    queue_root: Path | None, install: probe.Install, engine: probe.Engine, now: float,
+    worktree: bool,
 ) -> list[Finding]:
+    """`queue_root` is the checkout whose queue state is authoritative — the main one, even
+    when the doctor was run from a worktree. None means it could not be resolved."""
     queue = engine.queue
     if queue is None:
         return []
-    target = repo_root / str(install.dirname)
+    if queue_root is None:
+        return [Finding(
+            "NOTE", engine.name, "queue",
+            "the queue lives in the main checkout, which this worktree's .git file does "
+            "not resolve to — it was NOT read, so this run says nothing about it",
+            "re-run the doctor against the main checkout: --repo <main-checkout>",
+        )]
+    target = queue_root / str(install.dirname)
+    if not target.is_dir():
+        return [Finding(
+            "NOTE", engine.name, "queue",
+            f"the queue lives in {target}, which does not exist — it was NOT read, so "
+            "this run says nothing about it",
+            f"re-run the doctor against the checkout that holds {install.dirname}/",
+        )]
 
     config, _ = read_json(target / "config.json")
     age_hours = queue.age_default
@@ -388,19 +436,25 @@ def check_queue(
     detail = f"{plural(len(pending), 'pending daily log')} of {len(logs)}"
     if not isinstance(state, dict):
         detail += f" (no {queue.state} — every log counts as pending)"
+    # Say which checkout the verdict describes. Standing in a worktree, "0 pending" about
+    # somewhere else is otherwise indistinguishable from "0 pending" about here.
+    where = f" [read from the main checkout {queue_root}]" if worktree else ""
 
+    # Remediation has to run where the queue IS, not where the doctor stands. From a
+    # worktree a bare `uv run --directory <dir> …` resolves to the WORKTREE's own install
+    # dir, whose daily/ is empty: update.py prints "Nothing to update — docs are current"
+    # and exits 0, an all-clear contradicting the very finding it was offered for, while
+    # the real queue is untouched. Same for the lock — the one blocking the gate lives in
+    # the main checkout, so the path must be absolute.
     command = queue.command.format(dir=install.dirname)
+    if worktree:
+        command = f"cd {queue_root} && {command}"
     if not pending:
         return [Finding(
-            "OK", engine.name, "queue", f"drained — 0 pending daily logs of {len(logs)}"
+            "OK", engine.name, "queue",
+            f"drained — 0 pending daily logs of {len(logs)}{where}",
         )]
-
-    if worktree:
-        return [Finding(
-            "NOTE", engine.name, "queue",
-            f"{detail}; suppressed by design inside a worktree — the gate only runs in the "
-            "main checkout",
-        )]
+    detail += where
 
     stamp_data, _ = read_json(target / queue.stamp)
     last_ts: float | None = None
@@ -425,7 +479,7 @@ def check_queue(
             f"{detail}; a run was spawned at {stamp_time(fresh_lock)} and never completed "
             f"— the fresh lock blocks the gate until {stamp_time(fresh_lock + window)}",
             f"run it in the foreground to see the real error: {command} — then remove "
-            f"{install.dirname}/{queue.lock}",
+            f"{target / queue.lock}",
         )]
 
     # The gate's OWN first input, computed the way the hooks compute it: newest daily
@@ -511,6 +565,9 @@ def run_checks(repo_root: Path, plugin_root: Path, now: float) -> list[Finding]:
     plugin_root = Path(plugin_root)
     settings, settings_error = probe.load_settings(repo_root)
     worktree = in_worktree(repo_root)
+    # Code and wiring are checked where the doctor stands; the QUEUE is checked where the
+    # capture hooks actually write it, which from a worktree is the main checkout.
+    queue_root = main_checkout_root(repo_root) if worktree else repo_root
 
     findings = check_environment(repo_root, settings_error, worktree)
     installs = {i.engine: i for i in probe.discover(repo_root, settings)}
@@ -525,7 +582,7 @@ def run_checks(repo_root: Path, plugin_root: Path, now: float) -> list[Finding]:
         findings.extend(check_version(repo_root, plugin_root, install, engine))
         findings.extend(check_shared(repo_root, plugin_root, install, engine))
         findings.extend(check_integrity(repo_root, plugin_root, install, engine))
-        findings.extend(check_queue(repo_root, install, engine, now, worktree))
+        findings.extend(check_queue(queue_root, install, engine, now, worktree))
         if name == "compliance-compiler":
             findings.extend(check_catalog(repo_root, install, engine))
     return findings
