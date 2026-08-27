@@ -168,13 +168,14 @@ class HealthyInstallTests(DoctorTestCase):
 
 
 class QueueTests(DoctorTestCase):
-    def _stalled(self, *, worktree: bool = False) -> Path:
+    def _stalled(self, *, worktree: bool = False, lock_age: float = 2 * 3600) -> Path:
         repo = make_repo(self.tmp, worktree=worktree)
         target = install(repo, "claudemd-lerner", "claudemd-lerner")
         settings_for(repo, ("claudemd-lerner", "claudemd-lerner"))
         daily(target, "2026-08-20.md")
         stamp(target, "claudemd-lerner", self.now - 60 * DAY)
-        lock(target, "claudemd-lerner", self.now - 600)  # fresh: 10 min old, gate is 6h
+        # Fresh against the 6h gate, but well past the in-flight grace.
+        lock(target, "claudemd-lerner", self.now - lock_age)
         return repo
 
     def test_a_fresh_lock_over_an_older_stamp_is_the_stall(self) -> None:
@@ -183,9 +184,21 @@ class QueueTests(DoctorTestCase):
         self.assertIn("1 pending", finding.message)
         self.assertIn("never completed", finding.message)
         # The lock time and the reopen time are what makes the finding actionable.
-        self.assertIn(doctor.stamp_time(self.now - 600), finding.message)
-        self.assertIn(doctor.stamp_time(self.now - 600 + 6 * 3600), finding.message)
+        self.assertIn(doctor.stamp_time(self.now - 2 * 3600), finding.message)
+        self.assertIn(doctor.stamp_time(self.now - 2 * 3600 + 6 * 3600), finding.message)
         self.assertIn("scripts/update.py", finding.fix)
+
+    def test_a_run_still_in_flight_is_not_called_a_stall(self) -> None:
+        # The gate hooks write the lock before spawning and the child stamps completion
+        # only at the end, so a HEALTHY live run looks exactly like the stall above. An
+        # ERROR here would tell the user to delete the lock of a compile still writing.
+        repo = self._stalled(lock_age=5 * 60)
+        finding = self.check(self.run_checks(repo), "claudemd-lerner", "queue")
+        self.assertEqual(finding.severity, "NOTE")
+        self.assertIn("still in flight", finding.message)
+        self.assertEqual(
+            finding.fix, "", "an in-flight run must not be offered a lock-removal fix"
+        )
 
     def test_the_same_stall_inside_a_worktree_is_suppressed_by_design(self) -> None:
         finding = self.check(

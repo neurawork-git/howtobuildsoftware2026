@@ -49,6 +49,14 @@ EXIT = {"OK": 0, "NOTE": 0, "WARN": 1, "ERROR": 2}
 # Findings that belong to the repo rather than to any one engine.
 REPO = "-"
 
+# How long a fresh lock over an older completion stamp reads as "still running" rather
+# than "stalled". The gate hooks write the lock BEFORE spawning the child, and the child
+# stamps its completion only at the very end, so that state is ALSO what a perfectly
+# healthy run looks like for its whole duration. Without a grace the doctor would call
+# every live compile a stall — and its fix, removing the lock, would start a second run
+# writing the same state.json and the same output files as the one still going.
+IN_FLIGHT_GRACE = 30 * 60
+
 
 @dataclass
 class Finding:
@@ -406,6 +414,12 @@ def check_queue(
     fresh_lock = lock_mtime if lock_mtime is not None and (now - lock_mtime) < window else None
 
     if fresh_lock is not None and (last_ts is None or last_ts < fresh_lock):
+        if (now - fresh_lock) < IN_FLIGHT_GRACE:
+            return [Finding(
+                "NOTE", engine.name, "queue",
+                f"{detail}; a run spawned at {stamp_time(fresh_lock)} is still in flight "
+                "— re-run the doctor later if the lock is still here",
+            )]
         return [Finding(
             "ERROR", engine.name, "queue",
             f"{detail}; a run was spawned at {stamp_time(fresh_lock)} and never completed "
