@@ -42,7 +42,7 @@ No new phase, sink, state file, or config key. The review workflow and its schem
 | `uvx ruff check plugins/neurawork-cc-harness/tests/test_skill_assets.py` | `passed` | `All checks passed!` — the only Python file this change touches |
 | `uvx ruff check` (repo root) | `pre-existing baseline` | `Found 268 errors.` — all pre-existing; `.claude/ship-pr.local.md` documents why the repo-wide run is deliberately not a gate |
 | `git diff plugins/neurawork-cc-harness/commands/nw-ship-pr.md` | `passed` | Touches Phase 5, Phase 6.5 (input / item shape / de-dup / exclusions / sink placeholders), Phase 9 only. No phase ordering changed; all ten `$MAIN_ROOT` occurrences untouched |
-| `git diff .claude/BACKLOG.md` | `passed` | `1 file changed, 1 insertion(+), 1 deletion(-)` |
+| `git diff .claude/BACKLOG.md` | `passed` | One line per ticked entry: the implemented one in `e28442b`, the stale `validate_commands` one in `652c90c` |
 | Docs staleness check (`grep -rn "nw-ship-pr" docs/ plugins/CLAUDE.md CLAUDE.md`) | `passed` | Only filename/role mentions; no phase-input description exists to go stale — matches the plan's Integration points |
 
 Acceptance criteria: **AC8** is proven above (four pre-existing guard tests pass unmodified).
@@ -60,8 +60,10 @@ changed in the plan's live fixture).
   cannot be demonstrated by this run. The implementation is unaffected — the `SKIP` path and its
   fixed title are documented and tested; only the plan's intended live demonstration is no longer
   available here. AC5 (a clean run stays silent) is the observable one on this PR instead. The
-  stale backlog entry "`validate_commands` is empty, so the pre-merge gate never runs" was left
-  untouched, per the plan's "touch no other entry".
+  stale backlog entry "`validate_commands` is empty, so the pre-merge gate never runs" was first
+  left untouched per the plan's "touch no other entry", then ticked in `652c90c` at the approval
+  gate when it was called out as describing a condition that no longer exists — with a note
+  recording what was seeded and why `uvx ruff check` stays out of the list.
 - **Two small edits beyond the literal task text, both for internal consistency:** the
   "Why before the merge and not after" paragraph said "Both inputs of this step" and enumerated
   two — corrected to name the open items as well, or it would contradict the new input list one
@@ -100,12 +102,15 @@ One coherent outcome — `/nw-ship-pr` captures open items, not only review find
   item shape / de-dup titles / named exclusions / sink placeholders, Phase 9 readback + invariant.
 - `plugins/neurawork-cc-harness/tests/test_skill_assets.py` — four guard tests plus their
   section-slicing helper; nothing existing touched.
-- `.claude/BACKLOG.md` — the implemented entry ticked.
+- `.claude/BACKLOG.md` — the implemented entry ticked; the stale `validate_commands` entry ticked
+  and annotated in the follow-up commit.
 
 ## Delivery
 
-- **Commits:** `Not created` (handed to `/nw-ship-pr`, which owns commit → PR for this repo)
-- **Pull Request:** `Not opened`
+- **Commits:** `e28442b feat(nw-ship-pr): every open item a run surfaces reaches the backlog`;
+  `652c90c docs(backlog): the validation-gate entry is stale, not open` (both created by
+  `/nw-ship-pr`, which owns commit → PR in this repo)
+- **Pull Request:** https://github.com/neurawork-git/howtobuildsoftware2026/pull/36
 - **Base / Head:** `main <- feature/ship-pr-open-item-capture`
 - **Source PRD:** `None`
 - **Tracked follow-ups:** `None`
