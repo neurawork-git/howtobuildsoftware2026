@@ -187,7 +187,68 @@ class GuardInvariantTests(unittest.TestCase):
             "an absent or empty validate_commands list must SKIP the gate, never block",
         )
 
+    # Section-scoped like the cleanup-probe test above, and for the same reason: a
+    # file-wide search for "open items" stays green on the Phase 5 mention alone, even
+    # after Phase 6.5 stopped consuming them — the exact silent loss these pin.
+    def ship_pr_section(self, heading: str, following: str) -> str:
+        text = SHIP_PR.read_text(encoding="utf-8")
+        _, _, rest = text.partition(heading)
+        self.assertTrue(rest, f"{heading} is missing from the command file")
+        section, _, _ = rest.partition(following)
+        return section
 
+    def test_explanation_names_open_items(self) -> None:
+        section = self.ship_pr_section("## Phase 5", "## Phase 6 ")
+        self.assertIn(
+            "Open items",
+            section,
+            "phase 5 is the only collection point for the non-finding items (degraded "
+            "validation, unverified claims, known-broken state); without it phase 6.5 "
+            "receives review findings only",
+        )
+
+    def test_follow_up_capture_takes_open_items_not_only_findings(self) -> None:
+        section = self.ship_pr_section("## Phase 6.5", "## Phase 7")
+        for needle in ("nice-to-have", "Phase 5 open items"):
+            with self.subTest(needle=needle):
+                self.assertIn(
+                    needle,
+                    section,
+                    "phase 6.5 persists deferred ITEMS — review findings are one source "
+                    "among four; losing the phase 5 open items reverts the run to "
+                    "capturing review findings only",
+                )
+        self.assertIn(
+            "0 deferred items",
+            section,
+            "the zero-item skip is load-bearing against an empty commit",
+        )
+
+    def test_recurring_capture_items_have_fixed_titles(self) -> None:
+        section = self.ship_pr_section("## Phase 6.5", "## Phase 7")
+        for title in (
+            "the /nw-ship-pr validation gate is not configured",
+            "the /nw-ship-pr validation gate could not run",
+            "PR #<nr> was merged with a failing <command>",
+            "PR #<nr> was merged on a fallback mini-review",
+        ):
+            with self.subTest(title=title):
+                self.assertIn(
+                    title,
+                    section,
+                    "de-dup is exact-title, so a recurring condition needs a title the "
+                    "command fixes; LLM-authored prose adds one near-duplicate per merge",
+                )
+
+    def test_report_does_not_invent_open_items(self) -> None:
+        section = self.ship_pr_section("## Phase 9", "## Order mnemonic")
+        self.assertIn(
+            "names no open item that Phase 6.5 neither wrote nor explicitly excluded",
+            section,
+            "phase 9 is a readback of what phase 6.5 wrote plus the named exclusions; "
+            "without the invariant it becomes a source again and its items are lost with "
+            "the session",
+        )
 
 
 class RulesBlockTests(unittest.TestCase):
