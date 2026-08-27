@@ -235,10 +235,18 @@ doctor is the signal that state has none of its own. For every engine it reports
 - **queue** — pending daily logs (absent from `state.json`, or edited since), the age of
   the last successful run, and the lock. A fresh lock over an older completion stamp is
   the stall: it names when the run was spawned, when the gate reopens, and the foreground
-  command that shows the real error.
+  command that shows the real error. A stamp that out-dates every daily log is its own
+  warning — the gate's first input is `newest log mtime > last run`, so the queue then
+  cannot drain on its own no matter how long you wait.
 - **environment** — `uv` on `PATH`, python ≥ 3.12, an API credential, and whether this
-  checkout is a worktree (where both gates are suppressed by design, so queue lag there
-  is a note, not a fault).
+  checkout is a worktree.
+
+**Run from a worktree, the queue is read from the main checkout.** The capture hooks
+redirect their output there through `_shared/gitctx`, and all four queue files are
+gitignored, so a worktree genuinely holds none of them — reading them where you stand
+would report every stalled harness as drained. The finding says which checkout it
+describes. If the main checkout cannot be resolved from the worktree's `.git` file, the
+doctor says the queue was **not** read rather than reporting it empty.
 
 It runs under **system `python3`, not `uv run`** — a missing `uv` or an absent `.venv` is
 one of the states it exists to report — and needs no API key. Exit code: `0` clean, `1`
