@@ -95,6 +95,24 @@ class TestFindStale(unittest.TestCase):
             self.assertEqual(stale[0]["dir"], "knowledge-base")
             self.assertEqual((stale[0]["installed"], stale[0]["shipped"]), ("1", "2"))
 
+    def test_stale_stack_compiler_detected(self) -> None:
+        # The fourth engine only reaches the nudge once it has an installer to name:
+        # find_stale skips any engine with no install_skill.
+        tmp = tempfile.TemporaryDirectory()
+        with tmp:
+            root = Path(tmp.name)
+            repo, plugin = root / "repo", root / "plugin"
+            (repo / "stack-base").mkdir(parents=True)
+            (repo / "stack-base" / "VERSION").write_text("1")
+            (plugin / "engines" / "stack-compiler").mkdir(parents=True)
+            (plugin / "engines" / "stack-compiler" / "VERSION").write_text("2")
+            settings = _settings("stack-base", "hooks/st-post-tooluse.py")
+
+            stale = vc.find_stale(repo, plugin, settings)
+            self.assertEqual(len(stale), 1)
+            self.assertEqual(stale[0]["engine"], "stack-compiler")
+            self.assertEqual(stale[0]["dir"], "stack-base")
+
     def test_current_no_stale(self) -> None:
         tmp, repo, plugin, settings = self._setup("2", "2")
         with tmp:

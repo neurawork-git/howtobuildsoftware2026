@@ -1,7 +1,7 @@
 # Install & Upgrade Guide — neurawork-cc-harness
 
 `neurawork-cc-harness` is a Claude Code plugin that keeps a repo's project
-knowledge fresh. It bundles three **independently installable** skills:
+knowledge fresh. It bundles four **independently installable** skills:
 
 - **`neurawork-cc-harness:knowledge-compiler`** — captures Claude Code sessions
   into `<dir>/daily/` logs and compiles them into a per-repo knowledge base
@@ -13,6 +13,9 @@ knowledge fresh. It bundles three **independently installable** skills:
   GDPR/SOC2/ISO27001 into a tracked constraint **catalog** (+ derived
   capabilities); a `PostToolUse` hook validates each PRP plan against it as it is
   written.
+- **`neurawork-cc-harness:stack-compiler`** — narrows that catalog to one product:
+  which capabilities apply, which component was chosen for each from a closed pool,
+  and a `PostToolUse` hook that gates every PRD and plan write against those choices.
 
 Each runs an interactive **recon** on install, can **seed** an existing
 (brownfield) repo, and writes everything **inside the repo — never under
@@ -145,7 +148,42 @@ The catalog stores only official control/article identifiers, short titles, and
 Extraction and deep validation need an API key (see Requirements); install,
 scaffolding, and the inline precheck run without it.
 
-### 5. Write the baseline coding rules (no install)
+### 5. Install `stack-compiler`
+
+```text
+/neurawork-cc-harness:stack-compiler
+```
+
+It installs into its own dir (default `stack-base`) and wires a **single**
+`st-`-prefixed `PostToolUse` hook under the same `Write|Edit|MultiEdit` matcher as the
+compliance gate — the two share that group, so all four engines coexist. It owns **no
+data artifact**: every write goes through `compliance-base/scripts/stack.py`, the single
+schema owner for `catalog/stack.json`. `compliance-compiler` must therefore be installed
+and its catalog built for the passes and the gate to have anything to read; the install
+itself succeeds either way and says which of the two you are in.
+
+Three passes, then the gate:
+
+- `/neurawork-cc-harness:st-scope` — decides per capability *whether* it applies to this
+  product and why, from the tracked `stack-base/product.md`. The first run writes the
+  `product.md` template and exits; fill it in and re-run. Needs an API key.
+- `/neurawork-cc-harness:st-rank` — orders each still-applicable capability's catalog
+  components best-fit-first, with a reason per position. Needs an API key.
+- `/neurawork-cc-harness:st-select` — renders that ranking as an editable selection sheet
+  and records the component a human wrote per capability (`--apply <sheet>`). Runs **no**
+  agent and needs **no** API key.
+- Every PRD and plan write is then gated automatically: a fast inline precheck plus a
+  detached deep report under `stack-base/reports/`. `config.json`'s `validate_mode` sets
+  `warn` | `block` per document type. Validate manually:
+  `/neurawork-cc-harness:st-validate <path-to-prd-or-plan>`.
+
+The component pool is closed — a ranking must name exactly that capability's `options`,
+and a choice must come from them — and a deterministic gate (pool match plus the
+catalog's own `license_policy`) runs before every write; a failed gate writes nothing.
+Scoping and ranking are all-or-nothing; selection is deliberately partial, because an
+undecided capability stays a counted gap rather than a silent omission.
+
+### 6. Write the baseline coding rules (no install)
 
 ```text
 /neurawork-cc-harness:nw-rules-init          # [--force] to refresh an existing block

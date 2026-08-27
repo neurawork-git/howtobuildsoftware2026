@@ -167,15 +167,19 @@ class DiscoveryTests(unittest.TestCase):
 class FindStaleTests(unittest.TestCase):
     """`find_stale` backs the SessionStart nudge, which may only name a real installer."""
 
-    def test_only_engines_with_an_install_skill_are_nudged(self) -> None:
-        nudgeable = {n for n, e in probe.ENGINES.items() if e.install_skill}
-        self.assertNotIn(
-            "stack-compiler",
-            nudgeable,
-            "stack-compiler ships no installer; nudging it would name a slash command "
-            "that does not exist",
-        )
-        self.assertTrue(nudgeable)
+    def test_every_engine_that_ships_an_installer_is_nudgeable(self) -> None:
+        for name, engine in probe.ENGINES.items():
+            with self.subTest(engine=name):
+                has_installer = (
+                    PLUGIN_ROOT / "engines" / name / "install.py"
+                ).is_file()
+                self.assertEqual(
+                    bool(engine.install_skill),
+                    has_installer,
+                    "the nudge's whole payload is `re-run /neurawork-cc-harness:<engine>`: "
+                    "an engine with an installer that is not nudgeable never tells anyone "
+                    "to upgrade, and one without would name a command that does not exist",
+                )
 
 
 if __name__ == "__main__":

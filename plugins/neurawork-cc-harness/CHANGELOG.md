@@ -15,6 +15,33 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.5.0] — 2026-08-27
+
+### Added
+
+- **`stack-compiler` is the fourth installable skill.** `engines/stack-compiler/install.py`
+  and `recon.py` install the product-scoping engine into any git repo the same way the other
+  three install — recon, ask, ADOPT-safe execute — driven by
+  `/neurawork-cc-harness:stack-compiler`. The engine owns no data artifact: every write goes
+  through `<compliance-dir>/scripts/stack.py`, the single schema owner for
+  `catalog/stack.json`.
+- Four slash commands for its four passes: `/neurawork-cc-harness:st-scope` (which
+  capabilities apply and why), `:st-rank` (order each one's components), `:st-select`
+  (render the selection sheet, record the choices — no agent, no API key) and
+  `:st-validate` (check a PRD or plan against the recorded stack on demand).
+- `scripts/harness_probe.py`'s `stack-compiler` entry now names an install skill, so the
+  `SessionStart` staleness nudge covers a `stack-base/` install for the first time.
+
+### Changed
+
+- The `st-` `PostToolUse` hook registers under `matcher: "Write|Edit|MultiEdit"` instead of
+  the catch-all group, where every tool call in every session paid for a `uv run` subprocess
+  that read stdin and exited. Re-running the installer **moves** an existing catch-all
+  registration into that group, so the narrowing reaches installs that already exist.
+- Installing without a `compliance-compiler` sibling is a warning, not a failure: the
+  machinery installs, and the passes that genuinely need the catalog keep exiting 1 with
+  their own message.
+
 ## [0.4.1] — 2026-08-27
 
 ### Changed

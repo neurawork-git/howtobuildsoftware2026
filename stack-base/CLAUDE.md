@@ -6,10 +6,11 @@ this repo (the engine source is
 capability catalog down to **this one product** and gates PRD/plan writes against the
 component stack that scoping settles on.
 
-It is **installed by hand.** The engine has no `install.py` / `recon.py` / slash
-commands yet (they land in a later phase), so `plugins/…/engines/stack-compiler/payload/`
-and this dir are kept **byte-identical** by `tests/test_payload_drift.py`, not by an
-installer.
+It is installed and refreshed by `/neurawork-cc-harness:stack-compiler`, like the
+other three self-hosts. `tests/test_payload_drift.py` backs that installer up between
+runs: `plugins/…/engines/stack-compiler/payload/` and this dir must stay
+**byte-identical**, so a direct edit to either copy that was never propagated fails
+there rather than shipping different behaviour than this repo runs.
 
 ## What lives here vs. what it produces
 

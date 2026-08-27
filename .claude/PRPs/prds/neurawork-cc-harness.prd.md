@@ -28,7 +28,7 @@ Build **`neurawork-cc-harness`**, a Claude Code plugin bundling **independently 
 | `knowledge-compiler` | `knowledge-base/` | *(none)* | this PRD, Phase 2 | shipped |
 | `claudemd-lerner` | `claudemd-lerner/` | `cl-` | this PRD, Phase 3 | shipped |
 | `compliance-compiler` | `compliance-base/` | `co-` | this PRD Phase 6 + [`compliance-capabilities.prd.md`](completed/compliance-capabilities.prd.md) | shipped |
-| `stack-compiler` | `stack-base/` | `st-` | [`stack-compiler.prd.md`](stack-compiler.prd.md) | planned (supersedes Phase 5) |
+| `stack-compiler` | `stack-base/` | `st-` | [`stack-compiler.prd.md`](stack-compiler.prd.md) | shipped |
 
 ### Vocabulary
 

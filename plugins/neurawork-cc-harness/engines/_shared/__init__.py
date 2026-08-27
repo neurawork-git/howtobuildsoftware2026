@@ -1,6 +1,7 @@
 """Shared, stdlib-only helpers for neurawork-cc-harness skills.
 
-Both skills (knowledge-compiler, claudemd-lerner) reuse these modules:
+All four skills (knowledge-compiler, claudemd-lerner, compliance-compiler,
+stack-compiler) reuse these modules:
 
 - hookio:     parse hook stdin (Windows-safe) + recursion guard
 - transcript: read a JSONL session transcript into recent markdown turns

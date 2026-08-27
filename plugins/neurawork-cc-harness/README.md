@@ -8,10 +8,10 @@ written **inside the repo**, never under `.claude/`, so it is tracked and review
 **Architecture:** [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md).
 **Release notes:** [`CHANGELOG.md`](CHANGELOG.md).
 
-## Three independently installable skills
+## Four independently installable skills
 
 Each installs into its own directory in the target repo, registers hooks under its own
-filename prefix so the three coexist in one `.claude/settings.json`, runs an interactive
+filename prefix so the four coexist in one `.claude/settings.json`, runs an interactive
 **recon** on install, and can **seed** from an existing repo. Re-running an installer is an
 ADOPT: code and hooks are refreshed, existing data is left alone.
 
@@ -20,6 +20,7 @@ ADOPT: code and hooks are refreshed, existing data is left alone.
 | `knowledge-compiler` | `knowledge-base/` | *(none)* | `knowledge/concepts/`, `knowledge/connections/`, `knowledge/index.md` |
 | `claudemd-lerner` | `claudemd-lerner/` | `cl-` | the repo-root `CLAUDE.md` hierarchy + `docs/` |
 | `compliance-compiler` | `compliance-base/` | `co-` | `catalog/*.json` + `index.md`, `capabilities.{json,md}`, `stack.json` |
+| `stack-compiler` | `stack-base/` | `st-` | no artifact of its own — it records the chosen components into `compliance-base/catalog/stack.json` |
 
 - **`knowledge-compiler`** — captures session transcripts into per-repo `daily/` logs and
   compiles them into a knowledge wiki. Five hooks: `SessionStart` / `PreCompact` /
@@ -36,6 +37,12 @@ ADOPT: code and hooks are refreshed, existing data is left alone.
   scaffold the component stack. One `PostToolUse` hook (matcher `Write|Edit|MultiEdit`)
   validates each PRP plan write against the catalog. The catalog ships prebuilt, so a fresh
   install validates without an LLM run.
+- **`stack-compiler`** — narrows that catalog to one product: parallel agents decide which
+  capabilities apply and why (`scope`), order each one's components best-fit-first (`rank`),
+  and a human records the chosen component from that closed pool (`selection`, no agent, no
+  API key). One `PostToolUse` hook (matcher `Write|Edit|MultiEdit`) then gates every PRD and
+  plan write against those choices. It owns no data artifact — every write goes through
+  `compliance-base/scripts/stack.py`, the single schema owner.
 
 ## Three install-free workflow surfaces
 
@@ -65,29 +72,16 @@ Prompt-only. They copy nothing into a repo and have no engine.
 | `/neurawork-cc-harness:co-extract` | rebuild the constraint catalog from the frameworks |
 | `/neurawork-cc-harness:co-capabilities` | derive the capability layer + stack scaffold |
 | `/neurawork-cc-harness:co-validate` | check a PRP plan against the catalog |
+| `/neurawork-cc-harness:st-scope` | decide which capabilities apply to this product |
+| `/neurawork-cc-harness:st-rank` | order each applicable capability's components |
+| `/neurawork-cc-harness:st-select` | render the selection sheet, then record the choices |
+| `/neurawork-cc-harness:st-validate` | check a PRD or plan against the chosen stack |
 | `/neurawork-cc-harness:nw-ship-pr` | the PR lifecycle above |
 
 `/nw-worktree` and `/nw-rules-init` are skills, invoked by name.
 
 **Always invoke by the fully-qualified `neurawork-cc-harness:<name>` form** so an install
 resolves to this plugin regardless of what else is enabled.
-
-## `stack-compiler` — shipped, not yet installable
-
-`engines/stack-compiler/` carries a complete `payload/` (product scoping: a scope pass, a
-ranking pass, and a selection sheet, plus the `st-` `PostToolUse` gate that checks a PRD or
-plan against the recorded stack). It has **no `install.py`, no `recon.py`, no skill and no
-slash command**, so nobody installing this plugin can install it. That is deliberate: the
-installer is Phase 5 of `.claude/PRPs/prds/stack-compiler.prd.md`, and it is still `pending`.
-
-In the host repo, `stack-base/` was therefore installed **by hand**, and
-`engines/stack-compiler/tests/test_payload_drift.py` is what keeps the two copies
-byte-identical meanwhile — a payload edit that is not mirrored, or a self-host edit that never
-reaches the payload, fails there instead of shipping different behaviour than the repo runs.
-
-For the same reason `hooks/version-check.py` has three `ENGINES` entries and not four: the
-`SessionStart` staleness nudge tells you to re-run an installer, and there is no installer to
-name. `stack-compiler` joins that map when Phase 5 ships one.
 
 ## Status
 
