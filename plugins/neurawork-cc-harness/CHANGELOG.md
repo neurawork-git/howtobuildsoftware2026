@@ -15,6 +15,28 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.7.0] — 2026-09-02
+
+### Fixed
+
+- **The knowledge-base seed could write to the wrong directory.** `payload/scripts/seed.py`
+  runs the seeding agent with `cwd=<repo root>` but writes into `KNOWLEDGE_DIR`
+  (`<repo>/<kdir>/knowledge`), which it supplies in a separate `## Write articles under`
+  section. `seed_prompt.txt` nevertheless stated all six of its write targets as bare
+  relative paths (`knowledge/concepts/<slug>.md`, `knowledge/index.md`, `knowledge/log.md`,
+  `knowledge/connections/`, and both `knowledge/` constraints), which resolve against that
+  cwd — one level too high, at `<repo>/knowledge/`. Nothing caught it: the write guard
+  checks `KNOWLEDGE_DIR` once before the run, never the agent's writes, and
+  `<repo>/knowledge/` passes that check anyway. The prompt now binds every target to a
+  `<knowledge-root>` token that it explicitly resolves to the absolute section, and states
+  that the working directory is not that directory.
+  `engines/knowledge-compiler/VERSION` goes `3` → `4`, so existing installs are nudged to
+  re-install.
+- `engines/knowledge-compiler/tests/test_seed_prompt.py` pins the invariant: no bare
+  `knowledge/` write target in the prompt, the pointer to the absolute section is present,
+  and `seed.py` still supplies both that section and the repo-root cwd. It also fails when
+  the self-host copy at `knowledge-base/scripts/seed_prompt.txt` drifts from the payload.
+
 ## [0.6.0] — 2026-08-27
 
 ### Fixed
