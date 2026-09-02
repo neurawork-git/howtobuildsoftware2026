@@ -15,6 +15,39 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.8.0] — 2026-09-02
+
+### Fixed
+
+- **The stack gate was blind to every document prp-core writes.**
+  `stack-compiler`'s `gate_lib.document_kind` compared a written path against exactly one
+  subpath prefix, so `.claude/PRPs/<slug>-<hash8>/plans/x.plan.md` — the layout prp-core's
+  store resolver produces — classified as neither PRD nor plan. `hooks/st-post-tooluse.py`
+  then returned before the existence check, the catalog load and its only `print`: no
+  report, no stderr, nothing to distinguish a gate that never looked from one that
+  approved. It now accepts the same **one store segment** `compliance-compiler`'s
+  `precheck.is_plan_path` has accepted since the store layout appeared, in that one
+  position only, with `completed/` still rejected in both layouts.
+  (`engines/stack-compiler/VERSION` 2 → 3.)
+
+### Changed
+
+- **The PRP artifact store is wired by symlink, not by a relative `PRP_HOME`.** Both
+  installers now create `~/.prp/<slug>-<hash8>` → `<main-checkout>/.claude/PRPs` through the
+  new `engines/_shared/prp_store.py`. prp-core derives that key from `--git-common-dir`, so
+  it is worktree-invariant; only the *prefix* was not, because the shell resolved the
+  relative `PRP_HOME` against each session's working directory and gave every worktree its
+  own physical store. Consequence: a plan written from a worktree now lands in the main
+  checkout and does **not** travel with the feature branch. `PRP_HOME` remains the
+  fallback — used, and reported, when the platform cannot symlink or the store key is
+  already taken by a real directory or a foreign link, neither of which is ever replaced.
+  (`engines/compliance-compiler/VERSION` 5 → 6.)
+- **`/nw-doctor` reports the store wiring.** A new repo-scoped `prp-store` check names
+  which wiring a repo has (linked, `PRP_HOME`, both — where `PRP_HOME` wins and the link is
+  inert — or neither, which is the warning that documents land outside the repo), reports a
+  link resolving somewhere else, and, from a worktree, counts the documents that exist only
+  there. It runs only where a gate-owning engine is installed, and stays read-only.
+
 ## [0.7.0] — 2026-09-02
 
 ### Fixed

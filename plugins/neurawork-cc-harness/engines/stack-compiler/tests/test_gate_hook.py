@@ -182,6 +182,31 @@ class TestGateHook(unittest.TestCase):
                              "an unchanged document re-stamped the ledger")
             self.assertNotIn("decision", json.loads(res.stdout))
 
+    def test_a_document_in_the_prp_store_layout_is_gated(self) -> None:
+        # The defect this suite missed: with the store wired through ``PRP_HOME``,
+        # every document prp-core writes sits under ``<slug>-<hash8>/`` and the hook
+        # returned before printing anything — indistinguishable from a gate that ran
+        # and approved. Pre-stamp the ledger so this stays a spawn-free case.
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t)
+            root = self._install(tmp)
+            self._catalog(tmp, _stack("age"))
+            text = "We will use OpenBao for this.\n"
+            store = ".claude/PRPs/howtobuildsoftware2026-35325a96"
+            for rel in (f"{store}/plans/feature.plan.md", f"{store}/prds/product.prd.md"):
+                doc = self._doc(tmp, rel, text)
+                state_file = root / "reports" / ".state.json"
+                gate_lib.save_state(
+                    state_file,
+                    gate_lib.record_spawn(gate_lib.load_state(state_file), str(doc),
+                                          scope_lib.product_hash(text),
+                                          "2026-01-01T00:00:00+01:00"))
+                res = self._run(root, {"tool_name": "Write",
+                                       "tool_input": {"file_path": str(doc)}})
+                self.assertEqual(res.returncode, 0)
+                self.assertNotEqual(res.stdout, "", f"{rel}: the gate stayed silent")
+                self.assertIn("OpenBao", self._advisory(res))
+
     def test_block_mode_blocks_only_on_an_off_stack_component(self) -> None:
         with tempfile.TemporaryDirectory() as t:
             tmp = Path(t)

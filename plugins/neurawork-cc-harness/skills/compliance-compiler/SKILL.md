@@ -21,8 +21,9 @@ Installs the compliance-compiler engine into the current repo. Three parts:
    fast structural precheck inline, plus a detached deep LLM report in
    `<catalog_dir>/reports/`. Both the mandatory constraints and the plan's declared
    capabilities are checked. Two locations count — `.claude/PRPs/plans/*.plan.md` and
-   the `PRP_HOME` store layout `.claude/PRPs/<repo>-<hash>/plans/*.plan.md` — and the
-   install sets `PRP_HOME` so prp-core writes there instead of `~/.prp`.
+   the store layout `.claude/PRPs/<repo>-<hash>/plans/*.plan.md` — and the install wires
+   the store into the repo (a symlink `~/.prp/<repo>-<hash>` → `<main-checkout>/.claude/PRPs`,
+   `PRP_HOME` as the fallback) so prp-core writes there instead of `~/.prp`.
 
 The catalog always lives inside the repo, never under `.claude/`.
 
@@ -74,7 +75,8 @@ uv sync --directory <NAME>
 Then tell the user to commit `<NAME>/` and `.claude/settings.json`. After install:
 - The catalog, the derived capabilities and `catalog/stack.json` are all in place — no
   LLM run needed to reach a usable state; report any line the installer printed about a
-  skipped stack scaffold or a `PRP_HOME` it left alone.
+  skipped stack scaffold, or about how the PRP store was wired (linked, or fallen back
+  to `PRP_HOME` because the store key was occupied).
 - Every PRP plan write is checked automatically.
 - Manual extract: `/neurawork-cc-harness:co-extract`.
 - Re-derive the capability layer + stack scaffold:

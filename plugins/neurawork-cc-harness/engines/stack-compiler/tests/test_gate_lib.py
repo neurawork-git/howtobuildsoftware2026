@@ -152,6 +152,41 @@ class TestDocumentKind(unittest.TestCase):
         finally:
             os.chdir(cwd)
 
+    def test_the_prp_store_layout_is_read(self) -> None:
+        # prp-core's resolver appends a ``<slug>-<hash8>`` store key, so a document it
+        # writes sits one segment deeper than the configured subpath. Exactly one
+        # segment, in exactly that position — the tolerance ``is_plan_path`` has
+        # carried since the store layout appeared.
+        store = ".claude/PRPs/howtobuildsoftware2026-35325a96"
+        self.assertEqual(self._kind(f"{store}/prds/product.prd.md"), "prd")
+        self.assertEqual(self._kind(f"{store}/plans/feature.plan.md"), "plan")
+        self.assertEqual(self._kind(f"{store}/plans/nested/feature.plan.md"), "plan")
+
+    def test_archived_documents_in_the_store_layout_stay_records(self) -> None:
+        store = ".claude/PRPs/howtobuildsoftware2026-35325a96"
+        self.assertEqual(self._kind(f"{store}/prds/completed/old.prd.md"), "")
+        self.assertEqual(self._kind(f"{store}/plans/completed/old.plan.md"), "")
+
+    def test_more_than_one_inserted_segment_never_matches(self) -> None:
+        self.assertEqual(self._kind(".claude/PRPs/a/b/plans/feature.plan.md"), "")
+        self.assertEqual(self._kind(".claude/PRPs/a/b/prds/product.prd.md"), "")
+
+    def test_a_store_segment_does_not_cross_the_two_kinds(self) -> None:
+        # A ``.plan.md`` under the store's ``prds/`` is neither: the suffix picks the
+        # plans subpath, and ``prds`` is not it.
+        store = ".claude/PRPs/howtobuildsoftware2026-35325a96"
+        self.assertEqual(self._kind(f"{store}/prds/feature.plan.md"), "")
+        self.assertEqual(self._kind(f"{store}/plans/product.prd.md"), "")
+
+    def test_a_configured_subpath_gets_the_same_one_segment_tolerance(self) -> None:
+        cfg = {**CFG, "prds_subpath": "docs/prds"}
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / "docs/store-key/prds/x.prd.md"),
+                                   self.root, cfg), "prd")
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / "docs/a/b/prds/x.prd.md"),
+                                   self.root, cfg), "")
+
     def test_empty_path_and_configured_subpaths(self) -> None:
         self.assertEqual(gate_lib.document_kind("", self.root, CFG), "")
         cfg = {**CFG, "prds_subpath": "docs/prds"}

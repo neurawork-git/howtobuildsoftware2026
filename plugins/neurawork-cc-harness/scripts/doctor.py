@@ -42,6 +42,15 @@ if str(Path(__file__).resolve().parent) not in sys.path:
 
 import harness_probe as probe  # noqa: E402
 
+if str(Path(__file__).resolve().parents[1] / "engines") not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "engines"))
+
+# The store key and its prefix rule have ONE owner — the module the installers wire the
+# store with. Re-deriving either here would let the doctor look in a place no install
+# ever writes. `key_for_root` takes an already-resolved main checkout, so importing it
+# costs the doctor neither a git process nor a write.
+from _shared.prp_store import STORE_SUBPATH, default_prp_home, key_for_root
+
 SEVERITIES = ("OK", "NOTE", "WARN", "ERROR")
 RANK = {name: index for index, name in enumerate(SEVERITIES)}
 EXIT = {"OK": 0, "NOTE": 0, "WARN": 1, "ERROR": 2}
@@ -676,6 +685,91 @@ def check_catalog(repo_root: Path, install: probe.Install, engine: probe.Engine)
     return findings
 
 
+def check_prp_store(
+    repo_root: Path, settings: dict, installs: dict, worktree: bool
+) -> list[Finding]:
+    """How prp-core's artifact store is wired, and whether a worktree split one.
+
+    Only runs when a gate that reads the store is installed: a repo with neither
+    engine has no store to wire, and a warning there would be noise.
+
+    The two wirings are a symlink at ``<prp_home>/<key>`` into the repo (one store per
+    repo, reached identically from every worktree) and a relative ``PRP_HOME`` in
+    settings (per-checkout stores, one segment deeper — which both gates read since
+    the store layout was added to their path filters). Neither is an error; only
+    *nothing* is, because then every document lands outside the repo.
+    """
+    if not any(name in installs for name in ("compliance-compiler", "stack-compiler")):
+        return []
+
+    main_root = (main_checkout_root(repo_root) or repo_root) if worktree else repo_root
+    target = (main_root / STORE_SUBPATH).resolve()
+    link = default_prp_home() / key_for_root(main_root.resolve())
+    env_value = (settings.get("env") or {}).get("PRP_HOME") if isinstance(
+        settings.get("env"), dict) else None
+
+    linked = os.path.islink(link) and Path(os.path.realpath(link)) == target
+    fix = ("re-run /neurawork-cc-harness:stack-compiler or "
+           ":compliance-compiler (ADOPT — non-destructive)")
+
+    findings: list[Finding] = []
+    if linked and env_value is None:
+        findings.append(Finding(
+            "OK", REPO, "prp-store", f"store linked: {link} -> {target}"))
+    elif linked:
+        findings.append(Finding(
+            "NOTE", REPO, "prp-store",
+            f"store linked ({link}) AND env.PRP_HOME={env_value!r} is set — PRP_HOME wins "
+            "and the link is inert; documents land in a per-checkout store",
+            "remove env.PRP_HOME from .claude/settings.json to use the shared store",
+        ))
+    elif env_value is not None:
+        findings.append(Finding(
+            "NOTE", REPO, "prp-store",
+            f"store wired by env.PRP_HOME={env_value!r} — the older wiring: documents land "
+            "one <slug>-<hash8> segment deeper, and each checkout keeps its own store",
+            fix + " to replace it with a shared symlinked store",
+        ))
+    elif os.path.lexists(link):
+        findings.append(Finding(
+            "WARN", REPO, "prp-store",
+            f"{link} does not point at this repo's store: it resolves to "
+            f"{os.path.realpath(link)}, not {target}",
+            f"move or remove {link}, then {fix}",
+        ))
+    else:
+        findings.append(Finding(
+            "WARN", REPO, "prp-store",
+            f"store neither linked ({link} is absent) nor wired by env.PRP_HOME — every "
+            "PRD and plan lands outside the repo, where no gate sees it",
+            fix,
+        ))
+
+    if worktree:
+        findings.extend(_check_split_store(repo_root, main_root))
+    return findings
+
+
+def _check_split_store(repo_root: Path, main_root: Path) -> list[Finding]:
+    """A worktree that grew its own physical store holds documents nobody else sees."""
+    local = repo_root / STORE_SUBPATH
+    if main_root == repo_root or not local.is_dir():
+        return []
+    only_here = sorted(
+        p.relative_to(local).as_posix()
+        for p in local.rglob("*.md") if not (main_root / STORE_SUBPATH / p.relative_to(local)).exists()
+    )
+    if not only_here:
+        return []
+    return [Finding(
+        "WARN", REPO, "prp-store",
+        f"split store: {plural(len(only_here), 'document')} exist only in this worktree's "
+        f"{local} (first: {only_here[0]})",
+        f"move them into {main_root / STORE_SUBPATH} — the store the gates and every other "
+        "checkout read",
+    )]
+
+
 def run_checks(repo_root: Path, plugin_root: Path, now: float) -> list[Finding]:
     """Every check, in report order. Never raises: a broken input is a finding."""
     repo_root = Path(repo_root)
@@ -689,6 +783,7 @@ def run_checks(repo_root: Path, plugin_root: Path, now: float) -> list[Finding]:
     findings = check_environment(repo_root, settings_error, worktree)
     findings.extend(check_plugin(plugin_root))
     installs = {i.engine: i for i in probe.discover(repo_root, settings)}
+    findings.extend(check_prp_store(repo_root, settings, installs, worktree))
 
     for name, engine in probe.ENGINES.items():
         install = installs.get(name)

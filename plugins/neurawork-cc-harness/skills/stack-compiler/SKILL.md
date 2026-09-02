@@ -85,7 +85,8 @@ uv sync --directory <NAME>
 ```
 
 Then tell the user to commit `<NAME>/` and `.claude/settings.json`, and relay any line
-the installer printed about a missing compliance install or a `PRP_HOME` it left alone.
+the installer printed about a missing compliance install, or about how the PRP store was
+wired (linked, or fallen back to `PRP_HOME` because the store key was occupied).
 After install, the four commands in pass order:
 
 - `/neurawork-cc-harness:st-scope` — writes the `product.md` template on its first run;

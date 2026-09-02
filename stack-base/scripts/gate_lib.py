@@ -55,6 +55,13 @@ def document_kind(path_str: str, repo_root: Path | str, cfg: dict) -> str:
     kinds this gate covers and taking the subpaths from ``cfg`` rather than
     importing the sibling engine's constant. An archived document (``completed``
     anywhere below the subpath) is a record, not pending work, and never matches.
+
+    Two layouts count, exactly as in ``is_plan_path``: the configured subpath matched
+    at the front, and the same subpath with **one** arbitrary segment inserted before
+    its final element — prp-core's ``<slug>-<hash8>`` store key, which appears there
+    whenever the store was wired with ``PRP_HOME`` rather than a symlink. One segment
+    in one position keeps this a whitelist rather than a search for ``plans``/``prds``
+    anywhere in the path.
     """
     if not path_str:
         return ""
@@ -70,10 +77,16 @@ def document_kind(path_str: str, repo_root: Path | str, cfg: dict) -> str:
     except (ValueError, OSError):
         return ""
     head = tuple(part for part in subpath.split("/") if part)
-    parts = rel.parts
-    if parts[: len(head)] != head:
+    parts, n = rel.parts, len(head)
+    if not n:
         return ""
-    return "" if "completed" in parts[len(head):] else kind
+    if parts[:n] == head:
+        tail = parts[n:]
+    elif parts[: n - 1] == head[: n - 1] and parts[n : n + 1] == head[n - 1 :]:
+        tail = parts[n + 1:]  # one store segment: <slug>-<hash8>/plans/...
+    else:
+        return ""
+    return "" if "completed" in tail else kind
 
 
 # ── The closed pool, and finding it in prose ──────────────────────────
