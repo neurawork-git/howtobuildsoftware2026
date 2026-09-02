@@ -57,7 +57,10 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 - **Engine vs payload:** `engines/<engine>/` is install-time tooling that runs from
   the plugin; `payload/` is what runs *inside the target repo* after install. Keep
   the distinction — payload code resolves `config`/`utils` via `sys.path` at
-  `uv run` time, not as importable packages.
+  `uv run` time, not as importable packages. Import `_shared` (e.g. `repo_guard`)
+  **inside `main()`, not at module top**: `_shared/` exists only in an installed
+  repo, not in the `payload/` tree, so a top-level `from _shared.… import …` breaks
+  the payload-tree unit tests.
 - **`_shared/` is the single source of truth.** Edit it here; `install.py` copies it
   into every target. Don't fork per-engine copies.
 - **A workflow skill has no engine — that is intended, not an omission.** `nw-worktree`
@@ -72,6 +75,12 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   filenames + events per skill (`cl-`-prefixed for the learner; `co-`-prefixed on the
   `PostToolUse` event for compliance, `st-`-prefixed for stack-compiler) so all four
   skills coexist in one repo — the two `PostToolUse` hooks share one matcher group.
+- **Versioning:** a change that alters an engine's payload *behavior* is a **minor**
+  bump, not a patch (patch is for reporting/doc-only fixes). Two version files move
+  together on an engine change — the plugin version in `.claude-plugin/plugin.json`
+  (e.g. `0.6.0`) and the touched `engines/<engine>/VERSION` (e.g. claudemd-lerner's `5`)
+  — shipped with a `CHANGELOG.md` entry (`_shared/tests/test_manifest.py` fails a
+  release whose version has no section).
 - **A hook may claim a matcher group.** `_shared/settings.py` accepts a 5th tuple element,
   the matcher; a 4-tuple still lands in the `matcher: ""` group, which is correct for the
   events that carry no tool name (`SessionStart`, `PreCompact`, `SessionEnd`,
@@ -80,6 +89,9 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   `hooks/st-post-tooluse.py` use `matcher: "Write|Edit|MultiEdit"`: without one, the
   hook spawns a process on *every* tool call. Re-running an installer **moves** an entry found under a different matcher
   into the requested group, so a narrowing reaches installs that already exist.
+  Because both gates fire only on `Write|Edit|MultiEdit`, a file written via a Bash
+  heredoc bypasses **all** validation — check such a file by hand with
+  `/neurawork-cc-harness:co-validate <path>`.
 - **Test discovery quirk:** `engines/` is a namespace package and the engine dirs
   are hyphenated, so a single `unittest discover -s engines` under-collects (finds
   only `_shared`). Run discovery per test directory — see the root `CLAUDE.md`.

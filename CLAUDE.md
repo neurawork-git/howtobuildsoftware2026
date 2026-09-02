@@ -206,6 +206,15 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   hooks idempotently; ADOPT mode refreshes code without clobbering existing data.
 - **Subscription credentials are not sanctioned** for third-party plugin use; public
   installs must set an API key in the environment.
+- **`.claude/PRPs/` is an immutable historical archive** — completed PRDs, plans,
+  reports and filed tech-stack specs (`.claude/PRPs/specs/<name>.spec.md`) are left as
+  written, never rewritten to match current context, even when they
+  reference retired or renamed concepts.
+- **Never set `env.PRP_HOME` in `.claude/settings.json`** — the `prp-core` resolver
+  always appends `<slug>-<hash8>` to whatever `PRP_HOME` names, so a literal path nests
+  a second `.claude/PRPs/<slug>-<hash>/` store and new plans land in the wrong
+  directory. Leave the flat default store (`plans/ prds/ reports/ specs/`); `.gitignore`
+  pins its metadata by the non-nested `.claude/PRPs/project.json` (fix `ad63119`).
 
 ## Working principles
 

@@ -82,6 +82,12 @@ neither. Slash-command equivalents: `/neurawork-cc-harness:co-extract`,
   counted gap.
 - **The gap report is report-only and exits 0.** An unfilled stack is the normal
   starting state, not a regression. Enforcement is the plan validator's job.
+- **A `replaced` verdict is not a rejection.** In a catalog capability's `stack[]`,
+  `verdict: "replaced"` means the component *superseded* the one named in
+  `replaced_from` during the license audit — it stays a live option. Every entry is a
+  live recommendation regardless of verdict, so `stack.py`'s `component_options()`
+  never filters on verdict (doing so would drop a large share of the catalog's
+  components).
 - **Copyright**: the catalog stores official control/article identifiers, short titles,
   and *paraphrased* requirements — never verbatim text of the copyrighted standards.
 - Nothing is written under `.claude/` — enforced at runtime by `_shared/repo_guard.py`.

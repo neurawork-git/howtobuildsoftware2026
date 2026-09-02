@@ -37,6 +37,11 @@ writes — keep them in sync with how this repo is actually laid out.
   fires the gated background `update.py`. `CLAUDE.md` + `docs/` are already read at
   session start, so re-injecting them would only crowd the context; that
   `SessionStart` budget is left for `knowledge-compiler`'s concepts inject.
+- The background `update.py` is **detached and unwaited**, so a crash (even one at
+  import, before argparse) leaves no visible trace in the session. Its stdout+stderr
+  are appended to `scripts/update.log` (gitignored via `scripts/*.log`) — read that
+  file to diagnose a run that "did nothing". A dead run is what the doctor's
+  "stamped but nothing ingested" WARN reports; re-run in the foreground to see the error.
 - The updater **edits docs in place, surgically** — it does not rewrite from scratch,
   never invents, and refuses to write outside the repo or under `.claude/`
   (`_shared/repo_guard.py`).
