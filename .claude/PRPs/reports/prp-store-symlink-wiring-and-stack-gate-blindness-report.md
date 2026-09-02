@@ -137,9 +137,11 @@ tests; `CLAUDE.md`, `docs/INSTALL.md`, `docs/ARCHITECTURE.md`, both SKILL.md fil
 - **Base / Head:** `main <- feature/prp-store-symlink-and-stack-gate` (branch deleted remote
   and local; worktree removed)
 - **Source PRD:** `None`
-- **Tracked follow-ups:** two drift guards this work's manual mirroring made overdue, both
-  built immediately afterwards on `chore/drift-guards-and-plan-archive`:
-  `engines/compliance-compiler/tests/test_payload_drift.py` (the guard `stack-compiler` had
-  and compliance did not — this work edited both hook copies by hand) and
-  `tests/test_selfhost_version.py` (every self-host `VERSION` against its engine's — this
-  work moved four of those files by hand). Both proven to fail on an introduced drift.
+- **Tracked follow-ups:** the drift guards this work's manual mirroring made overdue, shipped
+  in PR #51 and finished right after it. Both are now single walks over the `harness_probe`
+  registry at the plugin root: `tests/test_payload_drift.py` (every engine's `payload/`
+  against its self-host — this work edited both copies of compliance's hook by hand) and
+  `tests/test_selfhost_version.py` (each self-host's `VERSION` against its engine's — this
+  work moved four of those files by hand). The per-engine copies PR #51 started with were
+  replaced by the walk, so both facts have one owner. Each proven to fail on an introduced
+  drift, in both directions.

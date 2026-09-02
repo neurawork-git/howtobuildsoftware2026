@@ -37,10 +37,14 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   researcher, spawned by the `knowledge-compiler` payload's two injecting hooks.
 - `tests/` — structural tests over the prompt-only assets (frontmatter agreement, the
   workflow name resolution, and the worktree guard invariants), plus the two guards that
-  belong to no single engine: `test_doctor.py` and `test_selfhost_version.py`, which walks
-  the `harness_probe` registry and fails when a self-host's `VERSION` differs from its
-  engine's (a bump that moves only one of the two makes `/nw-doctor` report a staleness
-  that does not exist). Run from the plugin root:
+  belong to no single engine: `test_doctor.py`, plus the two walks over the
+  `harness_probe` registry — `test_payload_drift.py` (every engine's `payload/` against
+  its self-host, git-tracked files only, so a live install's state is not mistaken for
+  code) and `test_selfhost_version.py` (each self-host's `VERSION` against its engine's;
+  a bump that moves only one of the two makes `/nw-doctor` report a staleness that does
+  not exist). One walk each rather than a file per engine: the comparison is identical
+  for all four, and two of them had no guard at all while the other two kept near-copies.
+  Run from the plugin root:
   `python3 -m unittest discover -s tests`.
 - `engines/<engine>/` — one per skill, plus shared code:
   - `install.py` — copies `payload/` + `_shared/` into the target repo, scaffolds
