@@ -27,6 +27,16 @@ writes — keep them in sync with how this repo is actually laid out.
 - **Do not hand-edit the machinery** (`hooks/`, `scripts/`, `_shared/`, `AGENTS.md`,
   `pyproject.toml`). It is copied from the plugin payload and is overwritten on
   re-install (ADOPT). Fix the source under `plugins/…/engines/claudemd-lerner/payload/`.
+  The engine lives in **two byte-identical copies** — the payload
+  (`plugins/…/engines/claudemd-lerner/payload/hooks/`) and this self-host
+  (`claudemd-lerner/hooks/`) — that must stay in sync; version bumps (`VERSION`,
+  `pyproject.toml`) apply to both. After editing a hook, confirm
+  `diff -rq claudemd-lerner/hooks/ plugins/neurawork-cc-harness/engines/claudemd-lerner/payload/hooks/`
+  is empty as a sync check.
+- The `SessionStart` hook (`cl-session-start.py`) **injects no context** — it only
+  fires the gated background `update.py`. `CLAUDE.md` + `docs/` are already read at
+  session start, so re-injecting them would only crowd the context; that
+  `SessionStart` budget is left for `knowledge-compiler`'s concepts inject.
 - The updater **edits docs in place, surgically** — it does not rewrite from scratch,
   never invents, and refuses to write outside the repo or under `.claude/`
   (`_shared/repo_guard.py`).

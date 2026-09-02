@@ -79,3 +79,6 @@ temp/
 
 # prp-core store metadata (absolute machine path)
 .claude/PRPs/project.json
+
+# Obsidian local editor state
+.obsidian/
