@@ -22,6 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import rank_lib
+from config import DEFAULT_CFG  # type: ignore[reportMissingImports]
 
 # Where a catalog name stops being the component and starts being a description:
 # ``"PostgreSQL (append-only disclosure ledger via …)"`` is the component
@@ -47,33 +48,73 @@ _STATUS_ORDER = ("on_stack", "off_stack", "undecided", "scoped_out", "orphaned")
 
 # ── Which documents this gate reads ───────────────────────────────────
 
+_MISSING = object()
+
+
+def _cfg_strings(cfg: dict, key: str) -> tuple[str, ...]:
+    """A document-matching config value as a tuple of strings (accepts one or many).
+
+    Falls back to the default when the key is absent or not a string/list, so an
+    ADOPT install whose ``config.json`` predates these keys keeps the documented
+    behaviour instead of silently matching nothing. An explicitly empty list is
+    honoured — that is how you switch one document kind off without uninstalling.
+    """
+    value = cfg.get(key, _MISSING)
+    if not isinstance(value, (str, list, tuple)):
+        value = DEFAULT_CFG[key]
+    if isinstance(value, str):
+        value = [value]
+    return tuple(v.strip() for v in value if isinstance(v, str) and v.strip())
+
+
+def _segments(subpath: str) -> tuple[str, ...]:
+    """Split a configured subpath into path segments, tolerating either slash style
+    and stray separators (``./.planning/phases/`` → ``.planning``, ``phases``)."""
+    return tuple(s for s in subpath.replace("\\", "/").split("/") if s and s != ".")
+
+
+def _matches(parts: tuple[str, ...], head: tuple[str, ...]) -> bool:
+    """True iff ``parts`` starts with ``head``, where a ``*`` segment in ``head``
+    matches exactly one segment of ``parts`` (``.claude/PRPs/*/plans``)."""
+    return len(parts) >= len(head) and all(
+        want == "*" or want == have for want, have in zip(head, parts)
+    )
+
+
 def document_kind(path_str: str, repo_root: Path | str, cfg: dict) -> str:
     """``"prd"`` | ``"plan"`` | ``""`` for a written path.
 
     Same shape and the same ``(ValueError, OSError)`` tolerance as
     ``compliance-base``'s ``precheck.is_plan_path``, widened to the two document
-    kinds this gate covers and taking the subpaths from ``cfg`` rather than
-    importing the sibling engine's constant. An archived document (``completed``
-    anywhere below the subpath) is a record, not pending work, and never matches.
+    kinds this gate covers and reading its keys from ``cfg`` rather than importing
+    the sibling engine's constants. Which files qualify is configurable via
+    ``prds_subpath`` / ``plans_subpath``, ``prd_suffix`` / ``plan_suffix`` and
+    ``doc_archive_segments`` (see ``config.DEFAULT_CFG``); an archived document — one
+    carrying an archive segment below the subpath — is a record, not pending work,
+    and never matches.
     """
     if not path_str:
         return ""
     p = Path(path_str)
-    if p.name.endswith(".prd.md"):
-        kind, subpath = "prd", str(cfg.get("prds_subpath") or ".claude/PRPs/prds")
-    elif p.name.endswith(".plan.md"):
-        kind, subpath = "plan", str(cfg.get("plans_subpath") or ".claude/PRPs/plans")
-    else:
-        return ""
-    try:
-        rel = p.resolve().relative_to(Path(repo_root).resolve())
-    except (ValueError, OSError):
-        return ""
-    head = tuple(part for part in subpath.split("/") if part)
-    parts = rel.parts
-    if parts[: len(head)] != head:
-        return ""
-    return "" if "completed" in parts[len(head):] else kind
+    for kind, suffix_key, subpath_key in (
+        ("prd", "prd_suffix", "prds_subpath"),
+        ("plan", "plan_suffix", "plans_subpath"),
+    ):
+        if not any(p.name.endswith(s) for s in _cfg_strings(cfg, suffix_key)):
+            continue
+        try:
+            rel = p.resolve().relative_to(Path(repo_root).resolve())
+        except (ValueError, OSError):
+            return ""
+        parts = rel.parts
+        archived = _cfg_strings(cfg, "doc_archive_segments")
+        for subpath in _cfg_strings(cfg, subpath_key):
+            head = _segments(subpath)
+            if head and _matches(parts, head):
+                if any(seg in archived for seg in parts[len(head):]):
+                    return ""
+                return kind
+    return ""
 
 
 # ── The closed pool, and finding it in prose ──────────────────────────
