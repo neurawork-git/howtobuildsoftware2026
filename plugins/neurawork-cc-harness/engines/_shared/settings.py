@@ -87,7 +87,8 @@ def merge_hooks(
     - Creates ``.claude/settings.json`` (and the dir) if absent.
     - For each hook: if a hook whose command contains ``marker`` already exists
       under ``event`` — in ANY matcher group — update only its command if it
-      drifted (keeps hand-edited timeout/type), and MOVE it into the requested
+      drifted (keeps its type), RAISE its timeout to the shipped value when it sits
+      below it (a hand-edited HIGHER value is kept), and MOVE it into the requested
       matcher's group when it sits under a different one, dropping the group it
       leaves behind once empty; otherwise append a new entry, reusing the group
       whose ``matcher`` equals the requested one if it exists, else creating it.
@@ -121,6 +122,14 @@ def merge_hooks(
             # Migration: replace a stale command in place; keep timeout/type.
             if existing.get("command") != command:
                 existing["command"] = command
+                changed = True
+            # Migration: the shipped timeout is a FLOOR, not a default. A value below it
+            # is not a preference — it is an install made before the engine knew what its
+            # own cold start costs, and it kills the hook mid-bootstrap. Raise it; a
+            # higher hand-edited value is still that user's choice and is left alone.
+            current_timeout = existing.get("timeout")
+            if not isinstance(current_timeout, int) or current_timeout < timeout:
+                existing["timeout"] = timeout
                 changed = True
             # Migration: an install made before this hook carried a matcher registered it
             # under the wrong one. MOVE the entry — leaving it where it is would keep the
@@ -196,5 +205,31 @@ def merge_gitignore(target: Path | str, content: str) -> bool:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / ".gitignore.tmp"
     tmp.write_text(prefix + "\n".join(missing) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+    return True
+
+
+def prune_gitignore(target: Path | str, rules: Sequence[str]) -> bool:
+    """Remove ``rules`` from ``<target>/.gitignore`` if they are there.
+
+    Returns True when the file was written, False when no named rule was present
+    (idempotent no-op) or the file does not exist. Same contract as merge_gitignore.
+
+    The counterpart merge_gitignore needs: that merge is append-only, so dropping a
+    rule from a shipped body reaches fresh installs only — every repo that already
+    installed keeps the line forever. A line matches when its stripped form equals a
+    named rule; every other line, including comments, blanks and the user's own
+    rules, is left byte-identical in place.
+    """
+    path = Path(target) / ".gitignore"
+    if not path.exists():
+        return False
+    existing = path.read_text(encoding="utf-8")
+    drop = set(rules)
+    kept = [line for line in existing.splitlines() if line.strip() not in drop]
+    if len(kept) == len(existing.splitlines()):
+        return False
+    tmp = path.parent / ".gitignore.tmp"
+    tmp.write_text("\n".join(kept) + "\n" if kept else "", encoding="utf-8")
     os.replace(tmp, path)
     return True

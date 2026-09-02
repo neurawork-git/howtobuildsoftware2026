@@ -133,10 +133,11 @@ symlinks are unavailable or that key is already taken, it falls back to
 `PRP_HOME` and an occupied store are never overwritten. Choosing to extract instead fans out ~30 parallel SDK
 agents. From then on:
 
-- Every PRP plan write is validated automatically: a fast inline structural precheck
-  plus a detached deep LLM report under `compliance-base/reports/`. Both plan
-  locations count — `.claude/PRPs/plans/*.plan.md` and the `PRP_HOME` store layout
-  `.claude/PRPs/<repo>-<hash>/plans/*.plan.md`; archived plans under `completed/` do not.
+- Every plan write is validated automatically: a fast inline structural precheck
+  plus a detached deep LLM report under `compliance-base/reports/`. Which files count
+  as a plan defaults to the PRP layout — `.claude/PRPs/plans/*.plan.md` and the
+  `PRP_HOME` store `.claude/PRPs/<repo>-<hash>/plans/*.plan.md`; archived plans under
+  `completed/` do not. It is configurable — see below.
 - Rebuild the constraint catalog on demand: `/neurawork-cc-harness:co-extract`.
 - Re-derive the **capability layer** and refresh the stack scaffold:
   `/neurawork-cc-harness:co-capabilities`. It clusters the constraints into concrete
@@ -145,6 +146,37 @@ agents. From then on:
   which component you actually chose per capability — plus a gap report under
   `compliance-base/reports/` naming the capabilities still undecided.
 - Validate a plan manually: `/neurawork-cc-harness:co-validate <path-to-plan>`.
+
+#### Plans that do not live in `.claude/PRPs/plans`
+
+The validator hook only fires for files it recognises as a plan. Three keys in
+`<catalog_dir>/config.json` define that; each takes a single string or a list.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `plans_subpath` | `[".claude/PRPs/plans", ".claude/PRPs/*/plans"]` | directory prefix(es), relative to the repo root; a `*` segment matches exactly one path segment (here: the `PRP_HOME` store key) |
+| `plan_suffix` | `.plan.md` | filename suffix(es) |
+| `plan_archive_segments` | `["completed"]` | path segment below the prefix that marks a plan as archived (skipped) |
+
+For a repo whose plans live at `.planning/phases/<phase>/NN-NN-PLAN.md`:
+
+```json
+{
+  "plans_subpath": ".planning/phases",
+  "plan_suffix": "-PLAN.md"
+}
+```
+
+Both layouts side by side: pass lists, e.g.
+`"plans_subpath": [".claude/PRPs/plans", ".planning/phases"]`.
+
+`stack-base/config.json` carries the same three keys plus `prds_subpath` /
+`prd_suffix` for PRDs; the two gates read their own config and are set independently.
+
+Keys absent from an existing `config.json` fall back to the defaults, so an
+upgrade over an older install keeps behaving exactly as before. An explicitly
+empty list (`[]`) matches nothing — that is how you switch the validator off
+without uninstalling the hook.
 
 The catalog stores only official control/article identifiers, short titles, and
 *paraphrased* requirements — never verbatim text of the copyrighted standards.
@@ -179,6 +211,12 @@ Three passes, then the gate:
   detached deep report under `stack-base/reports/`. `config.json`'s `validate_mode` sets
   `warn` | `block` per document type. Validate manually:
   `/neurawork-cc-harness:st-validate <path-to-prd-or-plan>`.
+- Which files count as a PRD or a plan is configurable exactly as the compliance gate's
+  is (see [above](#plans-that-do-not-live-in-claudeprpsplans)) — `prds_subpath` /
+  `plans_subpath`, `prd_suffix` / `plan_suffix`, and `doc_archive_segments` in
+  `stack-base/config.json`, each a string or a list, `*` matching one path segment. The
+  two gates are configured **separately**: pointing one at a repo's layout leaves the
+  other blind.
 
 The component pool is closed — a ranking must name exactly that capability's `options`,
 and a choice must come from them — and a deterministic gate (pool match plus the

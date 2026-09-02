@@ -27,8 +27,9 @@ VERSION_FILE = ENGINE_DIR / "VERSION"
 sys.path.insert(0, str(ENGINE_DIR.parent))  # engines/ for _shared
 
 from _shared.recon import git_root_or_none
-from _shared.settings import merge_gitignore, merge_hooks
+from _shared.settings import merge_gitignore, merge_hooks, prune_gitignore
 from _shared.repo_guard import assert_in_repo_not_dotclaude, WriteGuardError
+from _shared_install import refresh_shared
 
 GITIGNORE = """\
 # knowledge-compiler runtime (knowledge/ is tracked; these are local)
@@ -45,8 +46,13 @@ scripts/flush-context-*.md
 __pycache__/
 *.pyc
 .venv/
-uv.lock
 """
+
+# Rules this engine USED to ship in GITIGNORE and no longer does. Pruned on every
+# install so the line an earlier release wrote is removed from installs that already
+# exist — merge_gitignore only ever appends. uv.lock is TRACKED now: a committed lock
+# file removes the dependency resolve from a hook's cold start in a fresh checkout.
+REMOVED_GITIGNORE_RULES = ("uv.lock",)
 
 INDEX_SEED = """\
 # Knowledge Base Index
@@ -72,9 +78,9 @@ def _copy_code(target: Path) -> None:
             shutil.copy2(src, target / "scripts" / src.name)
     shutil.copy2(PAYLOAD / "pyproject.toml", target / "pyproject.toml")
     shutil.copy2(PAYLOAD / "AGENTS.md", target / "AGENTS.md")
-    # _shared refreshed every install (single source of truth).
-    shutil.copytree(SHARED_SRC, target / "_shared",
-                    ignore=shutil.ignore_patterns("__pycache__"), dirs_exist_ok=True)
+    # _shared refreshed every install (single source of truth), minus the tests that
+    # only make sense inside the plugin — see engines/_shared_install.py.
+    refresh_shared(SHARED_SRC, target)
 
 
 def _scaffold(target: Path, kdir: str) -> None:
@@ -94,6 +100,7 @@ def _scaffold(target: Path, kdir: str) -> None:
     # Merge, never create-if-absent: a rule added to GITIGNORE in a later release has to
     # reach the installs that already exist, and only the missing lines are appended so a
     # user's own rules keep their place.
+    prune_gitignore(target, REMOVED_GITIGNORE_RULES)
     merge_gitignore(target, GITIGNORE)
 
     shutil.copy2(VERSION_FILE, target / "VERSION")
@@ -104,15 +111,15 @@ def _hooks(kdir: str) -> list[tuple[str, str, int, str] | tuple[str, str, int, s
     # The 4-tuples below register in the catch-all group deliberately: none of these
     # events carries a tool name, so there is nothing for a matcher to select on.
     return [
-        ("SessionStart", f"{base} hooks/session-start.py", 15, "hooks/session-start.py"),
-        ("PreCompact", f"{base} hooks/pre-compact.py", 10, "hooks/pre-compact.py"),
-        ("SessionEnd", f"{base} hooks/session-end.py", 10, "hooks/session-end.py"),
+        ("SessionStart", f"{base} hooks/session-start.py", 60, "hooks/session-start.py"),
+        ("PreCompact", f"{base} hooks/pre-compact.py", 60, "hooks/pre-compact.py"),
+        ("SessionEnd", f"{base} hooks/session-end.py", 60, "hooks/session-end.py"),
         # The two kb-researcher spawn triggers. A research skill is entered by two paths
         # and no single event sees both — see payload/scripts/research_directive.py.
-        ("UserPromptSubmit", f"{base} hooks/user-prompt-submit.py", 10,
+        ("UserPromptSubmit", f"{base} hooks/user-prompt-submit.py", 60,
          "hooks/user-prompt-submit.py"),
         # The 5-tuple: the "Skill" matcher is what stops this firing on EVERY tool call.
-        ("PreToolUse", f"{base} hooks/pre-skill.py", 10, "hooks/pre-skill.py", "Skill"),
+        ("PreToolUse", f"{base} hooks/pre-skill.py", 60, "hooks/pre-skill.py", "Skill"),
     ]
 
 

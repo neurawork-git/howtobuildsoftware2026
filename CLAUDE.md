@@ -45,6 +45,16 @@ python3 -m unittest discover -s tests
 
 The tests use a real git temp repo and subprocess; they make no network/LLM calls.
 
+The plugin-level `SessionStart` hook is Node (see `docs/ARCHITECTURE.md` for why), so its
+tests run on the built-in `node:test` runner instead. From the repo root:
+
+```bash
+node --test plugins/neurawork-cc-harness/hooks/version-check.test.js
+```
+
+Name the file, not the directory: `node --test <dir>` resolves a bare directory path as a
+module and fails with `MODULE_NOT_FOUND`.
+
 **Lint:** `ruff` is configured (`line-length = 100`) in each `pyproject.toml`:
 
 ```bash
@@ -113,7 +123,8 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   `scripts/` is a fourth surface that installs nothing either: plugin-side, stdlib-only,
   system-`python3` diagnostics. `harness_probe.py` owns the engine registry and install
   discovery (by hook marker *and* by directory signature — their disagreement is the
-  finding), read by both `hooks/version-check.py` and `scripts/doctor.py` (`/nw-doctor`).
+  finding), imported by `scripts/doctor.py` (`/nw-doctor`) and mirrored — under the
+  drift guard `tests/test_version_check_registry.py` — by the Node `hooks/version-check.js`.
   Marker blocks are **learner-protected**: `claudemd-lerner` snapshots every
   `owner:name` marker span before its SDK run and restores it byte-for-byte afterwards
   (`payload/scripts/markers.py`), so no tool-owned block is silently reworded.

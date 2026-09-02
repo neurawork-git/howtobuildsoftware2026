@@ -37,10 +37,8 @@ sys.path.insert(0, str(ENGINE_DIR.parent))  # engines/ for _shared
 from _shared.prp_store import wire_store
 from _shared.recon import git_root_or_none
 from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
-from _shared.settings import SettingsError, merge_gitignore, merge_hooks
-
-# _shared tests that only make sense inside the plugin checkout — see _copy_code.
-PLUGIN_ONLY_SHARED_TESTS = ("test_manifest.py", "test_version_check.py")
+from _shared.settings import SettingsError, merge_gitignore, merge_hooks, prune_gitignore
+from _shared_install import refresh_shared
 
 GITIGNORE = """\
 # stack-compiler runtime (product.md is TRACKED — it is the scoping input of
@@ -52,8 +50,13 @@ scripts/*.log
 __pycache__/
 *.pyc
 .venv/
-uv.lock
 """
+
+# Rules this engine USED to ship in GITIGNORE and no longer does. Pruned on every
+# install so the line an earlier release wrote is removed from installs that already
+# exist — merge_gitignore only ever appends. uv.lock is TRACKED now: a committed lock
+# file removes the dependency resolve from a hook's cold start in a fresh checkout.
+REMOVED_GITIGNORE_RULES = ("uv.lock",)
 
 
 def _is_adopt(target: Path) -> bool:
@@ -71,16 +74,9 @@ def _copy_code(target: Path) -> None:
         shutil.copy2(src, target / "scripts" / src.name)
     shutil.copy2(PAYLOAD / "pyproject.toml", target / "pyproject.toml")
     shutil.copy2(PAYLOAD / "AGENTS.md", target / "AGENTS.md")
-    # _shared refreshed every install (single source of truth). Two of its tests assert
-    # plugin-level facts (the manifest, <plugin>/hooks/version-check.py) that do not exist
-    # in an installed copy — they would fail on arrival, so they stay in the plugin.
-    shutil.copytree(SHARED_SRC, target / "_shared",
-                    ignore=shutil.ignore_patterns("__pycache__", *PLUGIN_ONLY_SHARED_TESTS),
-                    dirs_exist_ok=True)
-    for name in PLUGIN_ONLY_SHARED_TESTS:  # drop copies an older install left behind
-        stale = target / "_shared" / "tests" / name
-        if stale.exists():
-            stale.unlink()
+    # _shared refreshed every install (single source of truth), minus the tests that
+    # only make sense inside the plugin — see engines/_shared_install.py.
+    refresh_shared(SHARED_SRC, target)
 
 
 def _scaffold(target: Path, sdir: str, cdir: str) -> None:
@@ -97,6 +93,7 @@ def _scaffold(target: Path, sdir: str, cdir: str) -> None:
     # Merge, never create-if-absent: a rule added in a later release has to reach the
     # installs that already exist, and only the missing lines are appended — a user's
     # own rules keep their place.
+    prune_gitignore(target, REMOVED_GITIGNORE_RULES)
     merge_gitignore(target, GITIGNORE)
 
     shutil.copy2(VERSION_FILE, target / "VERSION")
@@ -109,7 +106,7 @@ def _hooks(sdir: str) -> list[tuple[str, str, int, str, str]]:
     # that reads stdin and exits. The hook keeps its own WRITE_TOOLS check — a matcher is
     # an optimisation, and a settings.json someone edited by hand must still be safe.
     return [
-        ("PostToolUse", f"{base} hooks/st-post-tooluse.py", 15,
+        ("PostToolUse", f"{base} hooks/st-post-tooluse.py", 60,
          "hooks/st-post-tooluse.py", "Write|Edit|MultiEdit"),
     ]
 

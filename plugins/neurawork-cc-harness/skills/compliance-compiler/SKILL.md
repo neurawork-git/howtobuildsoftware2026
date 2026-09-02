@@ -17,13 +17,16 @@ Installs the compliance-compiler engine into the current repo. Three parts:
    `<catalog_dir>/catalog/capabilities.{json,md}`, failing when a mandatory constraint
    is covered by none. `scripts/stack.py` keeps `catalog/stack.json` — which component
    was actually chosen per capability — plus a gap report of the undecided ones.
-3. **Validation** — a `PostToolUse` hook checks each PRP plan file as it is written: a
+3. **Validation** — a `PostToolUse` hook checks each plan file as it is written: a
    fast structural precheck inline, plus a detached deep LLM report in
    `<catalog_dir>/reports/`. Both the mandatory constraints and the plan's declared
-   capabilities are checked. Two locations count — `.claude/PRPs/plans/*.plan.md` and
-   the store layout `.claude/PRPs/<repo>-<hash>/plans/*.plan.md` — and the install wires
-   the store into the repo (a symlink `~/.prp/<repo>-<hash>` → `<main-checkout>/.claude/PRPs`,
+   capabilities are checked. Plans default to the PRP layout — `.claude/PRPs/plans/*.plan.md`
+   and the store layout `.claude/PRPs/*/plans/*.plan.md` — and the install wires that store
+   into the repo (a symlink `~/.prp/<repo>-<hash>` → `<main-checkout>/.claude/PRPs`,
    `PRP_HOME` as the fallback) so prp-core writes there instead of `~/.prp`.
+   `plans_subpath` / `plan_suffix` / `plan_archive_segments` in `<catalog_dir>/config.json`
+   point the hook at another layout (each takes a string or a list; `*` matches one path
+   segment). Absent keys fall back to the defaults, so an ADOPT install is unaffected.
 
 The catalog always lives inside the repo, never under `.claude/`.
 
@@ -77,7 +80,10 @@ Then tell the user to commit `<NAME>/` and `.claude/settings.json`. After instal
   LLM run needed to reach a usable state; report any line the installer printed about a
   skipped stack scaffold, or about how the PRP store was wired (linked, or fallen back
   to `PRP_HOME` because the store key was occupied).
-- Every PRP plan write is checked automatically.
+- Every plan write is checked automatically. If the repo keeps its plans somewhere
+  other than `.claude/PRPs/plans/*.plan.md`, say so and point at `plans_subpath` /
+  `plan_suffix` in `<NAME>/config.json` — otherwise the hook stays silent and looks
+  like it is working.
 - Manual extract: `/neurawork-cc-harness:co-extract`.
 - Re-derive the capability layer + stack scaffold:
   `/neurawork-cc-harness:co-capabilities`.

@@ -7,12 +7,12 @@
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/session-start.py",
-            "timeout": 15
+            "timeout": 60
           },
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/claudemd-lerner\" python hooks/cl-session-start.py",
-            "timeout": 15
+            "timeout": 60
           }
         ]
       }
@@ -24,12 +24,12 @@
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/pre-compact.py",
-            "timeout": 10
+            "timeout": 60
           },
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/claudemd-lerner\" python hooks/cl-pre-compact.py",
-            "timeout": 10
+            "timeout": 60
           }
         ]
       }
@@ -41,12 +41,12 @@
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/session-end.py",
-            "timeout": 10
+            "timeout": 60
           },
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/claudemd-lerner\" python hooks/cl-session-end.py",
-            "timeout": 10
+            "timeout": 60
           }
         ]
       }
@@ -58,12 +58,12 @@
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/compliance-base\" python hooks/co-post-tooluse.py",
-            "timeout": 15
+            "timeout": 60
           },
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/stack-base\" python hooks/st-post-tooluse.py",
-            "timeout": 15
+            "timeout": 60
           }
         ]
       }
@@ -75,7 +75,7 @@
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/user-prompt-submit.py",
-            "timeout": 10
+            "timeout": 60
           }
         ]
       }
@@ -87,7 +87,7 @@
           {
             "type": "command",
             "command": "uv run --directory \"$CLAUDE_PROJECT_DIR/knowledge-base\" python hooks/pre-skill.py",
-            "timeout": 10
+            "timeout": 60
           }
         ]
       }

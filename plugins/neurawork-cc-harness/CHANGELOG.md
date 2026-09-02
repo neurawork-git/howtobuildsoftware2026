@@ -15,20 +15,7 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
-## [0.8.0] — 2026-09-02
-
-### Fixed
-
-- **The stack gate was blind to every document prp-core writes.**
-  `stack-compiler`'s `gate_lib.document_kind` compared a written path against exactly one
-  subpath prefix, so `.claude/PRPs/<slug>-<hash8>/plans/x.plan.md` — the layout prp-core's
-  store resolver produces — classified as neither PRD nor plan. `hooks/st-post-tooluse.py`
-  then returned before the existence check, the catalog load and its only `print`: no
-  report, no stderr, nothing to distinguish a gate that never looked from one that
-  approved. It now accepts the same **one store segment** `compliance-compiler`'s
-  `precheck.is_plan_path` has accepted since the store layout appeared, in that one
-  position only, with `completed/` still rejected in both layouts.
-  (`engines/stack-compiler/VERSION` 2 → 3.)
+## [0.9.0] — 2026-09-02
 
 ### Changed
 
@@ -46,12 +33,80 @@ section here.
   resolved against the installer's working directory and put the link inside the repo's own
   store, pointing at its own parent. An upgrade that leaves that key in `settings.json` is
   told the key still wins and the new link stays inert until it is removed.
-  (`engines/compliance-compiler/VERSION` 5 → 6.)
+  (`engines/compliance-compiler/VERSION` 6 → 7, `engines/stack-compiler/VERSION` 3 → 4.)
 - **`/nw-doctor` reports the store wiring.** A new repo-scoped `prp-store` check names
   which wiring a repo has (linked, `PRP_HOME`, both — where `PRP_HOME` wins and the link is
   inert — or neither, which is the warning that documents land outside the repo), reports a
   link resolving somewhere else, and, from a worktree, counts the documents that exist only
   there. It runs only where a gate-owning engine is installed, and stays read-only.
+
+  The gate blindness this wiring was found through — `document_kind` seeing none of the
+  documents prp-core writes — was fixed independently in 0.8.0, by making the subpath a
+  configurable list with a `*` segment (`.claude/PRPs/*/plans`). Both halves are needed:
+  the filter tolerates the store layout every existing `PRP_HOME` install still produces,
+  and the link stops producing one store per checkout in the first place.
+
+## [0.8.0] — 2026-09-02
+
+### Fixed
+
+- **Harness hooks were killed mid-bootstrap in a fresh checkout.** Every engine hook is a
+  `uv run`, `uv.lock` was gitignored, and the shipped timeouts were 10 s (SessionEnd,
+  PreCompact, UserPromptSubmit, PreToolUse) and 15 s (SessionStart, both PostToolUse
+  gates). A fresh worktree or clone therefore paid a full dependency resolve plus install
+  — measured ~12 s for a single engine — on the first hook fire and was cancelled before
+  it finished, which Claude Code reports as `failed: Hook cancelled`. It did not
+  self-heal: each killed run left a partial `.venv`, so the next fire was cold again.
+  Two changes close it. Every engine hook now ships a 60 s timeout, and the shipped
+  timeout is a **floor**: `merge_hooks` raises an existing entry that sits below it, so
+  the fix reaches installations that already exist. A higher hand-edited value is still
+  kept. And `uv.lock` is now tracked instead of ignored, which removes the resolve from
+  the cold start; `prune_gitignore` (the new counterpart to the append-only
+  `merge_gitignore`) removes the ignore rule an earlier release wrote.
+- **Two installs shipped tests that fail on arrival.** `_shared/tests/test_manifest.py`
+  and `test_version_check.py` assert plugin-level facts (the plugin manifest,
+  `<plugin>/hooks/version-check.py`) that no target repo has. `compliance-compiler` and
+  `stack-compiler` excluded them from the `_shared/` copy; `knowledge-compiler` and
+  `claudemd-lerner` did not, so their installs received both files, where they fail with
+  `FileNotFoundError`. The exclusion — and the copy itself, which was byte-identical in
+  all four installers — now has one definition in `engines/_shared_install.py`, called by
+  all four. It also unlinks copies an older install left behind, so an existing install is
+  repaired on its next re-install.
+
+All four engine VERSIONs are bumped, so existing installs are nudged to re-install.
+
+**To receive these fixes:** `/plugin update` + `/reload-plugins`, then re-run each
+installed engine's install skill. Both migrations — the timeout raise and the `.gitignore`
+prune — happen during an install run and nowhere else.
+
+## [0.7.1] — 2026-09-02
+
+### Fixed
+
+- **The `SessionStart` staleness nudge printed an error into every Windows session.**
+  `hooks/hooks.json` named `python3`, which on Windows resolves to the Microsoft Store
+  app-execution alias. The alias writes `Python was not found` to **stdout**, and
+  `SessionStart` stdout is injected into the session as `additionalContext` — so a hook
+  documented as a silent no-op became a visible one (#16). `python` is not a fix either:
+  macOS has shipped no unsuffixed `python` since 12.3, so the two candidate names fail on
+  opposite platforms and no third name exists everywhere. `uv` is out too — an 11.6 s cold
+  start against this hook's 10 s timeout (#5), and this is precisely the script that must
+  bootstrap before the toolchain exists.
+
+  The hook therefore stops naming an interpreter: `hooks/version-check.py` becomes
+  `hooks/version-check.js`, spawned through the hook **exec form** (`"command": "node"`,
+  script path in `args`, no shell). `node` is on `PATH` wherever Claude Code runs. Same
+  logic, same output, tests ported to the built-in `node:test` runner
+  (`hooks/version-check.test.js`).
+
+  One cost, one guard: a Node hook cannot import the Python engine registry in
+  `scripts/harness_probe.py`, so it carries a transcription of the engine → hook-marker map.
+  `tests/test_version_check_registry.py` fails the build when the two disagree — the map had
+  already fallen a whole engine behind reality once, which is what the shared registry was
+  extracted to end.
+
+  Not verified on Windows — the author reports macOS 15.7.3 / Node 22.19 only, and the
+  platform the fix exists for is the one gap left (tracked in `.claude/BACKLOG.md`).
 
 ## [0.7.0] — 2026-09-02
 

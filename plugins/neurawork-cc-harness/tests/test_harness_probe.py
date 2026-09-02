@@ -1,7 +1,8 @@
 """Stdlib tests for the shared engine registry and install discovery.
 
-The registry is the single source of truth both `hooks/version-check.py` and
-`scripts/doctor.py` read; these pin the properties whose loss is silent — an engine
+The registry is the single source of truth `scripts/doctor.py` reads and
+`hooks/version-check.js` is held against (`test_version_check_registry.py`); these pin
+the properties whose loss is silent — an engine
 that stops being discoverable, a hook/dir disagreement that stops being visible, and
 a partial copy that starts counting as an install.
 

@@ -78,7 +78,13 @@ class TestHooksJson(unittest.TestCase):
                 for hook in group["hooks"]:
                     with self.subTest(event=event, command=hook.get("command")):
                         self.assertEqual(hook["type"], "command")
-                        self.assertIn("${CLAUDE_PLUGIN_ROOT}", hook["command"])
+                        # Two spellings, one requirement: the shell form carries the
+                        # script path in `command`, the exec form carries it in `args`
+                        # (`command` is then the bare executable, e.g. "node"). Either
+                        # way the path must be plugin-root-relative — a relative path
+                        # resolves against the user's cwd, not the plugin.
+                        target = " ".join([hook["command"], *hook.get("args", [])])
+                        self.assertIn("${CLAUDE_PLUGIN_ROOT}", target)
                         self.assertIsInstance(hook["timeout"], int)
 
 
