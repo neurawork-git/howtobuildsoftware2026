@@ -1,8 +1,8 @@
 # Implementation Report
 
-**Plan:** `/home/felix/projects/howtobuildsoftware2026/.claude/PRPs/plans/stack-scaffold-honours-enabled-frameworks.plan.md`
+**Plan:** `/home/felix/projects/howtobuildsoftware2026/.claude/PRPs/plans/completed/stack-scaffold-honours-enabled-frameworks.plan.md`
 **Branch:** `feature/stack-scaffold-honours-enabled-frameworks`
-**Status:** `COMPLETE`
+**Status:** `COMPLETE` — merged
 
 ## Outcome
 
@@ -105,8 +105,21 @@ no `catalog/` change, no `reports/` artifact.
 
 ## Delivery
 
-- **Commits:** `d1bb45a` fix(compliance): stack.py honours config.json's enabled frameworks; `<R1 fix>` fix(compliance): orphaned is a catalog question, not a config one
-- **Pull Request:** https://github.com/neurawork-git/howtobuildsoftware2026/pull/53
+- **Commits:**
+  - `d1bb45a` fix(compliance): stack.py honours config.json's enabled frameworks
+  - `c2b748a` fix(compliance): orphaned is a catalog question, not a config one (review finding R1)
+  - `3cefa78` docs(backlog): capture the finding deferred at PR #53
+- **Pull Request:** https://github.com/neurawork-git/howtobuildsoftware2026/pull/53 — **MERGED** 2026-09-02, merge commit `d731d54`
 - **Base / Head:** `main <- feature/stack-scaffold-honours-enabled-frameworks`
+- **CI:** 4/4 green (CodeQL javascript-typescript, CodeQL python, CodeQL, GitGuardian)
+- **Review:** two workflow rounds — round 1 over the full PR (0 blocking, 1 confirmed nice-to-have, fixed as R1), round 2 scoped to `d1bb45a..HEAD` (0 findings)
+- **Merged with `--admin`:** `mergeStateStatus: BLOCKED` / `reviewDecision: REVIEW_REQUIRED` — the `main` ruleset requires a review and this repo has no second reviewer. Same path as PR #49 and #51.
+- **Source Issue:** https://github.com/neurawork-git/howtobuildsoftware2026/issues/46 — closed automatically by the merge
 - **Source PRD:** `None`
-- **Tracked follow-ups:** `None`
+- **Tracked follow-ups:** one backlog item, since closed — the tracked `compliance-base/catalog/stack.json` was stale relative to what `--scaffold` writes (`generated` date and the pre-PR-#53 field order). Refreshed in `ca30509` on `chore/refresh-tracked-stack-json`, verified structural: same 68 keys, same field set per entry, zero value changes.
+
+## Post-merge
+
+- Plan archived to `.claude/PRPs/plans/completed/`.
+- The plan's Agent Note about `knowledge-base/knowledge/index.md` omitting the articles compiled from `daily/2026-09-02.md` is **resolved without action**: the index now carries all seven (22 concepts + 3 connections = 25 rows), so the compiler has run since the note was written.
+- The plan's Agent Note about two untracked test files was already stale at implementation time — PR #51 had landed both.
