@@ -153,6 +153,8 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   uses a `co-`-prefixed `PostToolUse` hook (no `SessionStart`) so it coexists with
   the other two in `.claude/settings.json`. Extraction fans out ~30 parallel SDK agents
   (`asyncio.gather` + a semaphore) — the harness's only parallel compile path.
+  `tests/test_payload_drift.py` pins this self-host against the shipped `payload/`, the
+  same way `stack-compiler`'s does.
 - **`stack-base/`** — a live self-host install of `stack-compiler` (product scoping),
   installed and refreshed by `/neurawork-cc-harness:stack-compiler` like the other
   three; `tests/test_payload_drift.py` backs that installer up between runs, catching
