@@ -7,6 +7,7 @@ as cwd), then asserts the scaffold, _shared copy, hook merge, and RECON_JSON.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -19,6 +20,7 @@ INSTALL = ENGINE_DIR / "install.py"
 RECON = ENGINE_DIR / "recon.py"
 
 sys.path.insert(0, str(ENGINE_DIR.parent))  # engines/ for _shared
+from _shared import prp_store
 from _shared.recon import parse_recon_json  # noqa: E402
 
 CDIR = "cb"
@@ -38,10 +40,16 @@ def _init_repo(repo: Path) -> None:
 @unittest.skipUnless(shutil.which("git"), "git not available")
 class TestInstall(unittest.TestCase):
     def _install(self, repo: Path):
+        # PRP_HOME is prp-core's own store prefix, and the installer links into it.
+        # Point it inside the temp repo so no test ever touches the real ~/.prp.
+        env = dict(os.environ, PRP_HOME=str(repo / ".prp-home"))
         return subprocess.run(
             [sys.executable, str(INSTALL), "--catalog-dir", CDIR],
-            cwd=repo, capture_output=True, text=True,
+            cwd=repo, capture_output=True, text=True, env=env,
         )
+
+    def _store_link(self, repo: Path) -> Path:
+        return repo / ".prp-home" / prp_store.store_key(repo)
 
     def test_fresh_scaffold_and_hooks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -203,7 +211,7 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(self._install(repo).returncode, 0)
             self.assertEqual(stack_path.read_bytes(), before)
 
-    def test_fresh_install_points_prp_home_at_the_repo(self) -> None:
+    def test_fresh_install_links_the_store_into_the_repo(self) -> None:
         # Without this, prp-core writes plans to ~/.prp and the validator hook — whose path
         # filter is repo-relative — never sees a single one.
         with tempfile.TemporaryDirectory() as tmp:
@@ -211,14 +219,37 @@ class TestInstall(unittest.TestCase):
             _init_repo(repo)
             self.assertEqual(self._install(repo).returncode, 0)
 
+            link = self._store_link(repo)
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(link.resolve(), (repo / ".claude" / "PRPs").resolve())
+
+            settings = json.loads((repo / ".claude" / "settings.json").read_text())
+            self.assertNotIn("PRP_HOME", settings.get("env", {}))
+            self.assertIn("PostToolUse", settings["hooks"])  # both writers coexist
+
+    def test_an_occupied_store_key_falls_back_to_prp_home(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            # A real directory at the store key: another store's artifacts, never replaced.
+            occupied = self._store_link(repo)
+            occupied.mkdir(parents=True)
+            (occupied / "plans").mkdir()
+
+            res = self._install(repo)
+            self.assertEqual(res.returncode, 0)
+            self.assertFalse(occupied.is_symlink())
+            self.assertTrue((occupied / "plans").is_dir())
             settings = json.loads((repo / ".claude" / "settings.json").read_text())
             self.assertEqual(settings["env"]["PRP_HOME"], ".claude/PRPs")
-            self.assertIn("PostToolUse", settings["hooks"])  # both writers coexist
+            self.assertIn("falling back to PRP_HOME", res.stdout)
 
     def test_adopt_leaves_a_differing_prp_home_alone(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
             _init_repo(repo)
+            occupied = self._store_link(repo)  # force the fallback path
+            occupied.mkdir(parents=True)
             self.assertEqual(self._install(repo).returncode, 0)
 
             settings_path = repo / ".claude" / "settings.json"

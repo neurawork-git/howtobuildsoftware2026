@@ -174,8 +174,13 @@ semaphore, the harness's only parallel compile path. `catalog/stack.json` — th
 record of the component chosen per capability — is scaffolded at install time from the
 seeded capabilities (`scripts/stack.py --scaffold`, deterministic, no API key) and
 refreshed by `co-capabilities` afterwards; both write a gap report naming the ones still
-undecided. The install also points `PRP_HOME` at `.claude/PRPs`, without which prp-core
-writes its plans outside the repo and the hook below never sees them. At runtime the
+undecided. The install also wires prp-core's artifact store into the repo — a symlink
+`~/.prp/<slug>-<hash8>` → `<main-checkout>/.claude/PRPs`, with a relative
+`env.PRP_HOME` as the fallback where symlinks are unavailable or the key is taken
+(`engines/_shared/prp_store.py`). Without either, prp-core writes its plans outside the
+repo and the hook below never sees them. The link gives the repo one store, shared by
+the main checkout and every worktree, so a plan written from a worktree lands in the
+main checkout rather than travelling with the branch. At runtime the
 engine wires a **single** `co-`-prefixed **`PostToolUse`** hook (no
 `SessionStart`/`SessionEnd`) that validates each PRP plan write — in the canonical
 `.claude/PRPs/plans/` or in the `PRP_HOME` store one level deeper: a fast inline

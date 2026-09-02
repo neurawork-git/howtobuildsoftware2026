@@ -54,11 +54,28 @@ class TestGitCtx(unittest.TestCase):
             main_local = root / ".claude" / "x"
             self.assertEqual(gitctx.state_home(main_local, r), main_local)
 
+            # checkout_roots: one root in the main checkout, two in a worktree — the
+            # worktree first, the main checkout behind it (where a symlinked PRP store
+            # puts a document a worktree session writes).
+            self.assertEqual(gitctx.checkout_roots(r), [root.resolve()])
+            self.assertEqual(gitctx.checkout_roots(w), [wt.resolve(), root.resolve()])
+            # `local` overrides only the nearest root, and never duplicates the main one.
+            self.assertEqual(gitctx.checkout_roots(w, local=wt.resolve()),
+                             [wt.resolve(), root.resolve()])
+            self.assertEqual(gitctx.checkout_roots(r, local=root.resolve()),
+                             [root.resolve()])
+
     def test_nongit_safe_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as nogit:
             self.assertFalse(gitctx.in_worktree(nogit))
             self.assertIsNone(gitctx.main_checkout_root(nogit))
             self.assertIsNone(gitctx.repo_root(nogit))
+            # Outside git a hook still knows its own working tree, and that answer wins:
+            # classifying against a root the rest of the hook does not use finds nothing.
+            here = Path(nogit).resolve()
+            self.assertEqual(gitctx.checkout_roots(nogit), [here])
+            self.assertEqual(gitctx.checkout_roots(nogit, local=here / "wt"),
+                             [here / "wt"])
 
 
 if __name__ == "__main__":

@@ -34,20 +34,11 @@ VERSION_FILE = ENGINE_DIR / "VERSION"
 
 sys.path.insert(0, str(ENGINE_DIR.parent))  # engines/ for _shared
 
+from _shared.prp_store import wire_store
 from _shared.recon import git_root_or_none
 from _shared.repo_guard import WriteGuardError, assert_in_repo_not_dotclaude
-from _shared.settings import (SettingsError, merge_gitignore, merge_hooks, prune_gitignore,
-                             set_env_default)
+from _shared.settings import SettingsError, merge_gitignore, merge_hooks, prune_gitignore
 from _shared_install import refresh_shared
-
-# Where prp-core writes its artifact store. Its resolver is
-# ``"${PRP_HOME:-$HOME/.prp}/<repo-name>-<hash>"``, so an unset PRP_HOME puts every PRD
-# and plan OUTSIDE the repo, where the gate's ``prds_subpath``/``plans_subpath`` filter
-# never sees it. The value is relative on purpose: Claude Code does not expand
-# ``${CLAUDE_PROJECT_DIR}`` inside a settings ``env`` value, and an absolute path would
-# have to live in the gitignored settings.local.json, which ``git worktree add`` does
-# not materialize.
-PRP_HOME_VALUE = ".claude/PRPs"
 
 GITIGNORE = """\
 # stack-compiler runtime (product.md is TRACKED — it is the scoping input of
@@ -156,18 +147,12 @@ def main() -> int:
         return 1
 
     try:
-        status, current = set_env_default(root, "PRP_HOME", PRP_HOME_VALUE)
+        _, lines = wire_store(root)
     except (SettingsError, OSError) as e:
-        print(f"PRP_HOME write failed: {e}")
+        print(f"PRP store wiring failed: {e}")
         return 1
-    if status == "wrote":
-        print(f"PRP_HOME set to {PRP_HOME_VALUE} in .claude/settings.json "
-              "— PRDs and plans now land inside the repo, where the gate sees them")
-    elif status == "already":
-        print(f"PRP_HOME already {PRP_HOME_VALUE} in .claude/settings.json")
-    else:
-        print(f"PRP_HOME left at {current!r} (not {PRP_HOME_VALUE}) — PRDs and plans may "
-              "land outside the repo, where the gate never sees them")
+    for line in lines:
+        print(line)
 
     # Independently installable, not independently operable: the passes read the
     # capability catalog and write through <compliance-dir>/scripts/stack.py. Warn,

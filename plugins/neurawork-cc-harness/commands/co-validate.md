@@ -19,7 +19,8 @@ spawns automatically on plan writes, on demand here).
    ```
 
    `$ARGUMENTS` is the plan path, e.g. `.claude/PRPs/plans/my-feature.plan.md` or, in the
-   `PRP_HOME` store layout, `.claude/PRPs/<repo>-<hash>/plans/my-feature.plan.md`.
+   `PRP_HOME` store layout, `.claude/PRPs/<repo>-<hash>/plans/my-feature.plan.md`. With the
+   store linked (the default wiring), the flat layout is the one a plan actually lands in.
 3. Report the written report path and summarize both tiers: which applicable mandatory
    **constraints** are addressed vs unaddressed, and which **capabilities** the plan's
    own content makes applicable but does not declare (the agent's verdict lands in

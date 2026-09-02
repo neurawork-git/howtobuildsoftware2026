@@ -125,9 +125,12 @@ with the other two. A fresh install lands a **prebuilt catalog** — the plugin 
 `catalog/{gdpr,soc2,iso27001}.json` + `index.md` + the derived `capabilities.{json,md}`
 and copies them in, so the repo has a working catalog with no LLM run and no API key.
 The install then derives `catalog/stack.json` from those capabilities (deterministic,
-no API key) and sets `env.PRP_HOME` to `.claude/PRPs` in `.claude/settings.json`, so
-PRP artifacts land inside the repo where the validator can see them — an existing
-`PRP_HOME` is never overwritten. Choosing to extract instead fans out ~30 parallel SDK
+no API key) and wires prp-core's artifact store into the repo — a symlink
+`~/.prp/<slug>-<hash8>` → `<main-checkout>/.claude/PRPs`, so PRP artifacts land inside
+the repo where the validator can see them, in one store shared by every worktree. Where
+symlinks are unavailable or that key is already taken, it falls back to
+`env.PRP_HOME=.claude/PRPs` in `.claude/settings.json` and says so; an existing
+`PRP_HOME` and an occupied store are never overwritten. Choosing to extract instead fans out ~30 parallel SDK
 agents. From then on:
 
 - Every plan write is validated automatically: a fast inline structural precheck

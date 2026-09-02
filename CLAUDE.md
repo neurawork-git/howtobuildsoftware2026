@@ -226,6 +226,15 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   a second `.claude/PRPs/<slug>-<hash>/` store and new plans land in the wrong
   directory. Leave the flat default store (`plans/ prds/ reports/ specs/`); `.gitignore`
   pins its metadata by the non-nested `.claude/PRPs/project.json` (fix `ad63119`).
+- **The PRP store is wired by symlink, not by `PRP_HOME`** — `compliance-compiler` and
+  `stack-compiler` install a link `~/.prp/<slug>-<hash8>` → `<main-checkout>/.claude/PRPs`
+  (`engines/_shared/prp_store.py`). prp-core's key is worktree-invariant, so an absolute
+  prefix gives the repo **one** store reached identically from the main checkout and from
+  every worktree; a relative `PRP_HOME` is resolved against the session's cwd and gives a
+  worktree its own. Consequence: a plan written from a worktree lands in the main checkout
+  and does **not** travel with the feature branch. `PRP_HOME` remains the documented
+  fallback where symlinks are unavailable or the key is occupied — never overwritten, and
+  both gates read both layouts. `/nw-doctor` reports which wiring a repo has.
 
 ## Working principles
 

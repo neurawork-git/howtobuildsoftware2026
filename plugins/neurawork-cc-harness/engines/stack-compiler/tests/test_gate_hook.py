@@ -26,6 +26,15 @@ sys.path.insert(0, str(PAYLOAD / "scripts"))
 import gate_lib  # type: ignore[reportMissingImports]  # on sys.path only at runtime
 import scope_lib  # type: ignore[reportMissingImports]
 
+
+def _git(args: list[str], cwd: Path) -> None:
+    env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@e",
+           "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@e",
+           "PATH": os.environ.get("PATH", ""), "HOME": str(cwd)}
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True,
+                   text=True, env=env)
+
+
 CAPABILITIES = {
     "license_policy": {"embeddable": ["MIT"], "not_in_product": ["AGPL-3.0"]},
     "frameworks": {"gdpr": {"capabilities": [
@@ -181,6 +190,67 @@ class TestGateHook(unittest.TestCase):
             self.assertEqual(gate_lib.load_state(state_file), before,
                              "an unchanged document re-stamped the ledger")
             self.assertNotIn("decision", json.loads(res.stdout))
+
+    def test_a_document_in_the_prp_store_layout_is_gated(self) -> None:
+        # The defect this suite missed: with the store wired through ``PRP_HOME``,
+        # every document prp-core writes sits under ``<slug>-<hash8>/`` and the hook
+        # returned before printing anything — indistinguishable from a gate that ran
+        # and approved. Pre-stamp the ledger so this stays a spawn-free case.
+        with tempfile.TemporaryDirectory() as t:
+            tmp = Path(t)
+            root = self._install(tmp)
+            self._catalog(tmp, _stack("age"))
+            text = "We will use OpenBao for this.\n"
+            store = ".claude/PRPs/howtobuildsoftware2026-35325a96"
+            for rel in (f"{store}/plans/feature.plan.md", f"{store}/prds/product.prd.md"):
+                doc = self._doc(tmp, rel, text)
+                state_file = root / "reports" / ".state.json"
+                gate_lib.save_state(
+                    state_file,
+                    gate_lib.record_spawn(gate_lib.load_state(state_file), str(doc),
+                                          scope_lib.product_hash(text),
+                                          "2026-01-01T00:00:00+01:00"))
+                res = self._run(root, {"tool_name": "Write",
+                                       "tool_input": {"file_path": str(doc)}})
+                self.assertEqual(res.returncode, 0)
+                self.assertNotEqual(res.stdout, "", f"{rel}: the gate stayed silent")
+                self.assertIn("OpenBao", self._advisory(res))
+
+    def test_a_worktree_session_writing_through_the_linked_store_is_gated(self) -> None:
+        # The symlinked store puts a worktree session's document in the MAIN checkout,
+        # so `relative_to(<worktree>)` finds nothing and the hook would return before
+        # printing — the same silent gate, one layer down. The install under test is the
+        # WORKTREE's; the document it must still classify lives in the main checkout.
+        if shutil.which("git") is None:
+            self.skipTest("git not on PATH")
+        with tempfile.TemporaryDirectory() as t:
+            base = Path(t).resolve()
+            main, wt = base / "main", base / "wt"
+            _git(["init", "-q", "-b", "main", str(main)], base)
+            _git(["-C", str(main), "commit", "-q", "--allow-empty", "-m", "init"], base)
+            _git(["-C", str(main), "worktree", "add", "-q", str(wt), "-b", "side"], base)
+
+            root = self._install(wt)          # the worktree's own install
+            self._catalog(wt, _stack("age"))  # …and its own catalog
+            text = "We will use OpenBao for this.\n"
+            doc = self._doc(main, ".claude/PRPs/plans/feature.plan.md", text)
+            link = base / "prp-home" / "main-key"
+            link.parent.mkdir(parents=True)
+            link.symlink_to(main / ".claude" / "PRPs", target_is_directory=True)
+            through_link = link / "plans" / "feature.plan.md"
+            self.assertTrue(through_link.exists(), "the fixture link does not resolve")
+
+            state_file = root / "reports" / ".state.json"
+            gate_lib.save_state(
+                state_file,
+                gate_lib.record_spawn(gate_lib.load_state(state_file), str(doc),
+                                      scope_lib.product_hash(text),
+                                      "2026-01-01T00:00:00+01:00"))
+            res = self._run(root, {"tool_name": "Write",
+                                   "tool_input": {"file_path": str(through_link)}})
+            self.assertEqual(res.returncode, 0)
+            self.assertNotEqual(res.stdout, "", "the gate stayed silent for a worktree write")
+            self.assertIn("OpenBao", self._advisory(res))
 
     def test_block_mode_blocks_only_on_an_off_stack_component(self) -> None:
         with tempfile.TemporaryDirectory() as t:

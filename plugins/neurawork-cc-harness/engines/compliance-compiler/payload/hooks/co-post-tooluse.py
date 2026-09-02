@@ -27,7 +27,7 @@ from _shared.hookio import child_env, read_hook_input, recursion_guard
 
 recursion_guard()
 
-from _shared.gitctx import in_worktree, main_checkout_root
+from _shared.gitctx import checkout_roots, in_worktree, main_checkout_root
 from config import load_cfg
 from precheck import is_plan_path, precheck
 
@@ -130,14 +130,20 @@ def main() -> None:
         return
 
     path_str = _plan_path_from(data)
-    repo_root = KDIR.parent  # the working-tree root (main checkout or worktree)
+    repo_root = KDIR.parent  # this install's working tree — whose CLAUDE.md rules apply
     cfg = load_cfg()         # needed before the match: it carries the plan-path keys
-    if not is_plan_path(path_str, repo_root, cfg):
+    # Match against every working tree the plan could belong to. From a worktree the PRP
+    # store is reached through a symlink into the MAIN checkout, so the plan resolves
+    # outside this checkout and `relative_to(repo_root)` alone finds nothing.
+    for doc_root in checkout_roots(str(KDIR), local=repo_root):
+        if is_plan_path(path_str, doc_root, cfg):
+            break
+    else:
         return
 
     plan_path = Path(path_str)
     if not plan_path.is_absolute():
-        plan_path = (repo_root / plan_path).resolve()
+        plan_path = (doc_root / plan_path).resolve()
     if not plan_path.exists():
         return
 

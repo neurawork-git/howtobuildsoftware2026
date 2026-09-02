@@ -560,6 +560,119 @@ class ReportTests(DoctorTestCase):
         self.assertIn("run update.py", text)
 
 
+class PrpStoreTests(DoctorTestCase):
+    """How the artifact store is wired — the wiring a silent gate depends on."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        import os
+
+        self.prp_home = self.tmp / "prp-home"
+        previous = os.environ.get("PRP_HOME")
+        os.environ["PRP_HOME"] = str(self.prp_home)
+        self.addCleanup(lambda: os.environ.__setitem__("PRP_HOME", previous)
+                        if previous is not None else os.environ.pop("PRP_HOME", None))
+
+    def _gated_repo(self, *, name: str = "repo") -> Path:
+        repo = make_repo(self.tmp, name=name)
+        install(repo, "stack-compiler", "stack-base")
+        settings_for(repo, ("stack-compiler", "stack-base"))
+        return repo
+
+    def _link(self, repo: Path, target: Path) -> Path:
+        link = doctor.link_path(repo.resolve(), self.prp_home)
+        link.parent.mkdir(parents=True, exist_ok=True)
+        link.symlink_to(target, target_is_directory=True)
+        return link
+
+    def _set_env(self, repo: Path, value: str) -> None:
+        path = repo / ".claude" / "settings.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data.setdefault("env", {})["PRP_HOME"] = value
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+    def test_a_repo_with_no_gate_engine_has_no_store_to_wire(self) -> None:
+        repo = make_repo(self.tmp)
+        install(repo, "knowledge-compiler", "knowledge-base")
+        settings_for(repo, ("knowledge-compiler", "knowledge-base"))
+        self.assertEqual(
+            [f for f in self.run_checks(repo) if f.check == "prp-store"], [])
+
+    def test_a_linked_store_is_ok(self) -> None:
+        repo = self._gated_repo()
+        (repo / ".claude" / "PRPs").mkdir(parents=True)
+        self._link(repo, repo / ".claude" / "PRPs")
+        finding = self.check(self.run_checks(repo), doctor.REPO, "prp-store")
+        self.assertEqual(finding.severity, "OK")
+        self.assertIn(str(repo / ".claude" / "PRPs"), finding.message)
+
+    def test_no_wiring_at_all_warns_that_documents_land_outside_the_repo(self) -> None:
+        finding = self.check(self.run_checks(self._gated_repo()), doctor.REPO, "prp-store")
+        self.assertEqual(finding.severity, "WARN")
+        self.assertIn("no gate sees it", finding.message)
+
+    def test_prp_home_alone_is_the_older_wiring_not_a_fault(self) -> None:
+        repo = self._gated_repo()
+        self._set_env(repo, ".claude/PRPs")
+        finding = self.check(self.run_checks(repo), doctor.REPO, "prp-store")
+        self.assertEqual(finding.severity, "NOTE")
+        self.assertIn("env.PRP_HOME", finding.message)
+
+    def test_both_wirings_say_which_one_wins(self) -> None:
+        repo = self._gated_repo()
+        (repo / ".claude" / "PRPs").mkdir(parents=True)
+        self._link(repo, repo / ".claude" / "PRPs")
+        self._set_env(repo, ".claude/PRPs")
+        finding = self.check(self.run_checks(repo), doctor.REPO, "prp-store")
+        self.assertEqual(finding.severity, "NOTE")
+        self.assertIn("PRP_HOME wins", finding.message)
+
+    def test_a_link_pointing_somewhere_else_names_both_paths(self) -> None:
+        repo = self._gated_repo()
+        elsewhere = self.tmp / "other-store"
+        elsewhere.mkdir()
+        self._link(repo, elsewhere)
+        finding = self.check(self.run_checks(repo), doctor.REPO, "prp-store")
+        self.assertEqual(finding.severity, "WARN")
+        self.assertIn(str(elsewhere), finding.message)
+        self.assertIn(str(repo / ".claude" / "PRPs"), finding.message)
+
+    def _worktree_with_a_local_document(self) -> tuple[Path, Path]:
+        main = self._gated_repo(name="main")
+        (main / ".claude" / "PRPs" / "plans").mkdir(parents=True)
+        wt = make_worktree(self.tmp, main, name="wt")
+        install(wt, "stack-compiler", "stack-base")
+        settings_for(wt, ("stack-compiler", "stack-base"))
+        local = wt / ".claude" / "PRPs" / "plans" / "feature.plan.md"
+        local.parent.mkdir(parents=True)
+        local.write_text("plan\n", encoding="utf-8")
+        return main, wt
+
+    def _split(self, wt: Path) -> list[doctor.Finding]:
+        return [f for f in self.run_checks(wt)
+                if f.check == "prp-store" and "split store" in f.message]
+
+    def test_a_worktree_only_document_is_a_split_store_under_prp_home(self) -> None:
+        # PRP_HOME is relative, so each session resolves it against its own working
+        # directory: the worktree really does have a second physical store.
+        main, wt = self._worktree_with_a_local_document()
+        self._set_env(wt, ".claude/PRPs")
+
+        split = self._split(wt)
+        self.assertEqual(len(split), 1, "the worktree-only document was not reported")
+        self.assertEqual(split[0].severity, "WARN")
+        self.assertIn("plans/feature.plan.md", split[0].message)
+
+    def test_a_linked_store_makes_a_worktree_document_branch_content(self) -> None:
+        # With the link, every checkout reaches the same directory, so `.claude/PRPs`
+        # in a worktree is the branch's tracked content — a feature branch carrying a
+        # plan `<base>` does not have yet is the ordinary workflow, not a split store.
+        main, wt = self._worktree_with_a_local_document()
+        self._link(main, main / ".claude" / "PRPs")
+
+        self.assertEqual(self._split(wt), [])
+
+
 class ReadOnlyTests(DoctorTestCase):
     def test_a_run_leaves_the_repo_byte_identical(self) -> None:
         repo = make_repo(self.tmp)

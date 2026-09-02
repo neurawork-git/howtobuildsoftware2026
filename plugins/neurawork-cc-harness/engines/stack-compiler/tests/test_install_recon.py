@@ -7,6 +7,7 @@ as cwd), then asserts the scaffold, _shared copy, hook merge, and RECON_JSON.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -20,6 +21,7 @@ RECON = ENGINE_DIR / "recon.py"
 SHARED_SRC = ENGINE_DIR.parent / "_shared"
 
 sys.path.insert(0, str(ENGINE_DIR.parent))  # engines/ for _shared
+from _shared import prp_store
 from _shared.recon import parse_recon_json  # noqa: E402
 
 SDIR = "sb"
@@ -51,12 +53,18 @@ def _fake_compliance(repo: Path) -> None:
 
 @unittest.skipUnless(shutil.which("git"), "git not available")
 class TestInstall(unittest.TestCase):
-    def _install(self, repo: Path, stack_dir: str = SDIR):
+    def _install(self, repo: Path, stack_dir: str = SDIR, prp_home: Path | None = None):
+        # PRP_HOME is prp-core's own store prefix, and the installer links into it.
+        # Point it inside the temp repo so no test ever touches the real ~/.prp.
+        env = dict(os.environ, PRP_HOME=str(prp_home or repo / ".prp-home"))
         return subprocess.run(
             [sys.executable, str(INSTALL),
              "--stack-dir", stack_dir, "--compliance-dir", CDIR],
-            cwd=repo, capture_output=True, text=True,
+            cwd=repo, capture_output=True, text=True, env=env,
         )
+
+    def _store_link(self, repo: Path) -> Path:
+        return repo / ".prp-home" / prp_store.store_key(repo)
 
     def test_fresh_scaffold_and_hooks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -108,7 +116,53 @@ class TestInstall(unittest.TestCase):
             entries = [h for g in groups for h in g["hooks"]]
             self.assertEqual(len(entries), 1)
             self.assertIn("hooks/st-post-tooluse.py", entries[0]["command"])
+            # The store is wired by symlink, so PRP_HOME stays out of settings.json.
+            self.assertNotIn("PRP_HOME", settings.get("env", {}))
+            link = self._store_link(repo)
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(link.resolve(), (repo / ".claude" / "PRPs").resolve())
+
+    def test_an_unlinkable_store_falls_back_to_prp_home(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            _fake_compliance(repo)
+            # A real directory at the store key: another store's artifacts, never
+            # replaced. The installer falls back and says so.
+            occupied = self._store_link(repo)
+            occupied.mkdir(parents=True)
+            res = self._install(repo)
+            self.assertEqual(res.returncode, 0, res.stderr)
+
+            self.assertFalse(occupied.is_symlink())
+            settings = json.loads(
+                (repo / ".claude" / "settings.json").read_text(encoding="utf-8"))
             self.assertEqual(settings["env"]["PRP_HOME"], ".claude/PRPs")
+            self.assertIn("falling back to PRP_HOME", res.stdout)
+
+    def test_a_relative_prp_home_in_the_environment_is_not_a_link_prefix(self) -> None:
+        # The upgrade path: a repo wired before 0.8 exports PRP_HOME=".claude/PRPs" into
+        # the session. Resolved against the installer's cwd it would put the link inside
+        # the repo's own store, pointing at its own parent.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            _fake_compliance(repo)
+            env = dict(os.environ, PRP_HOME=".claude/PRPs", HOME=str(repo / "home"))
+            res = subprocess.run(
+                [sys.executable, str(INSTALL),
+                 "--stack-dir", SDIR, "--compliance-dir", CDIR],
+                cwd=repo, capture_output=True, text=True, env=env,
+            )
+            self.assertEqual(res.returncode, 0, res.stderr)
+
+            store = repo / ".claude" / "PRPs"
+            self.assertEqual([p for p in store.iterdir() if p.is_symlink()], [],
+                             "a link was written inside the repo's own store")
+            link = repo / "home" / ".prp" / prp_store.store_key(repo)
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(link.resolve(), store.resolve())
+            self.assertIn(str(link), res.stdout)
 
     def test_idempotent_reinstall(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

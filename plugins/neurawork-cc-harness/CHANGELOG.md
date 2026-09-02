@@ -15,6 +15,53 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.9.0] — 2026-09-02
+
+### Changed
+
+- **The PRP artifact store is wired by symlink, not by a relative `PRP_HOME`.** Both
+  installers now create `~/.prp/<slug>-<hash8>` → `<main-checkout>/.claude/PRPs` through the
+  new `engines/_shared/prp_store.py`. prp-core derives that key from `--git-common-dir`, so
+  it is worktree-invariant; only the *prefix* was not, because the shell resolved the
+  relative `PRP_HOME` against each session's working directory and gave every worktree its
+  own physical store. Consequence: a plan written from a worktree now lands in the main
+  checkout and does **not** travel with the feature branch. `PRP_HOME` remains the
+  fallback — used, and reported, when the platform cannot symlink or the store key is
+  already taken by a real directory or a foreign link, neither of which is ever replaced.
+  Only an **absolute** `$PRP_HOME` is honoured as the link prefix: the relative value every
+  pre-0.8 install wrote (and that Claude Code exports into the session) would otherwise be
+  resolved against the installer's working directory and put the link inside the repo's own
+  store, pointing at its own parent. An upgrade that leaves that key in `settings.json` is
+  told the key still wins and the new link stays inert until it is removed.
+  (`engines/compliance-compiler/VERSION` 6 → 7, `engines/stack-compiler/VERSION` 3 → 4.)
+- **Both PostToolUse gates classify a document against the main checkout too.** The
+  symlinked store is reached through `~/.prp/<key>`, which points into the MAIN checkout,
+  so a document a worktree session writes physically lives outside that session's own
+  checkout. Both hooks classified with `repo_root = KDIR.parent` only, so
+  `p.resolve().relative_to(repo_root)` raised and the hook returned before printing —
+  the same silent gate the store layout used to produce, one layer down and only in a
+  worktree. They now try each working tree the document could belong to (new
+  `_shared/gitctx.checkout_roots`: the local checkout, plus the main checkout behind a
+  linked worktree), and the root that matched is the one the document's own paths are
+  resolved against. The catalog and the repo's `CLAUDE.md` rules still come from the
+  install's own checkout — a branch is judged against its own decisions.
+- **`/nw-doctor` reports the store wiring.** A new repo-scoped `prp-store` check names
+  which wiring a repo has (linked, `PRP_HOME`, both — where `PRP_HOME` wins and the link is
+  inert — or neither, which is the warning that documents land outside the repo), reports a
+  link resolving somewhere else, and, from a worktree wired by `PRP_HOME`, counts the
+  documents that exist only there. It runs only where a gate-owning engine is installed,
+  and stays read-only. The split-store count is scoped to the `PRP_HOME` wiring on purpose:
+  only a relative prefix gives a worktree a second physical store. With the link, every
+  checkout reaches the same directory and a worktree's `.claude/PRPs` is simply its branch's
+  tracked content — a feature branch carrying a plan `<base>` does not have yet is the
+  ordinary workflow, not a finding.
+
+  The gate blindness this wiring was found through — `document_kind` seeing none of the
+  documents prp-core writes — was fixed independently in 0.8.0, by making the subpath a
+  configurable list with a `*` segment (`.claude/PRPs/*/plans`). Both halves are needed:
+  the filter tolerates the store layout every existing `PRP_HOME` install still produces,
+  and the link stops producing one store per checkout in the first place.
+
 ## [0.8.0] — 2026-09-02
 
 ### Fixed
