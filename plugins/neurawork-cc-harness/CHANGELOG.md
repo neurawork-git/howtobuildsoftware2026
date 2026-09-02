@@ -15,6 +15,35 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.7.1] — 2026-09-02
+
+### Fixed
+
+- **The `SessionStart` staleness nudge printed an error into every Windows session.**
+  `hooks/hooks.json` named `python3`, which on Windows resolves to the Microsoft Store
+  app-execution alias. The alias writes `Python was not found` to **stdout**, and
+  `SessionStart` stdout is injected into the session as `additionalContext` — so a hook
+  documented as a silent no-op became a visible one (#16). `python` is not a fix either:
+  macOS has shipped no unsuffixed `python` since 12.3, so the two candidate names fail on
+  opposite platforms and no third name exists everywhere. `uv` is out too — an 11.6 s cold
+  start against this hook's 10 s timeout (#5), and this is precisely the script that must
+  bootstrap before the toolchain exists.
+
+  The hook therefore stops naming an interpreter: `hooks/version-check.py` becomes
+  `hooks/version-check.js`, spawned through the hook **exec form** (`"command": "node"`,
+  script path in `args`, no shell). `node` is on `PATH` wherever Claude Code runs. Same
+  logic, same output, tests ported to the built-in `node:test` runner
+  (`hooks/version-check.test.js`).
+
+  One cost, one guard: a Node hook cannot import the Python engine registry in
+  `scripts/harness_probe.py`, so it carries a transcription of the engine → hook-marker map.
+  `tests/test_version_check_registry.py` fails the build when the two disagree — the map had
+  already fallen a whole engine behind reality once, which is what the shared registry was
+  extracted to end.
+
+  Not verified on Windows — the author reports macOS 15.7.3 / Node 22.19 only, and the
+  platform the fix exists for is the one gap left (tracked in `.claude/BACKLOG.md`).
+
 ## [0.7.0] — 2026-09-02
 
 ### Fixed

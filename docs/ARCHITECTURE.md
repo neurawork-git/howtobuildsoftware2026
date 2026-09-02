@@ -36,8 +36,9 @@ workflows/                     nw-ship-pr-review.js (auto-discovered by the runt
 agents/                        kb-researcher.md (read-only; the fourth research axis,
                                namespaced as neurawork-cc-harness:kb-researcher)
 tests/                         structural tests over the prompt-only assets
-hooks/                         hooks.json + version-check.py (the only code that runs
-                               FROM the plugin, with CLAUDE_PLUGIN_ROOT — the staleness nudge)
+hooks/                         hooks.json + version-check.js (the only code that runs
+                               FROM the plugin, with CLAUDE_PLUGIN_ROOT — the staleness nudge;
+                               Node, not Python: it must bootstrap without uv)
 engines/
   _shared/                     stdlib-only helpers (single source of truth)
   knowledge-compiler/
@@ -63,7 +64,7 @@ a `recon.py`, a `VERSION`, and a data artifact in the repo. A **workflow skill**
 (`nw-worktree`, and the `nw-ship-pr` command with its `nw-ship-pr-review.js`) copies
 nothing and installs nothing — it is a prompt procedure that lazily writes one
 `.claude/*.local.md` config on first run. It therefore has no engine, no payload, no
-`VERSION`, and no entry in `hooks/version-check.py`'s `ENGINES` map (which keys off
+`VERSION`, and no entry in `hooks/version-check.js`'s `ENGINES` map (which keys off
 installed hook commands — a component that installs no hook can never appear there).
 That absence is intended, not an omission.
 
@@ -185,13 +186,29 @@ names the command that builds it. Manual check:
 `/neurawork-cc-harness:co-validate <plan>`.
 
 Separately, the **plugin itself** registers one `SessionStart` hook (`hooks/hooks.json`
-→ `hooks/version-check.py`) — the only harness code that runs *from* the plugin with
+→ `hooks/version-check.js`) — the only harness code that runs *from* the plugin with
 `CLAUDE_PLUGIN_ROOT` set, rather than from an installed copy. It compares each installed
 engine's stamped `VERSION` (`<repo>/<dir>/VERSION`) against the plugin's shipped
 `VERSION` (`engines/<engine>/VERSION`), locating the install dir by parsing the engine's
 hook command in `.claude/settings.json`, and prints a staleness nudge when an install is
 behind. It has to live at the plugin level: an installed hook resolves its paths from its
 own on-disk location and never sees the plugin, so it cannot read the shipped `VERSION`.
+It is also the one script written in **Node rather than Python**, spawned through the hook
+*exec form* (`"command": "node"`, script path in `args`, no shell). Everything else in the
+harness runs under `uv` inside a target repo; this hook runs before any of that exists, so
+it cannot use `uv` (an 11.6 s cold start against a 10 s timeout) and cannot name a Python
+interpreter either — `python3` is the Microsoft Store alias on Windows, `python` does not
+exist on macOS. `node` is on `PATH` wherever Claude Code runs, on every platform.
+
+That language split is the one thing it costs: the nudge can no longer import the Python
+engine registry in `scripts/harness_probe.py`, so it carries its own copy of the engine →
+hook-marker map. The copy is not allowed to drift — `tests/test_version_check_registry.py`
+asserts the JavaScript map names exactly the installable engines of `harness_probe.ENGINES`
+with exactly their hook markers, and fails the moment a fifth engine is registered on one
+side only. That guard is what makes a second map acceptable; do not delete it and "keep
+them in sync by hand" — the map had already fallen an engine behind once before the probe
+existed.
+
 The manifest's semver `version` names the plugin *release* and is independent of the four
 per-engine integer `VERSION` counters (which advance separately).
 
