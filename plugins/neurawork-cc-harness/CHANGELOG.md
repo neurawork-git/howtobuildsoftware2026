@@ -15,6 +15,38 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.10.0] — 2026-09-02
+
+### Fixed
+
+- **`compliance-base/scripts/stack.py` honours `config.json`'s `frameworks`.** It was the one
+  consumer of derived catalog data that never called `load_cfg()`: `main()` treated
+  `catalog/capabilities.json` as the entire capability universe, so every framework ever
+  extracted landed in `stack.json`'s `choices` — the closed identity set the whole
+  `stack-compiler` pipeline trusts. An operator who narrowed `frameworks` to one framework
+  still paid a scoping pass over all of them, and a refutation on an out-of-scope capability
+  aborted the whole run, because scoping is all-or-nothing. `frameworks` is now the enabled
+  set for the stack passes too (issue #46).
+
+### Added
+
+- **`stack.json` gains a sibling `disabled` map.** Switching a framework off *retains* its
+  entries there — `chosen`, `rationale`, `chosen_from`, `applicable`, `applicability_reason`,
+  `scoped_from`, `ranked` and `ranked_from` all survive verbatim — and switching it back on
+  moves them into `choices` with their machine-owned fields refreshed from the current
+  catalog. A config edit therefore destroys nothing and re-enabling costs no LLM call.
+  `choices` keeps meaning exactly what it meant before (the working universe), so none of the
+  fifteen downstream read sites across `compliance-base/` and `stack-base/` changed. **No
+  existing `stack.json` needs migrating**: a file without the key loads unchanged, and a repo
+  with every framework enabled still writes no `disabled` key at all.
+- **An empty enabled set is refused instead of obeyed.** `frameworks: []`, or a list naming
+  only frameworks the catalog does not hold, previously produced an empty `choices`, a gap
+  report reading "0 of 0" and exit 0 — every recorded choice gone, reported as a clean stack.
+  Every `stack.py` mode now prints the configured frameworks, the catalog's frameworks and the
+  path to `config.json`, exits 1, and writes nothing.
+- `--scaffold` reports what it retained, which frameworks are disabled, and how many entries a
+  run restored.
+
 ## [0.9.0] — 2026-09-02
 
 ### Changed

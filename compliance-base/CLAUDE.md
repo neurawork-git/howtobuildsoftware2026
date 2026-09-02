@@ -25,7 +25,10 @@ kept**, because SOC 2 / ISO 27001 / GDPR are audited separately. Capability keys
 
 - `hooks/`, `scripts/`, `_shared/`, `pyproject.toml`, `AGENTS.md` — **machinery**,
   copied from the engine `payload/` + `_shared/` at install time.
-- `config.json` — runtime config: `frameworks` (what gets extracted),
+- `config.json` — runtime config: `frameworks` (the **enabled set** for the whole
+  pipeline — extraction through the stack scaffold; `capabilities.json` keeps every
+  framework ever derived, and `stack.json` retains a switched-off framework's entries
+  under `disabled` with their decisions intact, so re-enabling one costs nothing),
   `validate_frameworks` (which of them plans are checked against; empty = all),
   `validate_mode` (`warn` | `block`), `max_concurrency`, `model`.
 - `catalog/` — **the tracked output**: the three constraint JSONs, `index.md` (read

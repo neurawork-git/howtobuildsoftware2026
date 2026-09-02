@@ -1,14 +1,25 @@
-"""Pure-logic tests for stack.py (capability→component mapping). No LLM, no network."""
+"""Tests for stack.py (capability→component mapping). No LLM, no network.
+
+Pure-logic throughout except ``TestScaffoldCLI``, which drives ``main()`` in a temp
+install: the missing ``load_cfg()`` call this suite now guards against lived in the
+wiring, where no pure test could see it.
+"""
 
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-SCRIPTS = Path(__file__).resolve().parent.parent / "payload" / "scripts"
+ENGINE = Path(__file__).resolve().parent.parent
+ENGINES = ENGINE.parent
+PAYLOAD = ENGINE / "payload"
+SCRIPTS = PAYLOAD / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import stack
@@ -17,7 +28,7 @@ import stack
 def _constraints(tmp: Path) -> Path:
     """A catalog dir whose gdpr.json has two mandatory and one optional constraint."""
     catalog = tmp / "catalog"
-    catalog.mkdir()
+    catalog.mkdir(exist_ok=True)
     (catalog / "gdpr.json").write_text(json.dumps({
         "framework": "gdpr",
         "constraints": [
@@ -59,6 +70,159 @@ def _capabilities() -> dict:
             ],
         }},
     }
+
+
+def _multi_constraints(tmp: Path) -> Path:
+    """The gdpr catalog dir above, plus one mandatory constraint per extra framework."""
+    catalog = _constraints(tmp)
+    for fw, cid in (("soc2", "SOC2-CC6-01"), ("iso27001", "ISO-A8-01")):
+        (catalog / f"{fw}.json").write_text(json.dumps({
+            "framework": fw,
+            "constraints": [{"id": cid, "mandatory": True}],
+        }), encoding="utf-8")
+    return catalog
+
+
+def _multi_capabilities() -> dict:
+    """The gdpr fixture plus one soc2 and one iso27001 capability."""
+    cat = _capabilities()
+    cat["frameworks"]["soc2"] = {
+        "capability_count": 1,
+        "capabilities": [{
+            "name": "Access reviews",
+            "category": "Access Control",
+            "description": "Review who has access.",
+            "satisfies": ["SOC2-CC6-01"],
+            "stack": [{"name": "Keycloak", "kind": "open-source", "verdict": "keep"},
+                      {"name": "Authentik", "kind": "open-source", "verdict": "keep"}],
+            "stack_notes": "",
+        }],
+    }
+    cat["frameworks"]["iso27001"] = {
+        "capability_count": 1,
+        "capabilities": [{
+            "name": "Asset inventory",
+            "category": "Asset Management",
+            "description": "Know what you run.",
+            "satisfies": ["ISO-A8-01"],
+            "stack": [{"name": "Netbox", "kind": "open-source", "verdict": "keep"}],
+            "stack_notes": "",
+        }],
+    }
+    return cat
+
+
+DECIDED_SOC2 = {
+    "chosen": "Keycloak",
+    "rationale": "already the IdP",
+    "chosen_from": "cap-9f21",
+    "applicable": False,
+    "applicability_reason": "single-tenant, reviewed out of band",
+    "scoped_from": "scope-7f3a",
+    "ranked": [{"component": "Keycloak", "rationale": "runs already"},
+               {"component": "Authentik", "rationale": "second best"}],
+    "ranked_from": "rank-11ab",
+}
+
+
+class TestSplitByFramework(unittest.TestCase):
+    """The config's `frameworks` list partitions the catalog; it never prunes it."""
+
+    def test_partitions_frameworks_and_keeps_the_other_top_level_keys(self) -> None:
+        cat = _multi_capabilities()
+        cat["license_policy"] = {"deny": ["SSPL"]}
+        on, off = stack.split_by_framework(cat, ["gdpr"])
+        self.assertEqual(set(on["frameworks"]), {"gdpr"})
+        self.assertEqual(set(off["frameworks"]), {"soc2", "iso27001"})
+        self.assertEqual(on["generated"], "2026-01-01")
+        self.assertEqual(on["license_policy"], {"deny": ["SSPL"]})
+
+    def test_unknown_enabled_name_is_ignored_not_raised(self) -> None:
+        on, off = stack.split_by_framework(_capabilities(), ["gdpr", "nonexistent"])
+        self.assertEqual(set(on["frameworks"]), {"gdpr"})
+        self.assertEqual(off["frameworks"], {})
+
+    def test_empty_enabled_puts_everything_on_the_disabled_side(self) -> None:
+        on, off = stack.split_by_framework(_multi_capabilities(), [])
+        self.assertEqual(on["frameworks"], {})
+        self.assertEqual(set(off["frameworks"]), {"gdpr", "soc2", "iso27001"})
+
+
+class TestScaffoldEnabledFrameworks(unittest.TestCase):
+    """A disabled framework is retained with its decisions, never deleted."""
+
+    def _scaffold(self, tmp: str, enabled, existing=None, cat=None):
+        return stack.scaffold(cat or _multi_capabilities(), existing,
+                              catalog_dir=_multi_constraints(Path(tmp)),
+                              generated="2026-02-02", enabled=enabled)
+
+    def test_enabled_none_is_todays_behaviour_and_writes_no_disabled_key(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _multi_constraints(Path(t))
+            cat = _multi_capabilities()
+            default = stack.scaffold(cat, None, catalog_dir=catalog, generated="2026-02-02")
+            explicit = stack.scaffold(cat, None, catalog_dir=catalog, generated="2026-02-02",
+                                      enabled=["gdpr", "soc2", "iso27001"])
+            self.assertNotIn("disabled", default)
+            self.assertEqual(default, explicit)
+
+    def test_only_enabled_frameworks_reach_choices(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            out = self._scaffold(t, ["gdpr"])
+            self.assertEqual(sorted(out["choices"]),
+                             ["gdpr/consent-capture", "gdpr/encryption-at-rest"])
+            self.assertEqual(sorted(out["disabled"]),
+                             ["iso27001/asset-inventory", "soc2/access-reviews"])
+
+    def test_disabled_entry_keeps_all_eight_decision_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            existing = {"choices": {"soc2/access-reviews": dict(DECIDED_SOC2)}}
+            out = self._scaffold(t, ["gdpr"], existing)
+            entry = out["disabled"]["soc2/access-reviews"]
+            for field, value in DECIDED_SOC2.items():
+                self.assertEqual(entry[field], value, field)
+
+    def test_re_enabling_restores_the_decisions_verbatim(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            narrowed = self._scaffold(
+                t, ["gdpr"], {"choices": {"soc2/access-reviews": dict(DECIDED_SOC2)}})
+            widened = self._scaffold(t, ["gdpr", "soc2", "iso27001"], narrowed)
+            self.assertNotIn("disabled", widened)
+            entry = widened["choices"]["soc2/access-reviews"]
+            for field, value in DECIDED_SOC2.items():
+                self.assertEqual(entry[field], value, field)
+
+    def test_retained_entry_refreshes_its_machine_owned_fields(self) -> None:
+        """Re-enabling must never hand back a stale component pool."""
+        with tempfile.TemporaryDirectory() as t:
+            existing = {"disabled": {"soc2/access-reviews": {
+                **DECIDED_SOC2, "options": ["Vault"], "capability": "STALE NAME",
+                "mandatory_linked": False,
+            }}}
+            out = self._scaffold(t, ["gdpr"], existing)
+            entry = out["disabled"]["soc2/access-reviews"]
+            self.assertEqual(entry["options"], ["Keycloak", "Authentik"])
+            self.assertEqual(entry["capability"], "Access reviews")
+            self.assertTrue(entry["mandatory_linked"])
+            self.assertEqual(entry["chosen"], "Keycloak")
+
+    def test_stack_json_without_a_disabled_key_scaffolds(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            out = self._scaffold(t, ["gdpr"], {"choices": {}})
+            self.assertEqual(sorted(out["disabled"]),
+                             ["iso27001/asset-inventory", "soc2/access-reviews"])
+
+    def test_a_capability_the_catalog_dropped_is_not_resurrected(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            existing = {"disabled": {"soc2/retired-capability": dict(DECIDED_SOC2)}}
+            out = self._scaffold(t, ["gdpr"], existing)
+            self.assertNotIn("soc2/retired-capability", out["disabled"])
+            self.assertNotIn("soc2/retired-capability", out["choices"])
+
+    def test_no_key_appears_in_both_maps(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            out = self._scaffold(t, ["gdpr"])
+            self.assertEqual(set(out["choices"]) & set(out["disabled"]), set())
 
 
 class TestCapabilityKey(unittest.TestCase):
@@ -844,6 +1008,124 @@ class TestRenderGapReport(unittest.TestCase):
             self.assertIn("`gdpr/encryption-at-rest` \u2192 **OpenBao**", md)
             self.assertIn(res["stale_choices"][0]["current"], md)
 
+
+
+class TestScaffoldCLI(unittest.TestCase):
+    """The wiring: config.json → main() → the stack.json actually written."""
+
+    def _install(self, tmp: Path, frameworks) -> Path:
+        """A real install layout: scripts/ next to _shared/, catalog/ beside them.
+
+        The script is run from there rather than from payload/ because it resolves
+        ``_shared`` (the write guard) relative to its own parent directory.
+        """
+        root = tmp / "compliance-base"
+        (root / "scripts").mkdir(parents=True)
+        _multi_constraints(root)
+        for script in SCRIPTS.glob("*.py"):
+            shutil.copy2(script, root / "scripts" / script.name)
+        shutil.copytree(ENGINES / "_shared", root / "_shared",
+                        ignore=shutil.ignore_patterns("tests", "__pycache__"))
+        (root / "catalog" / "capabilities.json").write_text(
+            json.dumps(_multi_capabilities()), encoding="utf-8")
+        self._write_cfg(root, frameworks)
+        return root
+
+    def _write_cfg(self, root: Path, frameworks) -> None:
+        (root / "config.json").write_text(json.dumps({"frameworks": frameworks}),
+                                          encoding="utf-8")
+
+    def _run(self, root: Path, *args: str) -> subprocess.CompletedProcess:
+        env = dict(os.environ, COMPLIANCE_ROOT=str(root))
+        return subprocess.run([sys.executable, str(root / "scripts" / "stack.py"), *args],
+                              capture_output=True, text=True, env=env, timeout=60,
+                              check=False)
+
+    def _stack(self, root: Path) -> dict:
+        return json.loads((root / "catalog" / "stack.json").read_text(encoding="utf-8"))
+
+    def test_narrowed_config_scaffolds_only_its_frameworks(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), ["gdpr"])
+            res = self._run(root, "--scaffold")
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            written = self._stack(root)
+            self.assertEqual(sorted(written["choices"]),
+                             ["gdpr/consent-capture", "gdpr/encryption-at-rest"])
+            self.assertEqual(sorted(written["disabled"]),
+                             ["iso27001/asset-inventory", "soc2/access-reviews"])
+            self.assertIn("retained 2 entry/-ies of 2 disabled framework(s)", res.stdout)
+            self.assertIn("iso27001, soc2", res.stdout)
+            self.assertNotIn("orphaned", res.stdout)
+
+    def test_narrow_then_widen_round_trips_a_recorded_decision(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), ["gdpr", "soc2", "iso27001"])
+            self.assertEqual(self._run(root, "--scaffold").returncode, 0)
+            seeded = self._stack(root)
+            seeded["choices"]["soc2/access-reviews"].update(DECIDED_SOC2)
+            (root / "catalog" / "stack.json").write_text(json.dumps(seeded), encoding="utf-8")
+
+            self._write_cfg(root, ["gdpr"])
+            self.assertEqual(self._run(root, "--scaffold").returncode, 0)
+            self.assertNotIn("soc2/access-reviews", self._stack(root)["choices"])
+
+            self._write_cfg(root, ["gdpr", "soc2", "iso27001"])
+            res = self._run(root, "--scaffold")
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            self.assertIn("restored 2 entry/-ies from 'disabled'", res.stdout)
+            widened = self._stack(root)
+            self.assertNotIn("disabled", widened)
+            entry = widened["choices"]["soc2/access-reviews"]
+            for field, value in DECIDED_SOC2.items():
+                self.assertEqual(entry[field], value, field)
+
+    def test_unnarrowed_config_writes_no_disabled_key(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), ["gdpr", "soc2", "iso27001"])
+            res = self._run(root, "--scaffold")
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            written = self._stack(root)
+            self.assertNotIn("disabled", written)
+            self.assertEqual(len(written["choices"]), 4)
+            self.assertNotIn("retained", res.stdout)
+
+    def test_empty_frameworks_is_refused_and_writes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), [])
+            res = self._run(root, "--scaffold")
+            self.assertEqual(res.returncode, 1)
+            self.assertIn("Refusing to run", res.stdout)
+            self.assertIn("gdpr, iso27001, soc2", res.stdout)
+            self.assertIn(str(root / "config.json"), res.stdout)
+            self.assertFalse((root / "catalog" / "stack.json").exists())
+
+    def test_frameworks_naming_nothing_in_the_catalog_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), ["nonexistent"])
+            res = self._run(root, "--scaffold")
+            self.assertEqual(res.returncode, 1)
+            self.assertIn("['nonexistent']", res.stdout)
+
+    def test_a_refused_run_leaves_an_existing_stack_json_untouched(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), ["gdpr"])
+            self.assertEqual(self._run(root, "--scaffold").returncode, 0)
+            before = (root / "catalog" / "stack.json").read_bytes()
+            self._write_cfg(root, [])
+            self.assertEqual(self._run(root, "--scaffold").returncode, 1)
+            self.assertEqual((root / "catalog" / "stack.json").read_bytes(), before)
+
+    def test_the_report_run_covers_only_the_enabled_frameworks(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), ["gdpr"])
+            self.assertEqual(self._run(root, "--scaffold").returncode, 0)
+            res = self._run(root)
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            self.assertIn("1 of 1 applicable mandatory-linked capabilities", res.stdout)
+            report = next((root / "reports").glob("stack-gaps-*.md")).read_text(encoding="utf-8")
+            self.assertIn("gdpr/encryption-at-rest", report)
+            self.assertNotIn("soc2/access-reviews", report)
 
 
 if __name__ == "__main__":
