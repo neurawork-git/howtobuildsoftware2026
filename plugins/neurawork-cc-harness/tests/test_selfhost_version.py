@@ -51,5 +51,43 @@ class TestSelfHostVersion(unittest.TestCase):
         self.assertTrue(checked, "no self-host found — the walk asserted nothing")
 
 
+class TestSkipOutsideTheSourceRepo(unittest.TestCase):
+    """The skip branch, which every run in this repo takes the other way past.
+
+    Untested, it is the branch that would quietly swallow a wrong `REPO_ROOT`: the walk
+    would skip instead of failing, and nothing would say the guard stopped guarding.
+    """
+
+    def _run(self, repo_root: Path) -> unittest.TestResult:
+        module = sys.modules[TestSelfHostVersion.__module__]
+        result = unittest.TestResult()
+        original = module.REPO_ROOT
+        module.REPO_ROOT = repo_root
+        try:
+            module.TestSelfHostVersion(
+                "test_every_self_host_carries_its_engine_version").run(result)
+        finally:
+            module.REPO_ROOT = original
+        return result
+
+    def test_a_checkout_without_the_plugin_layout_skips(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self._run(Path(tmp))
+        self.assertEqual(len(result.skipped), 1, "the walk did not skip")
+        self.assertEqual(result.failures, [])
+        # errors, not only failures: a walk that blew up — `git` missing, a subprocess
+        # raising outside a repo — raises rather than fails, and a check that looks at
+        # skips and failures alone would read the crash as a pass.
+        self.assertEqual(result.errors, [])
+
+    def test_this_repo_does_not_skip(self) -> None:
+        result = self._run(REPO_ROOT)
+        self.assertEqual(result.skipped, [], "the walk skipped in its own source repo")
+        self.assertEqual(result.failures, [])
+        self.assertEqual(result.errors, [])
+
+
 if __name__ == "__main__":
     unittest.main()
