@@ -137,6 +137,30 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(settings["env"]["PRP_HOME"], ".claude/PRPs")
             self.assertIn("falling back to PRP_HOME", res.stdout)
 
+    def test_a_relative_prp_home_in_the_environment_is_not_a_link_prefix(self) -> None:
+        # The upgrade path: a repo wired before 0.8 exports PRP_HOME=".claude/PRPs" into
+        # the session. Resolved against the installer's cwd it would put the link inside
+        # the repo's own store, pointing at its own parent.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            _fake_compliance(repo)
+            env = dict(os.environ, PRP_HOME=".claude/PRPs", HOME=str(repo / "home"))
+            res = subprocess.run(
+                [sys.executable, str(INSTALL),
+                 "--stack-dir", SDIR, "--compliance-dir", CDIR],
+                cwd=repo, capture_output=True, text=True, env=env,
+            )
+            self.assertEqual(res.returncode, 0, res.stderr)
+
+            store = repo / ".claude" / "PRPs"
+            self.assertEqual([p for p in store.iterdir() if p.is_symlink()], [],
+                             "a link was written inside the repo's own store")
+            link = repo / "home" / ".prp" / prp_store.store_key(repo)
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(link.resolve(), store.resolve())
+            self.assertIn(str(link), res.stdout)
+
     def test_idempotent_reinstall(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

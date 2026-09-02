@@ -18,6 +18,7 @@ someone else owns, report what is there, and let the caller decide the severity.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -75,13 +76,23 @@ def store_key(repo_root: Path | str) -> str:
 
 
 def default_prp_home() -> Path:
-    """``$PRP_HOME`` when the environment sets one, else ``~/.prp``.
+    """``$PRP_HOME`` when it is ABSOLUTE, else ``~/.prp``.
 
-    prp-core's own prefix rule (``"${PRP_HOME:-$HOME/.prp}"``), so the link is created
-    where the resolver will actually look.
+    prp-core's prefix rule is ``"${PRP_HOME:-$HOME/.prp}"``, so the link belongs where
+    the resolver will actually look. Only an absolute value names one place, though: a
+    *relative* ``PRP_HOME`` — exactly what every pre-0.8 install wrote into
+    ``.claude/settings.json``, and what Claude Code then exports into the session — is
+    resolved against whatever directory the process stands in. Honouring it here would
+    put the link under the repo's own ``.claude/PRPs`` on the ordinary upgrade path,
+    pointing at its own parent, and no shared store would ever be created. The relative
+    case is precisely the wiring this module replaces, so it falls through to ``~/.prp``.
     """
     env = os.environ.get("PRP_HOME")
-    return Path(env).expanduser() if env else Path.home() / ".prp"
+    if env:
+        home = Path(env).expanduser()
+        if home.is_absolute():
+            return home
+    return Path.home() / ".prp"
 
 
 def main_checkout(repo_root: Path | str) -> Path:
@@ -93,6 +104,23 @@ def main_checkout(repo_root: Path | str) -> Path:
     root = Path(repo_root).resolve()
     main = gitctx.main_checkout_root(str(root))
     return main.resolve() if main is not None else root
+
+
+def link_path(main_root: Path | str, prp_home: Path | str | None = None) -> Path:
+    """Where the link lives, for an ALREADY-resolved main checkout.
+
+    One place composes prefix and key, so an installer's message, the link it writes
+    and the doctor's report can never name three different paths. Taking the main root
+    rather than any path inside the repo keeps this free of a git call, which is what
+    the doctor needs.
+    """
+    home = Path(prp_home) if prp_home is not None else default_prp_home()
+    return home / key_for_root(main_root)
+
+
+def store_link(repo_root: Path | str, prp_home: Path | str | None = None) -> Path:
+    """``link_path`` for any path inside the repo — resolves the main checkout first."""
+    return link_path(main_checkout(repo_root), prp_home)
 
 
 def link_prp_store(
@@ -114,8 +142,8 @@ def link_prp_store(
     Creates the in-repo store directory first, so a created link never dangles.
     """
     target = main_checkout(repo_root) / STORE_SUBPATH
-    home = Path(prp_home) if prp_home is not None else default_prp_home()
-    link = home / store_key(repo_root)
+    link = store_link(repo_root, prp_home)
+    home = link.parent
 
     try:
         target.mkdir(parents=True, exist_ok=True)
@@ -131,6 +159,22 @@ def link_prp_store(
     except (NotImplementedError, OSError) as e:
         return "unsupported", str(e)
     return "linked", str(target)
+
+
+def _settings_prp_home(repo_root: Path | str) -> str | None:
+    """``env.PRP_HOME`` from the repo's settings, or None. Never raises.
+
+    Read-only and tolerant on purpose: an unreadable or invalid settings.json is the
+    hook merge's problem to report, not a reason for the store wiring to fail.
+    """
+    path = Path(repo_root) / ".claude" / "settings.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    env = data.get("env") if isinstance(data, dict) else None
+    value = env.get("PRP_HOME") if isinstance(env, dict) else None
+    return str(value) if value is not None else None
 
 
 def wire_store(
@@ -150,15 +194,23 @@ def wire_store(
     caller already treats as a failed install.
     """
     status, path = link_prp_store(repo_root, prp_home)
-    if status == "linked":
-        linked = (
-            f"PRP store linked: ~/.prp/{store_key(repo_root)} -> {path} — PRDs and plans"
-            " land inside the repo, where the gates see them, from the main checkout"
-            " and from every worktree"
+    link = store_link(repo_root, prp_home)
+    if status in ("linked", "already"):
+        verb = "linked" if status == "linked" else "already linked"
+        wired = (
+            f"PRP store {verb}: {link} -> {path} — PRDs and plans land inside the repo,"
+            " where the gates see them, from the main checkout and from every worktree"
         )
-        return status, [linked]
-    if status == "already":
-        return status, [f"PRP store already linked at {path}"]
+        lines = [wired]
+        # An upgrade leaves the older wiring in place, and it WINS over the link, so the
+        # line above would otherwise claim a shared store the repo does not have.
+        existing = _settings_prp_home(repo_root)
+        if existing is not None:
+            lines.append(
+                f"env.PRP_HOME={existing!r} is still set in .claude/settings.json and takes "
+                "precedence — the link stays inert until that key is removed"
+            )
+        return status, lines
 
     why = (f"{path} is not a link to this repo's store"
            if status == "conflict" else f"this platform cannot symlink ({path})")

@@ -8,6 +8,7 @@ is the whole contract.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -102,6 +103,57 @@ class TestLinkPrpStore(unittest.TestCase):
         self.assertEqual(status, "unsupported")
         self.assertIn("privilege", str(path))
         self.assertFalse(self.link.exists())
+
+    def test_a_relative_prp_home_never_links_inside_the_repo(self) -> None:
+        # The upgrade path: every pre-0.8 install wrote PRP_HOME=".claude/PRPs" into
+        # settings.json, and Claude Code exports it into the session. Honouring a
+        # relative value would resolve it against the installer's cwd and write a link
+        # into the repo's own store pointing at its own parent — no shared store, and a
+        # recursive symlink among tracked artifacts.
+        previous = os.environ.get("PRP_HOME")
+        os.environ["PRP_HOME"] = ".claude/PRPs"
+        cwd = os.getcwd()
+        os.chdir(self.repo)
+        try:
+            self.assertEqual(prp_store.default_prp_home(), Path.home() / ".prp")
+            self.assertEqual(prp_store.store_link(self.repo).parent,
+                             Path.home() / ".prp")
+        finally:
+            os.chdir(cwd)
+            if previous is None:
+                os.environ.pop("PRP_HOME", None)
+            else:
+                os.environ["PRP_HOME"] = previous
+        self.assertFalse((self.target / prp_store.store_key(self.repo)).exists())
+
+    def test_an_absolute_prp_home_is_honoured(self) -> None:
+        previous = os.environ.get("PRP_HOME")
+        os.environ["PRP_HOME"] = str(self.home)
+        try:
+            self.assertEqual(prp_store.store_link(self.repo), self.link)
+        finally:
+            if previous is None:
+                os.environ.pop("PRP_HOME", None)
+            else:
+                os.environ["PRP_HOME"] = previous
+
+    def test_the_reported_path_is_the_link_that_was_written(self) -> None:
+        status, lines = prp_store.wire_store(self.repo, self.home)
+        self.assertEqual(status, "linked")
+        self.assertIn(str(self.link), lines[0])
+        self.assertIn(str(self.target), lines[0])
+        self.assertEqual(len(lines), 1, "no settings PRP_HOME, so nothing to warn about")
+
+    def test_an_existing_settings_prp_home_is_reported_as_winning(self) -> None:
+        settings = self.repo / ".claude" / "settings.json"
+        settings.parent.mkdir(parents=True, exist_ok=True)
+        settings.write_text(json.dumps({"env": {"PRP_HOME": ".claude/PRPs"}}),
+                            encoding="utf-8")
+        status, lines = prp_store.wire_store(self.repo, self.home)
+        self.assertEqual(status, "linked")
+        self.assertEqual(len(lines), 2)
+        self.assertIn("takes precedence", lines[1])
+        self.assertIn(".claude/PRPs", lines[1])
 
     def test_installing_from_a_worktree_links_the_main_checkout(self) -> None:
         if shutil.which("git") is None:

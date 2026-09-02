@@ -580,7 +580,7 @@ class PrpStoreTests(DoctorTestCase):
         return repo
 
     def _link(self, repo: Path, target: Path) -> Path:
-        link = self.prp_home / doctor.key_for_root(repo.resolve())
+        link = doctor.link_path(repo.resolve(), self.prp_home)
         link.parent.mkdir(parents=True, exist_ok=True)
         link.symlink_to(target, target_is_directory=True)
         return link

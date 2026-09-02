@@ -47,9 +47,9 @@ if str(Path(__file__).resolve().parents[1] / "engines") not in sys.path:
 
 # The store key and its prefix rule have ONE owner — the module the installers wire the
 # store with. Re-deriving either here would let the doctor look in a place no install
-# ever writes. `key_for_root` takes an already-resolved main checkout, so importing it
+# ever writes. `link_path` takes an already-resolved main checkout, so importing it
 # costs the doctor neither a git process nor a write.
-from _shared.prp_store import STORE_SUBPATH, default_prp_home, key_for_root
+from _shared.prp_store import STORE_SUBPATH, link_path
 
 SEVERITIES = ("OK", "NOTE", "WARN", "ERROR")
 RANK = {name: index for index, name in enumerate(SEVERITIES)}
@@ -704,7 +704,7 @@ def check_prp_store(
 
     main_root = (main_checkout_root(repo_root) or repo_root) if worktree else repo_root
     target = (main_root / STORE_SUBPATH).resolve()
-    link = default_prp_home() / key_for_root(main_root.resolve())
+    link = link_path(main_root.resolve())
     env_value = (settings.get("env") or {}).get("PRP_HOME") if isinstance(
         settings.get("env"), dict) else None
 

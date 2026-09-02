@@ -41,6 +41,11 @@ section here.
   checkout and does **not** travel with the feature branch. `PRP_HOME` remains the
   fallback — used, and reported, when the platform cannot symlink or the store key is
   already taken by a real directory or a foreign link, neither of which is ever replaced.
+  Only an **absolute** `$PRP_HOME` is honoured as the link prefix: the relative value every
+  pre-0.8 install wrote (and that Claude Code exports into the session) would otherwise be
+  resolved against the installer's working directory and put the link inside the repo's own
+  store, pointing at its own parent. An upgrade that leaves that key in `settings.json` is
+  told the key still wins and the new link stays inert until it is removed.
   (`engines/compliance-compiler/VERSION` 5 → 6.)
 - **`/nw-doctor` reports the store wiring.** A new repo-scoped `prp-store` check names
   which wiring a repo has (linked, `PRP_HOME`, both — where `PRP_HOME` wins and the link is
