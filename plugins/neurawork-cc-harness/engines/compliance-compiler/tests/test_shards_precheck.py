@@ -136,7 +136,7 @@ class TestIsPlanPath(unittest.TestCase):
 
     def test_matches_prp_home_store_layout(self) -> None:
         # PRP_HOME=".claude/PRPs" makes prp-core write to <store>/plans/, one level deeper
-        # than the canonical path — see config.PRP_SUBPATH.
+        # than the canonical path — covered by the `.claude/PRPs/*/plans` default.
         with tempfile.TemporaryDirectory() as t:
             root = Path(t)
             store = root / ".claude" / "PRPs" / "myrepo-1a2b3c4d"
