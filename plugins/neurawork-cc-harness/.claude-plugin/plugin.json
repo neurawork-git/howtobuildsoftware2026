@@ -1,6 +1,6 @@
 {
   "name": "neurawork-cc-harness",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "NeuraWork Claude Code harness: repo-local, self-maintaining project knowledge plus the delivery lifecycle around it. Bundles four independently installable skills \u2014 knowledge-compiler (distils session logs into a per-repo knowledge base, and spawns the kb-researcher agent as a fourth research axis whenever a PRP research workflow starts), claudemd-lerner (keeps the CLAUDE.md hierarchy + docs/ current), and compliance-compiler (parallel agents distil GDPR/SOC2/ISO27001 into a tracked constraint catalog, derive the capabilities and stack components those constraints require, and a PostToolUse hook validates PRP plans against both), and stack-compiler (narrows that catalog to one product: which capabilities apply, which component was chosen for each from a closed pool, and a PostToolUse hook that gates every PRD and plan write against those choices) \u2014 plus the read-only kb-researcher agent and three workflow surfaces that need no install: /nw-worktree (create and enter a Hand worktree), /nw-ship-pr (commit \u2192 push \u2192 PR \u2192 review \u2192 approval gate \u2192 merge \u2192 cleanup) and /nw-rules-init (write the baseline coding rules into a repo's CLAUDE.md). Knowledge, docs, and the catalog always live inside the repo, never in .claude/. Recon + brownfield seed/extract on install so existing repos can be upgraded.",
   "author": {
     "name": "Felix Doobe",

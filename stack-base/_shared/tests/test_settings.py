@@ -223,6 +223,81 @@ class TestMergeGitignore(unittest.TestCase):
             self.assertFalse(settings.merge_gitignore(tmp, GITIGNORE))
 
 
+class TestTimeoutFloor(unittest.TestCase):
+    """The shipped timeout is a floor. An install made before an engine knew what its
+    own cold start costs carries a value that kills the hook mid-bootstrap; a value
+    someone raised by hand is a preference and stays."""
+
+    def _write(self, tmp: str, timeout) -> Path:
+        sp = Path(tmp) / ".claude" / "settings.json"
+        sp.parent.mkdir(parents=True)
+        entry = {"type": "command", "command": HOOK[1]}
+        if timeout is not None:
+            entry["timeout"] = timeout
+        sp.write_text(json.dumps(
+            {"hooks": {"SessionEnd": [{"matcher": "", "hooks": [entry]}]}}))
+        return sp
+
+    def _timeout(self, sp: Path) -> int:
+        return json.loads(sp.read_text())["hooks"]["SessionEnd"][0]["hooks"][0]["timeout"]
+
+    def test_a_lower_existing_timeout_is_raised(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            sp = self._write(tmp, 10)
+            shipped = (*HOOK[:2], 60, HOOK[3])
+            self.assertTrue(settings.merge_hooks(tmp, [shipped]))
+            self.assertEqual(self._timeout(sp), 60)
+
+    def test_a_higher_existing_timeout_is_kept(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            sp = self._write(tmp, 99)
+            self.assertFalse(settings.merge_hooks(tmp, [(*HOOK[:2], 60, HOOK[3])]))
+            self.assertEqual(self._timeout(sp), 99)
+
+    def test_a_missing_timeout_is_filled_in(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            sp = self._write(tmp, None)
+            self.assertTrue(settings.merge_hooks(tmp, [(*HOOK[:2], 60, HOOK[3])]))
+            self.assertEqual(self._timeout(sp), 60)
+
+    def test_the_raise_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self._write(tmp, 10)
+            shipped = (*HOOK[:2], 60, HOOK[3])
+            self.assertTrue(settings.merge_hooks(tmp, [shipped]))
+            self.assertFalse(settings.merge_hooks(tmp, [shipped]))
+
+
+class TestPruneGitignore(unittest.TestCase):
+    """The counterpart merge_gitignore needs: dropping a rule from a shipped body is
+    invisible to every repo that already installed, because the merge only appends."""
+
+    def read(self, tmp: str) -> str:
+        return (Path(tmp) / ".gitignore").read_text(encoding="utf-8")
+
+    def test_named_rule_is_removed_and_the_rest_is_byte_identical(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".gitignore").write_text(
+                "my-own-rule/\n\n# caches\n__pycache__/\nuv.lock\n.venv/\n",
+                encoding="utf-8")
+            self.assertTrue(settings.prune_gitignore(tmp, ("uv.lock",)))
+            self.assertEqual(self.read(tmp),
+                             "my-own-rule/\n\n# caches\n__pycache__/\n.venv/\n")
+
+    def test_second_call_is_a_no_op(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".gitignore").write_text("uv.lock\n.venv/\n", encoding="utf-8")
+            self.assertTrue(settings.prune_gitignore(tmp, ("uv.lock",)))
+            before = (Path(tmp) / ".gitignore").read_bytes()
+            self.assertFalse(settings.prune_gitignore(tmp, ("uv.lock",)))
+            self.assertEqual((Path(tmp) / ".gitignore").read_bytes(), before)
+
+    def test_a_missing_file_is_a_no_op(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertFalse(settings.prune_gitignore(tmp, ("uv.lock",)))
+            self.assertFalse((Path(tmp) / ".gitignore").exists())
+
+
 class TestSetEnvDefault(unittest.TestCase):
     def test_writes_when_absent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

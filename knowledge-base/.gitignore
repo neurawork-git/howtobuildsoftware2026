@@ -12,4 +12,3 @@ scripts/flush-context-*.md
 __pycache__/
 *.pyc
 .venv/
-uv.lock
