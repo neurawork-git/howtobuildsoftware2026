@@ -32,6 +32,7 @@ KDIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(KDIR))                       # _shared
 sys.path.insert(0, str(KDIR / "scripts"))           # config, gate_lib, rank_lib
 
+from _shared.gitctx import checkout_roots
 from _shared.hookio import child_env, read_hook_input, recursion_guard
 
 recursion_guard()
@@ -87,15 +88,21 @@ def main() -> None:
         return
 
     path_str = _doc_path_from(data)
-    repo_root = KDIR.parent  # the working-tree root (main checkout or worktree)
+    repo_root = KDIR.parent  # this install's working tree — where the catalog lives
     cfg = load_cfg()
-    kind = gate_lib.document_kind(path_str, repo_root, cfg)
-    if not kind:
+    # Classify against every working tree the document could belong to. From a worktree
+    # the store is reached through a symlink into the MAIN checkout, so the document
+    # resolves outside this checkout and `relative_to(repo_root)` alone finds nothing.
+    for doc_root in checkout_roots(str(KDIR), local=repo_root):
+        kind = gate_lib.document_kind(path_str, doc_root, cfg)
+        if kind:
+            break
+    else:
         return
 
     doc_path = Path(path_str)
     if not doc_path.is_absolute():
-        doc_path = (repo_root / doc_path).resolve()
+        doc_path = (doc_root / doc_path).resolve()
     if not doc_path.exists():
         return
 

@@ -84,6 +84,32 @@ def main_checkout_root(start: str | None = None) -> Path | None:
     return None
 
 
+def checkout_roots(start: str | None = None, local: Path | None = None) -> list[Path]:
+    """The working trees a file of this repository can live in, nearest first.
+
+    In the main checkout that is one root. In a linked worktree it is two: the
+    worktree, and the main checkout behind it — because the PRP artifact store is
+    reached through ``~/.prp/<key>``, a symlink into the MAIN checkout, so a document
+    a worktree session writes resolves outside the worktree. A gate that only ever
+    asks ``relative_to(<worktree>)`` sees none of them and exits silently, which is
+    indistinguishable from a gate that ran and approved.
+
+    ``local`` is the caller's own answer for the nearest working tree, used when git
+    cannot answer. A hook knows it from its install location, and that is the value its
+    other paths are built from — deriving a different one here would classify a document
+    against a root the rest of the hook does not use.
+
+    Never raises: on any error it answers the single root it could resolve.
+    """
+    root = local if local is not None else repo_root(start)
+    roots = [root if root is not None else Path(start or ".").resolve()]
+    if in_worktree(start):
+        main_root = main_checkout_root(start)
+        if main_root is not None and main_root != roots[0]:
+            roots.append(main_root)
+    return roots
+
+
 def state_home(local_dir: Path, start: str | None = None) -> Path:
     """Where a per-session OUTPUT dir should live so it survives worktree removal.
 

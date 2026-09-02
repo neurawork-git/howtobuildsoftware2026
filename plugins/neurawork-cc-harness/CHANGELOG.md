@@ -34,6 +34,17 @@ section here.
   store, pointing at its own parent. An upgrade that leaves that key in `settings.json` is
   told the key still wins and the new link stays inert until it is removed.
   (`engines/compliance-compiler/VERSION` 6 → 7, `engines/stack-compiler/VERSION` 3 → 4.)
+- **Both PostToolUse gates classify a document against the main checkout too.** The
+  symlinked store is reached through `~/.prp/<key>`, which points into the MAIN checkout,
+  so a document a worktree session writes physically lives outside that session's own
+  checkout. Both hooks classified with `repo_root = KDIR.parent` only, so
+  `p.resolve().relative_to(repo_root)` raised and the hook returned before printing —
+  the same silent gate the store layout used to produce, one layer down and only in a
+  worktree. They now try each working tree the document could belong to (new
+  `_shared/gitctx.checkout_roots`: the local checkout, plus the main checkout behind a
+  linked worktree), and the root that matched is the one the document's own paths are
+  resolved against. The catalog and the repo's `CLAUDE.md` rules still come from the
+  install's own checkout — a branch is judged against its own decisions.
 - **`/nw-doctor` reports the store wiring.** A new repo-scoped `prp-store` check names
   which wiring a repo has (linked, `PRP_HOME`, both — where `PRP_HOME` wins and the link is
   inert — or neither, which is the warning that documents land outside the repo), reports a
