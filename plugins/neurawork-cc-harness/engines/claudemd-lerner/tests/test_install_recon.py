@@ -71,6 +71,55 @@ class TestInstall(unittest.TestCase):
             ends = [h for g in settings["hooks"]["SessionEnd"] for h in g["hooks"]]
             self.assertTrue(any("hooks/cl-session-end.py" in h["command"] for h in ends))
 
+    def test_fresh_install_ships_no_plugin_only_test(self) -> None:
+        # test_manifest.py and test_version_check.py assert plugin-level facts (the
+        # manifest, <plugin>/hooks/version-check.py) that no target repo has — shipped
+        # there they fail with FileNotFoundError on arrival.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            shared_tests = repo / LDIR / "_shared" / "tests"
+            self.assertTrue((shared_tests / "test_settings.py").exists())
+            self.assertFalse((shared_tests / "test_manifest.py").exists())
+            self.assertFalse((shared_tests / "test_version_check.py").exists())
+
+    def test_adopt_removes_plugin_only_tests_an_older_install_left(self) -> None:
+        # The repair path: a repo installed before the exclusion carries both files.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            shared_tests = repo / LDIR / "_shared" / "tests"
+            for name in ("test_manifest.py", "test_version_check.py"):
+                (shared_tests / name).write_text("# stale", encoding="utf-8")
+
+            self.assertEqual(self._install(repo).returncode, 0)
+            self.assertFalse((shared_tests / "test_manifest.py").exists())
+            self.assertFalse((shared_tests / "test_version_check.py").exists())
+            self.assertTrue((shared_tests / "test_settings.py").exists())
+
+    def test_adopt_prunes_the_uv_lock_ignore_rule(self) -> None:
+        # uv.lock is tracked now — a committed lock file removes the dependency resolve
+        # from a hook's cold start. The merge only appends, so the rule an earlier
+        # release wrote has to be pruned or it stays in every existing install.
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            _init_repo(repo)
+            self.assertEqual(self._install(repo).returncode, 0)
+
+            gi = repo / LDIR / ".gitignore"
+            gi.write_text("my-own-rule/\nuv.lock\n" + gi.read_text(encoding="utf-8"),
+                          encoding="utf-8")
+
+            self.assertEqual(self._install(repo).returncode, 0)
+            lines = gi.read_text(encoding="utf-8").splitlines()
+            self.assertNotIn("uv.lock", lines)
+            self.assertEqual(lines[0], "my-own-rule/")
+            self.assertIn(".venv/", lines)
+
     def test_idempotent_reinstall(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

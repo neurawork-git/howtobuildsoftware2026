@@ -85,8 +85,11 @@ class TestInstall(unittest.TestCase):
             self.assertEqual(config["compliance_dir"], CDIR)
 
             gitignore = (sb / ".gitignore").read_text(encoding="utf-8")
-            for rule in ("reports/", ".shards/", "uv.lock"):
+            for rule in ("reports/", ".shards/"):
                 self.assertIn(rule, gitignore)
+            # uv.lock is TRACKED: a committed lock file removes the dependency resolve
+            # from a hook's cold start in a fresh worktree or clone.
+            self.assertNotIn("uv.lock", gitignore)
             # product.md is the tracked scoping input of record — named in the comment
             # that says so, never in a rule
             rules = [line.strip() for line in gitignore.splitlines()

@@ -15,6 +15,39 @@ section here.
 > precise as the sections written since. They are marked so nothing in this file reads as a
 > contemporaneous record that is not one.
 
+## [0.8.0] — 2026-09-02
+
+### Fixed
+
+- **Harness hooks were killed mid-bootstrap in a fresh checkout.** Every engine hook is a
+  `uv run`, `uv.lock` was gitignored, and the shipped timeouts were 10 s (SessionEnd,
+  PreCompact, UserPromptSubmit, PreToolUse) and 15 s (SessionStart, both PostToolUse
+  gates). A fresh worktree or clone therefore paid a full dependency resolve plus install
+  — measured ~12 s for a single engine — on the first hook fire and was cancelled before
+  it finished, which Claude Code reports as `failed: Hook cancelled`. It did not
+  self-heal: each killed run left a partial `.venv`, so the next fire was cold again.
+  Two changes close it. Every engine hook now ships a 60 s timeout, and the shipped
+  timeout is a **floor**: `merge_hooks` raises an existing entry that sits below it, so
+  the fix reaches installations that already exist. A higher hand-edited value is still
+  kept. And `uv.lock` is now tracked instead of ignored, which removes the resolve from
+  the cold start; `prune_gitignore` (the new counterpart to the append-only
+  `merge_gitignore`) removes the ignore rule an earlier release wrote.
+- **Two installs shipped tests that fail on arrival.** `_shared/tests/test_manifest.py`
+  and `test_version_check.py` assert plugin-level facts (the plugin manifest,
+  `<plugin>/hooks/version-check.py`) that no target repo has. `compliance-compiler` and
+  `stack-compiler` excluded them from the `_shared/` copy; `knowledge-compiler` and
+  `claudemd-lerner` did not, so their installs received both files, where they fail with
+  `FileNotFoundError`. The exclusion — and the copy itself, which was byte-identical in
+  all four installers — now has one definition in `engines/_shared_install.py`, called by
+  all four. It also unlinks copies an older install left behind, so an existing install is
+  repaired on its next re-install.
+
+All four engine VERSIONs are bumped, so existing installs are nudged to re-install.
+
+**To receive these fixes:** `/plugin update` + `/reload-plugins`, then re-run each
+installed engine's install skill. Both migrations — the timeout raise and the `.gitignore`
+prune — happen during an install run and nowhere else.
+
 ## [0.7.0] — 2026-09-02
 
 ### Fixed
