@@ -77,11 +77,16 @@ class TestSkipOutsideTheSourceRepo(unittest.TestCase):
             result = self._run(Path(tmp))
         self.assertEqual(len(result.skipped), 1, "the walk did not skip")
         self.assertEqual(result.failures, [])
+        # errors, not only failures: a walk that blew up — `git` missing, a subprocess
+        # raising outside a repo — raises rather than fails, and a check that looks at
+        # skips and failures alone would read the crash as a pass.
+        self.assertEqual(result.errors, [])
 
     def test_this_repo_does_not_skip(self) -> None:
         result = self._run(REPO_ROOT)
         self.assertEqual(result.skipped, [], "the walk skipped in its own source repo")
         self.assertEqual(result.failures, [])
+        self.assertEqual(result.errors, [])
 
 
 if __name__ == "__main__":

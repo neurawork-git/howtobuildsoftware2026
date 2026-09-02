@@ -19,7 +19,11 @@ fixed lived in it, and a Python-only comparison would not have pinned it.
 state: a live install's `scripts/` also holds `state.json`, the completion stamp, a lock
 and flush logs, all of them gitignored and none of them payload. Filtering by extension
 could not tell them apart (`seed_prompt.txt` and `state.json` would both be "not `.py`"),
-so the split comes from git itself.
+so the split comes from git itself. The cost is deliberate and worth naming: a file
+someone drops into a self-host and never commits is invisible here — untracked is how
+this guard defines "not part of the install", and an uncommitted file is not yet part of
+the repository either. The reverse, a payload file gitignored in a self-host, does fail:
+it goes missing from the tracked list.
 
 `_shared/` is deliberately out of scope: it is not in `payload/` (the installer refreshes
 it from `engines/_shared/`), and `VERSION` belongs to `test_selfhost_version.py`, so one
@@ -136,11 +140,16 @@ class TestSkipOutsideTheSourceRepo(unittest.TestCase):
             result = self._run(Path(tmp))
         self.assertEqual(len(result.skipped), 1, "the walk did not skip")
         self.assertEqual(result.failures, [])
+        # errors, not only failures: a walk that blew up — `git` missing, a subprocess
+        # raising outside a repo — raises rather than fails, and a check that looks at
+        # skips and failures alone would read the crash as a pass.
+        self.assertEqual(result.errors, [])
 
     def test_this_repo_does_not_skip(self) -> None:
         result = self._run(REPO_ROOT)
         self.assertEqual(result.skipped, [], "the walk skipped in its own source repo")
         self.assertEqual(result.failures, [])
+        self.assertEqual(result.errors, [])
 
 
 if __name__ == "__main__":
