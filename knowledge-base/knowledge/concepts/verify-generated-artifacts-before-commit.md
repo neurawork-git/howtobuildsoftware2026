@@ -47,6 +47,8 @@ same `0.3.1` bump round (see
 
 - [[concepts/plugin-manifest-name-verification]] — the same verify-against-ground-truth discipline for identifiers
 - [[concepts/plugin-version-bump-propagates-cache]] — the bump round these doc commits accompanied
+- [[concepts/timing-evidence-vs-observed-behavior]] — the same verify-against-reality discipline applied to a claimed runtime symptom
+- [[concepts/install-run-clobbers-local-edits]] — generated installer output checked (and stripped) before it lands
 
 ## Sources
 

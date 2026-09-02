@@ -8,9 +8,12 @@ installer) changes nothing. It has happened once already (PR #45, caught in revi
 the store-wiring work moved four of these files by hand, so nothing but this test stands
 between a bump and the next silent mismatch.
 
-The engine registry is the source of truth for which self-host belongs to which engine;
-an engine whose default dir is absent from the checkout is skipped, not failed, so a
-pure plugin checkout stays green. No LLM, no network.
+The engine registry is the source of truth for which self-host belongs to which engine.
+An engine whose default dir is absent is skipped rather than failed — but "no self-host
+at all" is not the same fact: in this repo it means the walk found nothing where it
+should have, so the test asserts it checked something, and skips only where there is
+nothing to check by construction (a checkout that is not the plugin's source repo).
+No LLM, no network.
 """
 
 from __future__ import annotations
@@ -28,6 +31,8 @@ import harness_probe as probe
 
 class TestSelfHostVersion(unittest.TestCase):
     def test_every_self_host_carries_its_engine_version(self) -> None:
+        if not (REPO_ROOT / "plugins" / PLUGIN_ROOT.name).is_dir():
+            self.skipTest("not the plugin's source repo — no self-hosts to pin here")
         checked = []
         for name, engine in probe.ENGINES.items():
             self_host = REPO_ROOT / engine.default_dir

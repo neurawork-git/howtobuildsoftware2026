@@ -48,6 +48,8 @@ of the same marketplace distribution model documented for install commands in
 - [[concepts/plugin-marketplace-install]] — the marketplace distribution path this propagation rides on
 - [[concepts/semver-patch-for-reporting-only-change]] — why this particular propagation was a patch bump
 - [[concepts/verify-generated-artifacts-before-commit]] — the doc-verification done in the same bump round
+- [[concepts/installer-merge-repairs-existing-installs]] — the analogous propagation event for harness installs (the next install run)
+- [[connections/installer-repair-and-clobber]] — the same "installs change only at a defined propagation moment" structure
 
 ## Sources
 
