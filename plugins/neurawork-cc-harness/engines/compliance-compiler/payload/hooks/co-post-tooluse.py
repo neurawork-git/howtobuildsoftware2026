@@ -1,7 +1,8 @@
 """PostToolUse hook — validate a PRP plan against the compliance catalog on write.
 
 Fires after every tool call; fast-exits unless the tool was a Write/Edit to a live
-PRP plan file (``.claude/PRPs/plans/*.plan.md``). For a plan write it runs the
+plan file (``.claude/PRPs/plans/*.plan.md`` by default; see the ``plans_subpath`` /
+``plan_suffix`` config keys for other layouts). For a plan write it runs the
 deterministic ``precheck`` inline (<1s), emits an advisory summary as
 additionalContext, and spawns the deep LLM ``validate.py`` detached (a report lands
 in ``reports/``). ``validate_mode: "block"`` additionally returns a block decision
@@ -130,7 +131,8 @@ def main() -> None:
 
     path_str = _plan_path_from(data)
     repo_root = KDIR.parent  # the working-tree root (main checkout or worktree)
-    if not is_plan_path(path_str, repo_root):
+    cfg = load_cfg()         # needed before the match: it carries the plan-path keys
+    if not is_plan_path(path_str, repo_root, cfg):
         return
 
     plan_path = Path(path_str)
@@ -139,7 +141,6 @@ def main() -> None:
     if not plan_path.exists():
         return
 
-    cfg = load_cfg()
     root = effective_root()
     catalog_dir = root / "catalog"
     try:
