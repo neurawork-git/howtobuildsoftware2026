@@ -150,6 +150,42 @@ test("findStale: no install is silent", () => {
   }
 });
 
+// Each engine carries several hook markers, and the first one is not guaranteed to
+// be wired: the knowledge-compiler's SessionStart entry can be removed by hand while
+// the install is still an install. Discovery has to fall through to a later marker.
+test("findStale: found by a marker other than the first", () => {
+  const { repo, plugin, cleanup } = setupTree("1", "2");
+  try {
+    const settings = settingsFor("knowledge-base", "hooks/session-end.py");
+    const stale = vc.findStale(repo, plugin, settings);
+    assert.equal(stale.length, 1);
+    assert.equal(stale[0].dir, "knowledge-base");
+  } finally {
+    cleanup();
+  }
+});
+
+// The fourth engine shipped after this map was first written, and its absence from
+// the map is exactly how the Python original went stale — silently, because an
+// unregistered engine is indistinguishable from an uninstalled one.
+test("findStale: stack-compiler is registered", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "vc-test-"));
+  const repo = path.join(root, "repo");
+  const plugin = path.join(root, "plugin");
+  try {
+    fs.mkdirSync(path.join(repo, "stack-base"), { recursive: true });
+    fs.writeFileSync(path.join(repo, "stack-base", "VERSION"), "1");
+    fs.mkdirSync(path.join(plugin, "engines", "stack-compiler"), { recursive: true });
+    fs.writeFileSync(path.join(plugin, "engines", "stack-compiler", "VERSION"), "2");
+    const settings = settingsFor("stack-base", "hooks/st-post-tooluse.py");
+    const stale = vc.findStale(repo, plugin, settings);
+    assert.equal(stale.length, 1);
+    assert.equal(stale[0].engine, "stack-compiler");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 // --- main --------------------------------------------------------------------
 
 test("main: no env, no output", () => {

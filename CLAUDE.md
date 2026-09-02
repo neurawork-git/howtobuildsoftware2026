@@ -123,7 +123,8 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   `scripts/` is a fourth surface that installs nothing either: plugin-side, stdlib-only,
   system-`python3` diagnostics. `harness_probe.py` owns the engine registry and install
   discovery (by hook marker *and* by directory signature — their disagreement is the
-  finding), read by both `hooks/version-check.py` and `scripts/doctor.py` (`/nw-doctor`).
+  finding), imported by `scripts/doctor.py` (`/nw-doctor`) and mirrored — under the
+  drift guard `tests/test_version_check_registry.py` — by the Node `hooks/version-check.js`.
   Marker blocks are **learner-protected**: `claudemd-lerner` snapshots every
   `owner:name` marker span before its SDK run and restores it byte-for-byte afterwards
   (`payload/scripts/markers.py`), so no tool-owned block is silently reworded.

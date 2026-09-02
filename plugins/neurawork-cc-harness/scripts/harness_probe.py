@@ -5,10 +5,13 @@ CLAUDE_PLUGIN_ROOT and no shipped VERSION to compare against), stdlib-only, unde
 system python3 — half the states this exists to diagnose (`uv` missing, no `.venv`)
 would stop a `uv run`-based probe from starting at all.
 
-Two consumers read this one registry: ``hooks/version-check.py`` (the quiet
-SessionStart staleness nudge) and ``scripts/doctor.py`` (the on-demand health
-report). Before it existed the engine map lived only in the nudge and had already
-fallen behind reality — it still listed three engines after the fourth shipped.
+``scripts/doctor.py`` (the on-demand health report) imports this registry directly.
+The quiet SessionStart staleness nudge cannot: ``hooks/version-check.js`` is Node, so
+it keeps a transcription of the engine → hook-marker map. Before this module existed
+that map lived ONLY in the nudge and had already fallen behind reality — it still
+listed three engines after the fourth shipped, which is why
+``tests/test_version_check_registry.py`` now fails the build when the two disagree.
+Register a new engine here first; the guard will point at the other side.
 
 Discovery deliberately merges TWO sources, because their disagreement is the
 finding: a hook command in ``.claude/settings.json`` says where an engine was
