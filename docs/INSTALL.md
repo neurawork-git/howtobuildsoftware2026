@@ -167,6 +167,9 @@ For a repo whose plans live at `.planning/phases/<phase>/NN-NN-PLAN.md`:
 Both layouts side by side: pass lists, e.g.
 `"plans_subpath": [".claude/PRPs/plans", ".planning/phases"]`.
 
+`stack-base/config.json` carries the same three keys plus `prds_subpath` /
+`prd_suffix` for PRDs; the two gates read their own config and are set independently.
+
 Keys absent from an existing `config.json` fall back to the defaults, so an
 upgrade over an older install keeps behaving exactly as before. An explicitly
 empty list (`[]`) matches nothing — that is how you switch the validator off
@@ -205,6 +208,12 @@ Three passes, then the gate:
   detached deep report under `stack-base/reports/`. `config.json`'s `validate_mode` sets
   `warn` | `block` per document type. Validate manually:
   `/neurawork-cc-harness:st-validate <path-to-prd-or-plan>`.
+- Which files count as a PRD or a plan is configurable exactly as the compliance gate's
+  is (see [above](#plans-that-do-not-live-in-claudeprpsplans)) — `prds_subpath` /
+  `plans_subpath`, `prd_suffix` / `plan_suffix`, and `doc_archive_segments` in
+  `stack-base/config.json`, each a string or a list, `*` matching one path segment. The
+  two gates are configured **separately**: pointing one at a repo's layout leaves the
+  other blind.
 
 The component pool is closed — a ranking must name exactly that capability's `options`,
 and a choice must come from them — and a deterministic gate (pool match plus the

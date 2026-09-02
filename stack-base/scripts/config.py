@@ -40,8 +40,15 @@ DEFAULT_CFG = {
     "model": "",
     "max_concurrency": 12,
     "product_file": "product.md",
-    "prds_subpath": ".claude/PRPs/prds",
-    "plans_subpath": ".claude/PRPs/plans",
+    # Which files the gate treats as a PRD / a plan. Each takes a string or a list; a
+    # "*" segment matches exactly one path segment (here: the PRP_HOME store key). A
+    # repo with another convention — GSD's `.planning/phases/<phase>/NN-NN-PLAN.md` —
+    # overrides them; the same three keys exist in `compliance-base/config.json`.
+    "prds_subpath": [".claude/PRPs/prds", ".claude/PRPs/*/prds"],
+    "plans_subpath": [".claude/PRPs/plans", ".claude/PRPs/*/plans"],
+    "prd_suffix": ".prd.md",
+    "plan_suffix": ".plan.md",
+    "doc_archive_segments": ["completed"],
     "validate_mode": {"prd": "warn", "plan": "warn"},
 }
 

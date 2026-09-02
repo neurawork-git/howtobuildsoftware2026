@@ -152,6 +152,60 @@ class TestDocumentKind(unittest.TestCase):
         finally:
             os.chdir(cwd)
 
+    def test_configured_suffixes(self) -> None:
+        """GSD keeps its plans as `NN-NN-PLAN.md`; the default suffix never matches those."""
+        cfg = {**CFG, "plans_subpath": ".planning/phases", "plan_suffix": "-PLAN.md"}
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / ".planning/phases/p1/01-02-PLAN.md"),
+                                   self.root, cfg), "plan")
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / ".planning/phases/p1/notes.md"),
+                                   self.root, cfg), "")
+
+    def test_subpath_and_suffix_accept_lists(self) -> None:
+        cfg = {**CFG,
+               "plans_subpath": [".claude/PRPs/plans", ".planning/phases"],
+               "plan_suffix": [".plan.md", "-PLAN.md"]}
+        self.assertEqual(self._kind(".claude/PRPs/plans/a.plan.md"), "plan")
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / ".claude/PRPs/plans/a.plan.md"),
+                                   self.root, cfg), "plan")
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / ".planning/phases/01-PLAN.md"),
+                                   self.root, cfg), "plan")
+
+    def test_star_segment_matches_exactly_one_segment(self) -> None:
+        """The PRP_HOME store (`.claude/PRPs/<repo>-<hash>/plans/`) is a DEFAULT, so this
+        case runs on the empty config — CFG above pins the plain subpaths on purpose."""
+        def kind(rel: str) -> str:
+            return gate_lib.document_kind(str(self.root / rel), self.root, {})
+
+        self.assertEqual(kind(".claude/PRPs/myrepo-1a2b3c4d/plans/x.plan.md"), "plan")
+        self.assertEqual(kind(".claude/PRPs/myrepo-1a2b3c4d/prds/x.prd.md"), "prd")
+        self.assertEqual(kind(".claude/PRPs/plans/x.plan.md"), "plan")
+        self.assertEqual(kind(".claude/PRPs/a/b/plans/x.plan.md"), "")
+        self.assertEqual(kind(".claude/PRPs/myrepo-1a2b3c4d/plans/completed/x.plan.md"), "")
+
+    def test_configured_archive_segments(self) -> None:
+        cfg = {**CFG, "doc_archive_segments": ["archive", "done"]}
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / ".claude/PRPs/plans/archive/x.plan.md"),
+                                   self.root, cfg), "")
+        # `completed` is no longer archived once the config names other segments.
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / ".claude/PRPs/plans/completed/x.plan.md"),
+                                   self.root, cfg), "plan")
+
+    def test_unusable_values_fall_back_and_an_empty_list_disables(self) -> None:
+        for bad in (None, 42, {"nested": "dict"}):
+            self.assertEqual(
+                gate_lib.document_kind(str(self.root / ".claude/PRPs/plans/x.plan.md"),
+                                       self.root, {**CFG, "plans_subpath": bad}),
+                "plan", repr(bad))
+        self.assertEqual(
+            gate_lib.document_kind(str(self.root / ".claude/PRPs/plans/x.plan.md"),
+                                   self.root, {**CFG, "plans_subpath": []}), "")
+
     def test_empty_path_and_configured_subpaths(self) -> None:
         self.assertEqual(gate_lib.document_kind("", self.root, CFG), "")
         cfg = {**CFG, "prds_subpath": "docs/prds"}
