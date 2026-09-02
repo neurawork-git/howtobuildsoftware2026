@@ -48,6 +48,17 @@ silent. Each written choice also records ``chosen_from``, the hash of the catalo
 capability it was decided against, so a later catalog change reopens exactly the
 choices it invalidated.
 
+``config.json``'s ``frameworks`` list is the enabled set for this pipeline, not just
+for extraction: only the frameworks it names take part in the stack passes. A
+framework switched off is **retained, never deleted** — ``--scaffold`` moves its
+entries into a sibling ``disabled`` map in the same file, decision fields untouched,
+and moves them back into ``choices`` when the framework is switched on again. So
+``choices`` keeps meaning exactly what it always meant — the working universe every
+downstream pass reads — while nothing that was ever derived or decided is lost. The
+key is omitted entirely when no framework is disabled. An enabled set that intersects
+``capabilities.json`` in nothing is refused with a named cause rather than emptying
+the file.
+
 A plain run computes the gap — *applicable* mandatory-linked capabilities with no
 chosen component — writes ``reports/stack-gaps-<date>.md`` and prints a one-line
 summary. A capability scoped out of the product is not a gap; it is reported
@@ -75,7 +86,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # install dir for _shared
 
 import cap_lib
-from config import CATALOG_DIR, FRAMEWORK_TITLES, REPORTS_DIR, ROOT_DIR, today_iso
+from config import (
+    CATALOG_DIR,
+    CONFIG_FILE,
+    FRAMEWORK_TITLES,
+    REPORTS_DIR,
+    ROOT_DIR,
+    load_cfg,
+    today_iso,
+)
 from utils import file_hash, load_constraints, mandatory_ids
 
 # _shared/ is imported inside main(): it exists next to scripts/ only in an installed
@@ -168,12 +187,29 @@ def catalog_capabilities(catalog: dict) -> dict[str, dict]:
     }
 
 
+def split_by_framework(catalog: dict, enabled: list[str]) -> tuple[dict, dict]:
+    """Partition a capability catalog into ``(enabled half, disabled half)``.
+
+    Only the ``frameworks`` map is split; every other top-level key (``generated``,
+    ``license_policy``) is preserved on **both** halves, because a half is still a
+    catalog — ``render_gap_report()`` and ``apply_selection()`` read those keys. A
+    name in ``enabled`` that the catalog does not contain appears in neither half
+    and is not an error here; ``main()`` owns the diagnostics.
+    """
+    all_fws = catalog.get("frameworks") or {}
+    on = {fw: all_fws[fw] for fw in all_fws if fw in set(enabled)}
+    off = {fw: all_fws[fw] for fw in all_fws if fw not in set(enabled)}
+    rest = {k: v for k, v in catalog.items() if k != "frameworks"}
+    return {**rest, "frameworks": on}, {**rest, "frameworks": off}
+
+
 def scaffold(
     catalog: dict,
     existing: dict | None = None,
     catalog_dir=None,
     generated: str | None = None,
     capabilities_hash: str = "",
+    enabled: list[str] | None = None,
 ) -> dict:
     """Build catalog/stack.json from the capability catalog.
 
@@ -181,17 +217,31 @@ def scaffold(
     ``chosen``/``rationale``/``chosen_from`` and the ``stack-compiler``-owned
     applicability and ranking fields are carried over from ``existing`` by key. Keys are emitted sorted so a
     re-scaffold produces a stable, reviewable diff.
+
+    ``enabled`` names the frameworks that are in play; ``None`` means all of them,
+    which is what every caller wanted before the config was honoured. A framework
+    outside it still gets its entries built — machine fields refreshed, decisions
+    carried — but they land in ``disabled`` instead of ``choices``. The full catalog
+    is passed in on purpose: both halves are built from it, so switching a framework
+    off and on again is lossless in both directions. ``disabled`` is omitted when
+    empty, so a repo with every framework enabled writes exactly what it wrote before.
     """
-    prev_choices = (existing or {}).get("choices") or {}
+    ex = existing or {}
+    # Read previous decisions from both maps: a key coming back from ``disabled``
+    # must find its old record, which is what makes re-enabling free.
+    prev_choices = {**(ex.get("disabled") or {}), **(ex.get("choices") or {})}
     linked = mandatory_linked_keys(catalog, catalog_dir)
+    on_fws = set(catalog.get("frameworks") or {}) if enabled is None else set(enabled)
     choices: dict[str, dict] = {}
+    disabled: dict[str, dict] = {}
     for fw, f in catalog.get("frameworks", {}).items():
+        target = choices if fw in on_fws else disabled
         for cap in f.get("capabilities", []):
             key = capability_key(fw, cap["name"])
-            if key in choices:
+            if key in choices or key in disabled:
                 raise ValueError(f"duplicate capability key: {key}")
             prev = prev_choices.get(key) or {}
-            choices[key] = {
+            target[key] = {
                 "capability": cap["name"],
                 "framework": fw,
                 "mandatory_linked": key in linked,
@@ -205,13 +255,16 @@ def scaffold(
                 "ranked": prev.get("ranked"),
                 "ranked_from": prev.get("ranked_from"),
             }
-    return {
+    out = {
         "generated": generated or today_iso(),
         "source": "compliance-base/catalog/capabilities.json",
         "capabilities_generated": catalog.get("generated", ""),
         "capabilities_hash": capabilities_hash,
         "choices": {k: choices[k] for k in sorted(choices)},
     }
+    if disabled:
+        out["disabled"] = {k: disabled[k] for k in sorted(disabled)}
+    return out
 
 
 def gaps(
@@ -219,6 +272,7 @@ def gaps(
     stack: dict,
     catalog_dir=None,
     capabilities_hash: str = "",
+    full_catalog: dict | None = None,
 ) -> dict:
     """Which capabilities still have no chosen component (and related findings).
 
@@ -236,10 +290,17 @@ def gaps(
     no ``chosen_from`` (hand-recorded straight into ``stack.json``) is never reported:
     there is nothing to compare it against, and guessing would either cry wolf on
     every run or hide a real drift.
+
+    ``orphaned`` asks a **catalog-membership** question — "does the catalog still
+    describe this key?" — never a config one. When ``catalog`` has been narrowed to the
+    enabled frameworks, pass the unnarrowed one as ``full_catalog`` so the keys of a
+    switched-off framework are not reported as removed upstream. Defaults to
+    ``catalog``, which is correct whenever no narrowing happened.
     """
     linked = mandatory_linked_keys(catalog, catalog_dir)
     described = catalog_capabilities(catalog)
     catalog_keys = set(described)
+    known_keys = set(catalog_capabilities(full_catalog)) if full_catalog else catalog_keys
     choices = stack.get("choices") or {}
 
     mandatory_unchosen: list[str] = []
@@ -281,7 +342,7 @@ def gaps(
         "non_applicable": non_applicable,
         "unexplained_non_applicable": unexplained_non_applicable,
         "stale_choices": stale_choices,
-        "orphaned": sorted(set(choices) - catalog_keys),
+        "orphaned": sorted(set(choices) - known_keys),
         "stale": bool(capabilities_hash and stack_hash and stack_hash != capabilities_hash),
     }
 
@@ -637,21 +698,50 @@ def main() -> int:
     if not catalog.get("frameworks"):
         print("No capabilities.json — run scripts/capabilities.py first")
         return 1
+    # ``frameworks`` is the enabled set for the whole pipeline. The catalog keeps every
+    # framework it ever derived; this is what selects the ones in play.
+    cfg = load_cfg()
+    enabled = [fw for fw in (cfg.get("frameworks") or []) if fw in catalog["frameworks"]]
+    if not enabled:
+        print(f"Refusing to run: config frameworks "
+              f"{sorted(cfg.get('frameworks') or [])} match nothing in capabilities.json "
+              f"(has: {', '.join(sorted(catalog['frameworks']))}). "
+              f"Edit {CONFIG_FILE}.")
+        return 1
+    # A hash of the file on disk, deliberately not of the narrowed dict: `stale` must keep
+    # meaning "your stack.json is behind this capabilities.json".
     cap_hash = file_hash(CAPABILITIES_JSON)
+    # Every consumer below the scaffold sees only the enabled half; `scaffold()` gets the
+    # full catalog because it builds both halves of stack.json.
+    in_play, _ = split_by_framework(catalog, enabled)
 
     stack = _load_json(STACK_JSON)
     generated = today_iso()
 
     if args.scaffold:
+        # The FULL catalog on purpose: `orphaned` means "the catalog no longer describes
+        # this key", which is a catalog-membership question, not a config one.
         before = gaps(catalog, stack, capabilities_hash=cap_hash)
         prev_choices = stack.get("choices") or {}
-        stack = scaffold(catalog, stack, generated=generated, capabilities_hash=cap_hash)
+        prev_disabled = stack.get("disabled") or {}
+        stack = scaffold(catalog, stack, generated=generated, capabilities_hash=cap_hash,
+                         enabled=enabled)
         _write_json_atomic(STACK_JSON, stack)
         carried = sum(1 for k in stack["choices"]
                       if (prev_choices.get(k) or {}).get("chosen"))
-        added = sum(1 for k in stack["choices"] if k not in prev_choices)
+        added = sum(1 for k in stack["choices"]
+                    if k not in prev_choices and k not in prev_disabled)
         print(f"stack.json: {len(stack['choices'])} capabilities "
               f"({carried} choice(s) carried, {added} new)")
+        retained = stack.get("disabled") or {}
+        if retained:
+            off = sorted({e["framework"] for e in retained.values()})
+            print(f"  retained {len(retained)} entry/-ies of {len(off)} disabled "
+                  f"framework(s) under 'disabled': {', '.join(off)}")
+        restored = [k for k in stack["choices"] if k in prev_disabled]
+        if restored:
+            print(f"  restored {len(restored)} entry/-ies from 'disabled' "
+                  f"(decisions intact)")
         if before["orphaned"]:
             print(f"  dropped {len(before['orphaned'])} orphaned key(s): "
                   f"{', '.join(before['orphaned'])}")
@@ -718,7 +808,7 @@ def main() -> int:
             print(f"{sel_path}: no 'selections' object to apply")
             return 1
         try:
-            stack = apply_selection(stack, selections, catalog)
+            stack = apply_selection(stack, selections, in_play)
         except ValueError as e:
             print(f"Refusing to apply selection: {e}")
             return 1
@@ -728,10 +818,11 @@ def main() -> int:
         print(f"stack.json: {len(selections)} choice(s) recorded, "
               f"{undecided} applicable capability/-ies still undecided")
 
-    result = gaps(catalog, stack, capabilities_hash=cap_hash)
+    result = gaps(in_play, stack, capabilities_hash=cap_hash, full_catalog=catalog)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = REPORTS_DIR / f"stack-gaps-{generated}.md"
-    report_path.write_text(render_gap_report(catalog, stack, result, generated), encoding="utf-8")
+    report_path.write_text(render_gap_report(in_play, stack, result, generated),
+                           encoding="utf-8")
 
     print(f"Stack gaps: {len(result['mandatory_unchosen'])} of {result['mandatory_total']} "
           "applicable mandatory-linked capabilities have no chosen component")
