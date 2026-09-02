@@ -485,6 +485,30 @@ class TestGaps(unittest.TestCase):
             self.assertEqual(res["unexplained_non_applicable"], [])
 
 
+class TestGapsOrphanedIsACatalogQuestion(unittest.TestCase):
+    """`orphaned` means "the catalog dropped this key", never "the config switched it off"."""
+
+    def test_narrowed_catalog_alone_would_call_disabled_keys_orphaned(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _multi_constraints(Path(t))
+            cat = _multi_capabilities()
+            full = stack.scaffold(cat, None, catalog_dir=catalog)   # all three frameworks
+            in_play, _ = stack.split_by_framework(cat, ["gdpr"])
+            self.assertEqual(
+                stack.gaps(in_play, full, catalog_dir=catalog, full_catalog=cat)["orphaned"], [])
+
+    def test_a_key_the_catalog_really_dropped_is_still_orphaned(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            catalog = _multi_constraints(Path(t))
+            cat = _multi_capabilities()
+            existing = stack.scaffold(cat, None, catalog_dir=catalog)
+            existing["choices"]["gdpr/retired-capability"] = {"chosen": None}
+            in_play, _ = stack.split_by_framework(cat, ["gdpr"])
+            self.assertEqual(
+                stack.gaps(in_play, existing, catalog_dir=catalog, full_catalog=cat)["orphaned"],
+                ["gdpr/retired-capability"])
+
+
 class TestApplyScope(unittest.TestCase):
     """The single write path the stack-compiler skill uses for applicability."""
 
@@ -1126,6 +1150,19 @@ class TestScaffoldCLI(unittest.TestCase):
             report = next((root / "reports").glob("stack-gaps-*.md")).read_text(encoding="utf-8")
             self.assertIn("gdpr/encryption-at-rest", report)
             self.assertNotIn("soc2/access-reviews", report)
+
+
+    def test_a_plain_run_after_narrowing_reports_no_orphaned_keys(self) -> None:
+        """Between a config narrowing and the next --scaffold, choices still holds the
+        switched-off frameworks' keys. They were retained, not removed upstream."""
+        with tempfile.TemporaryDirectory() as t:
+            root = self._install(Path(t), ["gdpr", "soc2", "iso27001"])
+            self.assertEqual(self._run(root, "--scaffold").returncode, 0)
+            self._write_cfg(root, ["gdpr"])
+            res = self._run(root)
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            report = next((root / "reports").glob("stack-gaps-*.md")).read_text(encoding="utf-8")
+            self.assertNotIn("Orphaned keys", report)
 
 
 if __name__ == "__main__":

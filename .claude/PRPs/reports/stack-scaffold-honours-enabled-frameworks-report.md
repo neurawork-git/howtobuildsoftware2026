@@ -30,7 +30,7 @@ exit 0.
 
 | Command or check | Result | Evidence |
 | --- | --- | --- |
-| `python3 -m unittest compliance-compiler.tests.test_stack` (from `engines/`) | `passed` | `Ran 85 tests ... OK` (was 67; 18 added) |
+| `python3 -m unittest compliance-compiler.tests.test_stack` (from `engines/`) | `passed` | `Ran 88 tests ... OK` (was 67; 21 added — 18 for the feature, 3 for review finding R1) |
 | Same suite against `git show HEAD:...stack.py` (both copies reverted) | `failed as required` | `FAILED (failures=6, errors=11)` — 17 of the new tests fail pre-fix, e.g. `choices` holding `iso27001/asset-inventory` and `soc2/access-reviews`; the report run printing `3 of 3` instead of `1 of 1` |
 | `python3 -m unittest discover -s compliance-compiler/tests` | `passed` | `Ran 196 tests ... OK` — includes `test_payload_drift.py` (AC7) |
 | `python3 -m unittest discover -s stack-compiler/tests` | `passed` | `OK` — AC6, no `stack-base/` change needed |
@@ -84,7 +84,9 @@ stack-compiler suite plus the `disabled`-reader grep. AC7 — `test_payload_drif
 
 ## Review Dispositions
 
-None.
+| ID | Disposition | Reason and evidence | Tracking |
+| --- | --- | --- | --- |
+| `R1` — plain report run after narrowing mislabels the disabled frameworks' keys as orphaned (`stack.py:813`, nice-to-have, correctness) | `FIXED` | Confirmed and reproduced: between a config narrowing and the next `--scaffold`, `stack.json.choices` still holds the switched-off keys, and the post-run `gaps(in_play, …)` computed `orphaned` against the narrowed catalog, so the gap report claimed they were "removed upstream". `gaps()` gained a `full_catalog` parameter (defaulting to `catalog`, so every other caller is unchanged) and `main()` passes the unnarrowed catalog for that one membership question — the same split the `--scaffold` branch already made. Three regression tests added (`TestGapsOrphanedIsACatalogQuestion` ×2, plus a CLI run asserting the report has no "Orphaned keys" section); all three fail against the pre-fix commit `d1bb45a` (`FAILED (failures=1, errors=2)`) and pass after. | `Not applicable` |
 
 ## Completion Gate
 
@@ -103,8 +105,8 @@ no `catalog/` change, no `reports/` artifact.
 
 ## Delivery
 
-- **Commits:** `Not created`
-- **Pull Request:** `Not opened`
+- **Commits:** `d1bb45a` fix(compliance): stack.py honours config.json's enabled frameworks; `<R1 fix>` fix(compliance): orphaned is a catalog question, not a config one
+- **Pull Request:** https://github.com/neurawork-git/howtobuildsoftware2026/pull/53
 - **Base / Head:** `main <- feature/stack-scaffold-honours-enabled-frameworks`
 - **Source PRD:** `None`
 - **Tracked follow-ups:** `None`

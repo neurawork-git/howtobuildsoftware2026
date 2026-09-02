@@ -272,6 +272,7 @@ def gaps(
     stack: dict,
     catalog_dir=None,
     capabilities_hash: str = "",
+    full_catalog: dict | None = None,
 ) -> dict:
     """Which capabilities still have no chosen component (and related findings).
 
@@ -289,10 +290,17 @@ def gaps(
     no ``chosen_from`` (hand-recorded straight into ``stack.json``) is never reported:
     there is nothing to compare it against, and guessing would either cry wolf on
     every run or hide a real drift.
+
+    ``orphaned`` asks a **catalog-membership** question — "does the catalog still
+    describe this key?" — never a config one. When ``catalog`` has been narrowed to the
+    enabled frameworks, pass the unnarrowed one as ``full_catalog`` so the keys of a
+    switched-off framework are not reported as removed upstream. Defaults to
+    ``catalog``, which is correct whenever no narrowing happened.
     """
     linked = mandatory_linked_keys(catalog, catalog_dir)
     described = catalog_capabilities(catalog)
     catalog_keys = set(described)
+    known_keys = set(catalog_capabilities(full_catalog)) if full_catalog else catalog_keys
     choices = stack.get("choices") or {}
 
     mandatory_unchosen: list[str] = []
@@ -334,7 +342,7 @@ def gaps(
         "non_applicable": non_applicable,
         "unexplained_non_applicable": unexplained_non_applicable,
         "stale_choices": stale_choices,
-        "orphaned": sorted(set(choices) - catalog_keys),
+        "orphaned": sorted(set(choices) - known_keys),
         "stale": bool(capabilities_hash and stack_hash and stack_hash != capabilities_hash),
     }
 
@@ -810,7 +818,7 @@ def main() -> int:
         print(f"stack.json: {len(selections)} choice(s) recorded, "
               f"{undecided} applicable capability/-ies still undecided")
 
-    result = gaps(in_play, stack, capabilities_hash=cap_hash)
+    result = gaps(in_play, stack, capabilities_hash=cap_hash, full_catalog=catalog)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     report_path = REPORTS_DIR / f"stack-gaps-{generated}.md"
     report_path.write_text(render_gap_report(in_play, stack, result, generated),
