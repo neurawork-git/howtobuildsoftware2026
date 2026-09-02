@@ -20,3 +20,10 @@
 | [[concepts/semver-patch-for-reporting-only-change]] | Reporting-only recon fix is patch-level; 0.3.0 → 0.3.1 | daily/2026-08-27.md | 2026-08-27 |
 | [[concepts/verify-generated-artifacts-before-commit]] | LLM-generated docs verified against real files/config before commit | daily/2026-08-27.md | 2026-08-27 |
 | [[concepts/connection-articles-enable-backward-retrieval]] | Connection articles surface non-obvious links a forward-only agent misses | daily/2026-08-27.md | 2026-08-27 |
+| [[concepts/cold-start-measurement-needs-empty-uv-cache]] | Cold start is only real with an empty UV_CACHE_DIR: 6.95 s vs 11.28 s | daily/2026-09-02.md | 2026-09-02 |
+| [[concepts/hook-timeout-sixty-second-budget]] | 60 s hook timeout replaces 10 s and is the sole cold-start mitigation | daily/2026-09-02.md | 2026-09-02 |
+| [[concepts/installer-merge-repairs-existing-installs]] | Monotonic timeout floor + gitignore prune fix old installs, not just fresh ones | daily/2026-09-02.md | 2026-09-02 |
+| [[concepts/install-run-clobbers-local-edits]] | Install runs overwrite hand-edited timeouts, user gitignore lines, and re-add forbidden env.PRP_HOME | daily/2026-09-02.md | 2026-09-02 |
+| [[concepts/timing-evidence-vs-observed-behavior]] | Review with 0 findings still flagged a symptom argued from timing, never observed | daily/2026-09-02.md | 2026-09-02 |
+| [[concepts/uncommitted-changes-to-deleted-files-block-ff-pull]] | Dirty file deleted upstream blocks pull --ff-only | daily/2026-09-02.md | 2026-09-02 |
+| [[connections/installer-repair-and-clobber]] | An installer's repair power and its clobber power are the same write | daily/2026-09-02.md | 2026-09-02 |
