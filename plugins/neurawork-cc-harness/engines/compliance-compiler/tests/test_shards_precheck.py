@@ -164,6 +164,25 @@ class TestIsPlanPath(unittest.TestCase):
             self.assertFalse(precheck.is_plan_path(str(deep), root))
             self.assertFalse(precheck.is_plan_path(str(root / "a.md"), root))
 
+    def test_star_segment_matches_exactly_one_segment(self) -> None:
+        """A `*` in plans_subpath stands for one path segment, not for a deep search."""
+        cfg = {"plans_subpath": ".claude/PRPs/*/plans"}
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            one = self._touch(root, ".claude", "PRPs", "myrepo-1a2b3c4d", "plans", "x.plan.md")
+            self.assertTrue(precheck.is_plan_path(str(one), root, cfg))
+
+            none = self._touch(root, ".claude", "PRPs", "plans", "x.plan.md")
+            self.assertFalse(precheck.is_plan_path(str(none), root, cfg))
+
+            two = self._touch(root, ".claude", "PRPs", "a", "b", "plans", "x.plan.md")
+            self.assertFalse(precheck.is_plan_path(str(two), root, cfg))
+
+            archived = self._touch(
+                root, ".claude", "PRPs", "myrepo-1a2b3c4d", "plans", "completed", "x.plan.md"
+            )
+            self.assertFalse(precheck.is_plan_path(str(archived), root, cfg))
+
     def test_defaults_apply_when_config_omits_the_keys(self) -> None:
         """An ADOPT install keeps a config.json written before these keys existed."""
         with tempfile.TemporaryDirectory() as t:
