@@ -637,22 +637,40 @@ class PrpStoreTests(DoctorTestCase):
         self.assertIn(str(elsewhere), finding.message)
         self.assertIn(str(repo / ".claude" / "PRPs"), finding.message)
 
-    def test_a_worktree_only_document_is_a_split_store(self) -> None:
+    def _worktree_with_a_local_document(self) -> tuple[Path, Path]:
         main = self._gated_repo(name="main")
         (main / ".claude" / "PRPs" / "plans").mkdir(parents=True)
-        self._link(main, main / ".claude" / "PRPs")
         wt = make_worktree(self.tmp, main, name="wt")
         install(wt, "stack-compiler", "stack-base")
         settings_for(wt, ("stack-compiler", "stack-base"))
-        stranded = wt / ".claude" / "PRPs" / "plans" / "feature.plan.md"
-        stranded.parent.mkdir(parents=True)
-        stranded.write_text("plan\n", encoding="utf-8")
+        local = wt / ".claude" / "PRPs" / "plans" / "feature.plan.md"
+        local.parent.mkdir(parents=True)
+        local.write_text("plan\n", encoding="utf-8")
+        return main, wt
 
-        split = [f for f in self.run_checks(wt)
-                 if f.check == "prp-store" and "split store" in f.message]
+    def _split(self, wt: Path) -> list[doctor.Finding]:
+        return [f for f in self.run_checks(wt)
+                if f.check == "prp-store" and "split store" in f.message]
+
+    def test_a_worktree_only_document_is_a_split_store_under_prp_home(self) -> None:
+        # PRP_HOME is relative, so each session resolves it against its own working
+        # directory: the worktree really does have a second physical store.
+        main, wt = self._worktree_with_a_local_document()
+        self._set_env(wt, ".claude/PRPs")
+
+        split = self._split(wt)
         self.assertEqual(len(split), 1, "the worktree-only document was not reported")
         self.assertEqual(split[0].severity, "WARN")
         self.assertIn("plans/feature.plan.md", split[0].message)
+
+    def test_a_linked_store_makes_a_worktree_document_branch_content(self) -> None:
+        # With the link, every checkout reaches the same directory, so `.claude/PRPs`
+        # in a worktree is the branch's tracked content — a feature branch carrying a
+        # plan `<base>` does not have yet is the ordinary workflow, not a split store.
+        main, wt = self._worktree_with_a_local_document()
+        self._link(main, main / ".claude" / "PRPs")
+
+        self.assertEqual(self._split(wt), [])
 
 
 class ReadOnlyTests(DoctorTestCase):

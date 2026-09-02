@@ -37,8 +37,13 @@ section here.
 - **`/nw-doctor` reports the store wiring.** A new repo-scoped `prp-store` check names
   which wiring a repo has (linked, `PRP_HOME`, both — where `PRP_HOME` wins and the link is
   inert — or neither, which is the warning that documents land outside the repo), reports a
-  link resolving somewhere else, and, from a worktree, counts the documents that exist only
-  there. It runs only where a gate-owning engine is installed, and stays read-only.
+  link resolving somewhere else, and, from a worktree wired by `PRP_HOME`, counts the
+  documents that exist only there. It runs only where a gate-owning engine is installed,
+  and stays read-only. The split-store count is scoped to the `PRP_HOME` wiring on purpose:
+  only a relative prefix gives a worktree a second physical store. With the link, every
+  checkout reaches the same directory and a worktree's `.claude/PRPs` is simply its branch's
+  tracked content — a feature branch carrying a plan `<base>` does not have yet is the
+  ordinary workflow, not a finding.
 
   The gate blindness this wiring was found through — `document_kind` seeing none of the
   documents prp-core writes — was fixed independently in 0.8.0, by making the subpath a

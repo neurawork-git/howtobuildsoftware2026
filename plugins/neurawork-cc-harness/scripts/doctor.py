@@ -745,7 +745,12 @@ def check_prp_store(
             fix,
         ))
 
-    if worktree:
+    # Only the PRP_HOME wiring can split the store: its value is relative, so each
+    # session resolves it against its own working directory. With the link, every
+    # checkout reaches the SAME directory and `.claude/PRPs` in a worktree is just the
+    # branch's tracked content — a feature branch legitimately carrying a plan `<base>`
+    # does not have yet, which is the ordinary workflow and not a finding.
+    if worktree and env_value is not None:
         findings.extend(_check_split_store(repo_root, main_root))
     return findings
 
