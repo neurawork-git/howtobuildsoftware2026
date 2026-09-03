@@ -5,7 +5,7 @@ tags: [installer, side-effects, self-hosting, harness, gotcha]
 sources:
   - "daily/2026-09-02.md"
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-03
 ---
 
 # Install-Run-Only Side Effects on Local Edits
@@ -28,6 +28,9 @@ hand-edited hook timeouts below 60 are raised, a self-written `uv.lock` line in
   self-host commit.
 - All three fire only during an install run, which makes them easy to miss when
   reviewing a diff produced by any other workflow.
+- `PRP_HOME` is not merely a forbidden key: installers wrote it as a **relative**
+  path, so each worktree resolved its own physical store — the root cause behind
+  Issue #50's blind gate (see [[concepts/blind-gate-silent-pass]]).
 
 ## Details
 
@@ -52,8 +55,9 @@ neighbouring worktree, keeping plan boundaries intact across concurrent work.
 - [[concepts/installer-merge-repairs-existing-installs]] — the repair mechanisms whose side effects these are
 - [[concepts/verify-generated-artifacts-before-commit]] — the same discipline of checking generated output before it lands
 - [[connections/installer-repair-and-clobber]] — the shared mechanism behind repair and clobber
+- [[concepts/blind-gate-silent-pass]] — the gate defect an installer-written relative `PRP_HOME` caused
 
 ## Sources
 
-- [[daily/2026-09-02.md]] — two install-run-only side effects; compliance installer re-writes forbidden `env.PRP_HOME`, stripped manually
+- [[daily/2026-09-02.md]] — two install-run-only side effects; compliance installer re-writes forbidden `env.PRP_HOME`, stripped manually; installers wrote a relative `PRP_HOME` behind #50
 

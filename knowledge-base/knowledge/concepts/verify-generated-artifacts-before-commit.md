@@ -4,8 +4,9 @@ aliases: [verify-llm-docs, claudemd-lerner-verification, verify-before-commit]
 tags: [convention, verification, documentation, claudemd-lerner]
 sources:
   - "daily/2026-08-27.md"
+  - "daily/2026-09-02.md"
 created: 2026-08-27
-updated: 2026-08-27
+updated: 2026-09-03
 ---
 
 # Verify Generated Artifacts Against Reality Before Committing
@@ -27,6 +28,10 @@ commit `910b0f9` landed.
   intact — exactly one BEGIN/END pair, not duplicated or dropped.
 - The safeguard targets LLM-produced prose the same way opaque identifiers are
   checked against manifests: plausible ≠ correct.
+- For generated *data*, the equivalent check is semantic rather than textual:
+  a 137-line field-order diff in `compliance-base/catalog/stack.json` was
+  verified by parsing both blobs as JSON and comparing key sets, values and field
+  sets — 68 entries, 0 value changes, `generated` the only scalar difference.
 
 ## Details
 
@@ -49,7 +54,10 @@ same `0.3.1` bump round (see
 - [[concepts/plugin-version-bump-propagates-cache]] — the bump round these doc commits accompanied
 - [[concepts/timing-evidence-vs-observed-behavior]] — the same verify-against-reality discipline applied to a claimed runtime symptom
 - [[concepts/install-run-clobbers-local-edits]] — generated installer output checked (and stripped) before it lands
+- [[concepts/stale-generator-artifact-poisons-noop-checks]] — the structured-data case, where a stale tracked artifact defeats the check entirely
+- [[concepts/drift-guard-scope-and-falsifiable-meta-tests]] — the automated form of the same discipline
 
 ## Sources
 
 - [[daily/2026-08-27.md]] — LLM-generated docs verified against real files/config and intact marker block before commit
+- [[daily/2026-09-02.md]] — semantic JSON comparison used instead of a line diff for a pure field-order change

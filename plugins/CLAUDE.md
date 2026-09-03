@@ -44,7 +44,12 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   a bump that moves only one of the two makes `/nw-doctor` report a staleness that does
   not exist). One walk each rather than a file per engine: the comparison is identical
   for all four, and two of them had no guard at all while the other two kept near-copies.
-  Run from the plugin root:
+  The drift walk enumerates the self-host side with `git ls-files`, which buys the
+  code-vs-state split at two deliberate costs: it **skips** when `git` is not on the
+  `PATH`, and it assumes the `<repo>/plugins/<plugin>` layout. An **untracked** file
+  dropped into a self-host is therefore invisible to it — untracked is how the guard
+  defines "not part of the install" — while the reverse (a payload file gitignored in a
+  self-host) still fails loudly. Run from the plugin root:
   `python3 -m unittest discover -s tests`.
 - `engines/<engine>/` — one per skill, plus shared code:
   - `install.py` — copies `payload/` + `_shared/` into the target repo, scaffolds
@@ -59,6 +64,13 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   guard), `transcript.py` (JSONL → markdown turns), `gitctx.py` (worktree redirect),
   `settings.py` (idempotent hook merge), `repo_guard.py` (in-repo / not-`.claude/`),
   `recon.py` (git-root + `RECON_JSON`).
+- `engines/_shared_install.py` — install-time helpers that must **never ship**, which is
+  exactly why they sit beside `_shared/` rather than inside it. `refresh_shared()` is the
+  single definition of the `_shared/` copy: every installer calls it instead of its own
+  `copytree`, so the plugin-only tests in `PLUGIN_ONLY_SHARED_TESTS`
+  (`test_manifest.py`, `test_version_check.py` — they assert plugin facts that do not
+  exist in a target repo) physically cannot reach an install, and a copy an older install
+  left behind is unlinked on the next ADOPT run.
 
 ## Conventions & gotchas
 
@@ -75,7 +87,11 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   and `nw-ship-pr` copy nothing into a target repo, so they have no `install.py`, no
   `recon.py`, no `payload/`, no `VERSION`, and no entry in `scripts/harness_probe.py`'s
   `ENGINES` registry (a component that installs nothing has no install to discover or
-  version). Don't "fix" the missing engine. Their only per-repo state
+  version). Don't "fix" the missing engine. `nw-worktree` and `nw-rules-init` also have
+  **no `commands/` file** — unlike `nw-ship-pr`, they exist only as skills, so only their
+  fully-qualified skill names (`neurawork-cc-harness:nw-worktree`,
+  `neurawork-cc-harness:nw-rules-init`) resolve reliably; a bare `/nw-worktree` may not.
+  Their only per-repo state
   is a lazily written `.claude/*.local.md` config, shared by path and key with a
   `coding-suite` install so the two never keep two drifting profiles.
 - **Install modes:** `install.py` detects **ADOPT** (existing install — refresh code,
@@ -83,6 +99,14 @@ via a `git-subdir` source — it is what users install, not this whole repo.
   filenames + events per skill (`cl-`-prefixed for the learner; `co-`-prefixed on the
   `PostToolUse` event for compliance, `st-`-prefixed for stack-compiler) so all four
   skills coexist in one repo — the two `PostToolUse` hooks share one matcher group.
+- **Ship an install-time fix as a migration, not as fresh-install-only behaviour.** The
+  merge helpers are built for it: `merge_hooks` treats the shipped timeout as a monotonic
+  **floor** (it raises a lower existing value, keeps a higher hand-edited one, fills in a
+  missing one) and `prune_gitignore()` is the removing counterpart to the append-only
+  `merge_gitignore`, driven by each installer's `REMOVED_GITIGNORE_RULES`. Every engine
+  ships a **60 s** hook timeout. The consequence to state when shipping one: an existing
+  repo changes nothing until its owner runs `/plugin update` + `/reload-plugins` and
+  re-runs the install skills.
 - **Versioning:** a change that alters an engine's payload *behavior* is a **minor**
   bump, not a patch (patch is for reporting/doc-only fixes). Two version files move
   together on an engine change — the plugin version in `.claude-plugin/plugin.json`
@@ -103,10 +127,25 @@ via a `git-subdir` source — it is what users install, not this whole repo.
 - **Test discovery quirk:** `engines/` is a namespace package and the engine dirs
   are hyphenated, so a single `unittest discover -s engines` under-collects (finds
   only `_shared`). Run discovery per test directory — see the root `CLAUDE.md`.
+- **Doing nothing must be visible.** A guard that silently passes is the worst failure
+  mode here: a hook that returns early before its existence check and its only `print` is
+  indistinguishable from one that ran and passed, and a walk that compares zero files
+  passes vacuously — hence the `assertTrue(compared, …)` in `test_payload_drift.py`. The
+  same trap catches *meta*-tests: one that asserts only `result.skipped` and
+  `result.failures` is unfalsifiable, because unittest reports a raising walk (no `git`,
+  a subprocess error outside a repo) as an **error**. Always assert `result.errors == []`
+  too.
+- **Path and layout literals belong in `DEFAULT_CFG`, not inline in code.**
+  `plans_subpath`, `plan_suffix` and `plan_archive_segments` are config keys, and
+  `precheck.is_plan_path()` takes an optional `cfg`. A repo with another plan layout
+  otherwise gets a hook that silently never fires.
 - **Outputs never under `.claude/`** — enforced by `_shared/repo_guard.py`
   (`assert_in_repo_not_dotclaude`).
 - **Auth:** SDK calls need `ANTHROPIC_API_KEY` / `CLAUDE_CODE_OAUTH_TOKEN`;
-  subscription credentials are not sanctioned for third-party plugin use.
+  subscription credentials are not sanctioned for third-party plugin use. Withholding a
+  key is **not** an egress control: the validators run the SDK with the `claude_code`
+  preset (`system_prompt: {"type": "preset", "preset": "claude_code"}`), so it launches
+  the Claude Code CLI, which picks up whatever subscription credentials are present.
 
 ## Local development
 

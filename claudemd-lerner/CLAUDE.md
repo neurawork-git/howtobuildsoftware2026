@@ -45,6 +45,13 @@ writes — keep them in sync with how this repo is actually laid out.
 - The updater **edits docs in place, surgically** — it does not rewrite from scratch,
   never invents, and refuses to write outside the repo or under `.claude/`
   (`_shared/repo_guard.py`).
+- **The marker guard protects only the learner's own targets.** `scripts/markers.py`
+  snapshots and restores exactly the paths it is handed, and both call sites hand it the
+  same set: every visible `CLAUDE.md` plus the `docs/` tree (`scripts/update.py`
+  `snapshot(claudemds + docs)`; `scripts/seed.py` `_guarded_paths()`). The root
+  `README.md` is **read** as seed context (`scripts/seed.py`) but never written and never
+  guarded — `git log -- README.md` shows the learner has never touched it. So do **not**
+  put an `owner:name` marker block in `README.md`: nothing would parse or restore it.
 - Run: `uv sync --directory claudemd-lerner` then
   `uv run --directory claudemd-lerner python scripts/update.py` (`--all` re-applies
   every log, `--dry-run` previews without calling the model).

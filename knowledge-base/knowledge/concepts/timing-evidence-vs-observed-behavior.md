@@ -5,7 +5,7 @@ tags: [verification, code-review, evidence, testing, convention]
 sources:
   - "daily/2026-09-02.md"
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-03
 ---
 
 # Timing Evidence Is Not an Observed End-to-End Symptom
@@ -50,6 +50,8 @@ faithful end-to-end reproduction paid for two verification debts at once.
 - [[concepts/hook-timeout-sixty-second-budget]] — the budget the observed run confirmed
 - [[concepts/verify-generated-artifacts-before-commit]] — the same verify-against-reality discipline applied to generated docs
 - [[concepts/uncommitted-changes-to-deleted-files-block-ff-pull]] — the git blocker hit while cleaning up after the same PR
+- [[concepts/blind-gate-silent-pass]] — the same null-result-read-as-pass error inside the gate itself
+- [[connections/silence-read-as-success]] — the three instances of this pattern from one day
 
 ## Sources
 

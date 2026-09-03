@@ -334,6 +334,8 @@ plugin regardless of what else is enabled.
 
 ```text
 /plugin marketplace update
+/plugin update neurawork-cc-harness
+/reload-plugins
 ```
 
 Because the marketplace entry tracks the commit SHA (no pinned `version`), this
@@ -341,6 +343,14 @@ pulls the latest plugin code. To refresh an already-installed skill's engine in 
 repo, re-invoke the install skill — recon detects the existing dir as an **ADOPT**
 and refreshes the code/hooks **without clobbering** your `daily/` logs or
 `knowledge/`.
+
+**Order matters: update the plugin cache *before* you re-run an install skill.** A fix
+merged to `main` is stranded in the repo until `/plugin update neurawork-cc-harness` +
+`/reload-plugins` bring it into the running plugin cache; an install skill invoked
+against a stale cache copies the *older* payload into your repo, and new checks the bump
+added (for example new `/nw-doctor` findings) stay silent until the reload. If you have
+several repos on the same engine version, re-run each one's install skill after the
+update.
 
 **Staleness nudge.** `/plugin marketplace update` refreshes the *plugin* but not the
 engine copy already installed in your repo (that copy is tracked in-repo, not in the

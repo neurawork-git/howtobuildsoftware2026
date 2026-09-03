@@ -5,7 +5,7 @@ tags: [hooks, timeouts, uv, scope, claude-code]
 sources:
   - "daily/2026-09-02.md"
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-03
 ---
 
 # 60-Second Hook Timeout as the Cold-Start Budget
@@ -27,6 +27,9 @@ planned workarounds were dropped because the timeout already covers them.
 - The same reasoning covers fresh installs into foreign repositories, which
   receive only `pyproject.toml` and no `uv.lock` and therefore keep paying a full
   dependency resolve.
+- An independent finding reinforces dropping that fallback: naming `python3` in a
+  hook command is not portable in the first place (see
+  [[concepts/hook-interpreter-naming-not-portable]]).
 
 ## Details
 
@@ -51,6 +54,7 @@ session left open whether to file that as a backlog item.
 - [[concepts/cold-start-measurement-needs-empty-uv-cache]] — how the 11.28 s figure behind this budget was obtained
 - [[concepts/installer-merge-repairs-existing-installs]] — how the 60 s value reaches installs that already have a lower one
 - [[concepts/timing-evidence-vs-observed-behavior]] — the end-to-end run that confirmed the budget against real behavior
+- [[concepts/hook-interpreter-naming-not-portable]] — why the dropped `python3` fallback was unworkable on its own terms
 
 ## Sources
 

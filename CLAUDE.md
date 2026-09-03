@@ -24,6 +24,12 @@ itself.
 There is no compile step — the engines are interpreted Python (≥ 3.12, run via
 [`uv`](https://docs.astral.sh/uv/)). LLM calls (compile / update / seed) need
 `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`; capture and scaffolding do not.
+`/nw-ship-pr` additionally needs the **`gh` CLI installed and authenticated** — it
+shells out to `gh` throughout (`commands/nw-ship-pr.md`) and uses no `mcp__github`
+tooling, so the GitHub *CLI* is the dependency, not a GitHub plugin or MCP server.
+`gh pr checks --json` does **not** exist in the installed `gh`: a wait-loop built on it
+substitutes empty forever and never terminates. Confirm any polling loop exits in the
+foreground before backgrounding it.
 
 **Test** (stdlib `unittest`). A single top-level `discover` under-collects because
 `engines/` and the hyphenated engine dirs are not importable packages — run
@@ -61,7 +67,12 @@ module and fails with `MODULE_NOT_FOUND`.
 uvx ruff check
 ```
 
+It is **not** clean on `main` — the tree carries a three-digit pre-existing baseline, so
+judge a change by *no new findings in the lines it touches*, never by a zero count.
+
 **Resolve engine deps** (after install / when adopting): `uv sync --directory <dir>`.
+Each self-host's `uv.lock` is **tracked** here, not gitignored, so a fresh clone or
+worktree runs its first hook without paying a dependency resolve.
 
 **Run the self-hosted harness in this repo:**
 
@@ -204,6 +215,26 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
 - No timezone is hardcoded — local time is read from the system.
 - Invoke skills by their **fully qualified** names (`neurawork-cc-harness:…`) so an
   install always resolves to this plugin regardless of what else is enabled.
+- **Refresh a generated artifact in its own commit**, never mixed into the behaviour
+  change that altered its shape — otherwise the churn cannot be told apart from a
+  semantic diff, and a stale artifact makes every later run look like a change. When a
+  regeneration is meant to be semantics-free, prove it by **parsing** both blobs
+  (`git show <ref>:<path>` vs. the branch copy) and comparing the maps, not by reading
+  the line diff: a field-order-only change reads as hundreds of added and removed lines.
+- **Parallel Claude sessions share this checkout.** After any unexplained gap, verify the
+  branch and working-tree state (`git reflog`), and check for `+`-marked branches in
+  `git branch` — those are checked out in another worktree — before touching them. In a
+  worktree session, learn-capture runs through the hook layer into the main checkout, so
+  no separate flush is needed at cleanup.
+- The root `README.md` is the harness **landing page**, not a second manual: every
+  statement in it must trace to a file in the tree, a frontmatter `description`, or a
+  PRD phase table, and it names the *form* of a thing while linking to
+  [`docs/INSTALL.md`](docs/INSTALL.md) / [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+  for depth — never duplicating them. Hardcoded figures in it (plugin version, per-skill
+  hook counts, call counts) are drift-prone: prefer a statement with no number over a
+  number that silently goes stale. It carries **no** `owner:name` marker block either —
+  the learner's guard covers only `CLAUDE.md` + `docs/`, so nothing would restore one
+  (see [`claudemd-lerner/CLAUDE.md`](claudemd-lerner/CLAUDE.md)).
 
 ## Key decisions
 
@@ -224,6 +255,29 @@ compiled, `CLAUDE.md` stopped moving, a hook you are unsure ever fired).
   reports and filed tech-stack specs (`.claude/PRPs/specs/<name>.spec.md`) are left as
   written, never rewritten to match current context, even when they
   reference retired or renamed concepts.
+- **PRP bookkeeping is committed straight to `main`, no PR** — moving a completed plan
+  or PRD into `completed/` and fixing the links it broke is archival housekeeping, not a
+  behaviour change; the rules block's "every PR through `/nw-ship-pr`" governs code
+  (precedent: `94b2c58`, `1d401e0`). Moving one file of a mutually-linking pair breaks
+  the relative links on **both** sides — fix them together, in the same commit.
+  A completed plan moves to `.claude/PRPs/plans/completed/` as a **pure rename** (the
+  archive is immutable — content untouched); its report does **not** move. The matching
+  `.claude/PRPs/reports/<name>-report.md` is closed out in place with the delivery
+  commits, the merge SHA, CI status, review rounds and a Post-merge section resolving any
+  stale Agent Notes.
+- **`main` is protected by a ruleset requiring one approving review**, and GitHub
+  forbids self-approval, so a solo-authored PR cannot satisfy it. Merge such a PR with
+  `gh pr merge --admin` (the documented alternatives — a second reviewer, or dropping
+  `required_approving_review_count` to 0 — are worse). `/nw-ship-pr`'s own approval gate
+  still applies: **each `--admin` merge needs the user's explicit approval in that
+  session**, and every check must be green first (precedent: PRs #49, #51, #53, #54).
+  Without `--admin` such a PR reports `mergeStateStatus: BLOCKED` at
+  `mergeable: MERGEABLE` — that pairing is the ruleset, not a conflict.
+- **A filed spec stays here; the product it describes does not** — this repo is the
+  harness, so `.claude/PRPs/specs/<name>.spec.md` keeps a product's stack decisions and
+  the reasoning behind them, while that product's code gets its own repository as soon
+  as implementation starts. The first filed spec, `specs/grillme.spec.md`, works this
+  way. Never grow application code under this repo to match a spec it holds.
 - **Never set `env.PRP_HOME` in `.claude/settings.json`** — the `prp-core` resolver
   always appends `<slug>-<hash8>` to whatever `PRP_HOME` names, so a literal path nests
   a second `.claude/PRPs/<slug>-<hash>/` store and new plans land in the wrong

@@ -7,7 +7,8 @@ capability catalog down to **this one product** and gates PRD/plan writes agains
 component stack that scoping settles on.
 
 It is installed and refreshed by `/neurawork-cc-harness:stack-compiler`, like the
-other three self-hosts. `tests/test_payload_drift.py` backs that installer up between
+other three self-hosts. The plugin-root `plugins/neurawork-cc-harness/tests/test_payload_drift.py`
+— one registry walk covering all four engines — backs that installer up between
 runs: `plugins/…/engines/stack-compiler/payload/` and this dir must stay
 **byte-identical**, so a direct edit to either copy that was never propagated fails
 there rather than shipping different behaviour than this repo runs.

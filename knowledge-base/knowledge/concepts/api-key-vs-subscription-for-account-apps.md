@@ -5,7 +5,7 @@ tags: [claude-agent-sdk, authentication, credentials, licensing]
 sources:
   - "daily/2026-08-13.md"
 created: 2026-08-20
-updated: 2026-08-20
+updated: 2026-09-03
 ---
 
 # API Key Required for Apps with Accounts (Not Subscription OAuth)
@@ -39,6 +39,8 @@ build-single-user-now, extend-to-teams-later stance.
 
 - [[concepts/claude-agent-sdk-subprocess-architecture]] — the wrapped CLI that must authenticate this way
 - [[concepts/grillme-app]] — the account-bearing app subject to this constraint
+- [[concepts/withholding-api-key-does-not-stop-egress]] — why omitting the key is not the inverse control
+- [[connections/subprocess-auth-inheritance-compliance-and-containment]] — the same inheritance read from the containment side
 
 ## Sources
 

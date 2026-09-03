@@ -70,6 +70,12 @@ neither. Slash-command equivalents: `/neurawork-cc-harness:co-extract`,
   (that budget belongs to the knowledge engines). A fresh install gets a working catalog
   from the shipped seed, not from a bootstrap run, and `install.py` actively prunes any
   leftover `co-session-start.py`. Do not add one.
+- **The `co-` hook matches plans only, never PRDs.** Its path gate is
+  `.claude/PRPs/plans/*.plan.md` (config keys `plans_subpath` / `plan_suffix`), so a
+  **PRD** write is gated against the *chosen stack* by `stack-base`'s `st-` hook but is
+  **not** checked against this catalog. That asymmetry is a known gap, not a design
+  choice — extending the hook to `prds/*.prd.md` is the deferred Phase 7 carried in
+  `.claude/BACKLOG.md`; the `st-` hook's debounce helper is the pattern to reuse.
 - **`stack.json` ownership is split.** Its schema, `--scaffold` and the gap report live
   here; the three passes that fill it live in `stack-base/` and write through this
   script's three apply modes — `scripts/scope.py → --apply-scope` (does a capability
@@ -83,8 +89,27 @@ neither. Slash-command equivalents: `/neurawork-cc-harness:co-extract`,
   invalidated instead of invalidating the whole file. Scope and ranking demand the
   complete key set; selection is deliberately partial — an undecided capability stays a
   counted gap.
+- **Narrow through `config.json`'s `frameworks`, never by hand-deleting from
+  `capabilities.json`.** A key that vanishes from `stack.json` does not error — it simply
+  stops existing for the downstream passes, because `scope_lib.capability_universe()`
+  builds its universe from `stack["choices"]` keys and never enumerates the catalog
+  itself. Narrowing after a successful `--apply-scope` therefore drops that scope
+  decision silently, and a component whose only owning capability disappears turns
+  `orphaned` in `gate_lib.classify()` — a status `verdict()` never checks, so a
+  gate-breaking `off_stack` becomes invisible. The supported route keeps the entries in
+  the `disabled` map with their decisions intact; recovery from a hand-deletion is
+  out-of-band only, via git (`catalog/stack.json` is tracked).
+- **An enabled set that matches nothing is refused.** `stack.py` prints
+  `Refusing to run:` and exits non-zero rather than scaffolding an empty `choices` map
+  that every later report would describe as "0 of 0 … Nothing to report".
 - **The gap report is report-only and exits 0.** An unfilled stack is the normal
   starting state, not a regression. Enforcement is the plan validator's job.
+- **`catalog/stack.json` must stay byte-stable against a fresh `stack.py --scaffold`.**
+  No test pins it — it is read-only input to `stack-base`'s `selection.py` and the `st-`
+  gate — so a non-empty `git diff` after a scaffold run on `main` is a bug signal, not
+  noise. Re-scaffold and commit the result on its own as soon as the generator's output
+  shape changes (`chosen_from` is emitted by `scaffold()` itself, which is why it now
+  sits directly after `rationale` in each entry).
 - **A `replaced` verdict is not a rejection.** In a catalog capability's `stack[]`,
   `verdict: "replaced"` means the component *superseded* the one named in
   `replaced_from` during the license audit — it stays a live option. Every entry is a

@@ -4,8 +4,9 @@ aliases: [agent-sdk-subprocess, claude-code-cli-subprocess, fat-image]
 tags: [claude-agent-sdk, claude-code, python, deployment]
 sources:
   - "daily/2026-08-13.md"
+  - "daily/2026-09-02.md"
 created: 2026-08-20
-updated: 2026-08-20
+updated: 2026-09-03
 ---
 
 # Claude Agent SDK Spawns Claude Code CLI as a Subprocess
@@ -25,6 +26,9 @@ package alongside Python — a "fat image" carrying two runtimes.
   changed to output a spec + tickets, not just an interview.
 - A license check is required before vendoring third-party skill text (the
   `mattpocock-skills` `grilling` skill) into the repo.
+- The spawned CLI does its own credential discovery, so an unset
+  `ANTHROPIC_API_KEY` does not prevent it from running or reaching the network
+  (see [[concepts/withholding-api-key-does-not-stop-egress]]).
 
 ## Details
 
@@ -44,7 +48,10 @@ must be resolved before the text lands in the repository.
 - [[concepts/grillme-app]] — the app whose grill engine is built on this SDK
 - [[concepts/postgres-source-of-truth-replayed-sessions]] — the disposable sessions this subprocess model runs
 - [[concepts/api-key-vs-subscription-for-account-apps]] — how the wrapped CLI must authenticate here
+- [[concepts/withholding-api-key-does-not-stop-egress]] — the containment consequence of the same subprocess boundary
+- [[connections/subprocess-auth-inheritance-compliance-and-containment]] — one mechanism, two opposite failures
 
 ## Sources
 
 - [[daily/2026-08-13.md]] — SDK wraps the CLI as a subprocess; backend needs Node + Python
+- [[daily/2026-09-02.md]] — the spawned CLI picks up subscription credentials, so withholding a key does not stop it

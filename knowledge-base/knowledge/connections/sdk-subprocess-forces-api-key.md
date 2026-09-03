@@ -6,7 +6,7 @@ connects:
 sources:
   - "daily/2026-08-13.md"
 created: 2026-08-20
-updated: 2026-08-20
+updated: 2026-09-03
 ---
 
 # Connection: SDK Subprocess Model and the API-Key Requirement
@@ -43,3 +43,4 @@ single shared `ANTHROPIC_API_KEY` in `.env` for v1 and an optional per-user
 - [[concepts/claude-agent-sdk-subprocess-architecture]]
 - [[concepts/api-key-vs-subscription-for-account-apps]]
 - [[concepts/connection-articles-enable-backward-retrieval]] — this article is probe #3's target: the non-obvious link a forward-only agent would miss
+- [[connections/subprocess-auth-inheritance-compliance-and-containment]] — the same coupling generalised after it recurred in the compliance engine
